@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Conexões</title>
+  <meta name="theme-color" content="#e03a3e">
+  <meta name="description" content="Dívidas, contas do mês e teto de gastos da casa.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Conexões">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Carregando -->
+  <section id="tela-carregando" class="tela centro">
+    <div class="spinner" aria-label="Carregando"></div>
+  </section>
+
+  <!-- Login -->
+  <section id="tela-login" class="tela centro" hidden>
+    <div class="cartao-central">
+      <h1>Conexões</h1>
+      <p class="sub">Dívidas, contas do mês e teto de gastos, sincronizados entre vocês dois.</p>
+      <button id="btn-login" class="btn primario grande">Entrar com Google</button>
+      <p id="erro-login" class="erro" role="alert" hidden></p>
+    </div>
+  </section>
+
+  <!-- Criar ou entrar numa casa -->
+  <section id="tela-casa" class="tela centro" hidden>
+    <div class="cartao-central">
+      <h2>Vamos configurar a casa</h2>
+      <p class="sub">Olá, <strong id="nome-usuario"></strong>. Uma pessoa cria a casa e a outra entra com o código de convite.</p>
+
+      <div class="bloco">
+        <h3>Criar uma casa nova</h3>
+        <label for="nome-casa">Nome da casa</label>
+        <input id="nome-casa" type="text" maxlength="40" placeholder="Ex.: Nossa casa" autocomplete="off">
+        <button id="btn-criar" class="btn primario">Criar casa</button>
+      </div>
+
+      <div class="divisor"><span>ou</span></div>
+
+      <div class="bloco">
+        <h3>Entrar com um código</h3>
+        <label for="codigo-casa">Código de convite</label>
+        <input id="codigo-casa" type="text" maxlength="12" placeholder="Ex.: K7M2QX9P" autocapitalize="characters" autocomplete="off" spellcheck="false">
+        <button id="btn-entrar-casa" class="btn">Entrar na casa</button>
+      </div>
+
+      <p id="erro-casa" class="erro" role="alert" hidden></p>
+      <button id="btn-sair-casa" class="btn link">Sair da conta</button>
+    </div>
+  </section>
+
+  <!-- App principal -->
+  <div id="app" hidden>
+    <header class="topo">
+      <div>
+        <div class="topo-titulo" id="titulo-casa">Conexões</div>
+        <div class="topo-sub" id="subtitulo-pagina"></div>
+      </div>
+      <div id="estado-rede" class="selo" title="Estado da conexão">online</div>
+    </header>
+
+    <main id="conteudo">
+      <section id="pagina-inicio" class="pagina">
+        <div class="cartao">
+          <h2>Início</h2>
+          <p class="sub">Aqui vai ficar o resumo: total que ainda falta pagar, gasto do mês, valor por dia útil e saldo do teto.</p>
+        </div>
+        <div class="cartao">
+          <h3>Andamento do projeto</h3>
+          <ul class="checklist">
+            <li class="feito">Fase 1: login, casa compartilhada e instalação no celular</li>
+            <li>Fase 2: Dívidas</li>
+            <li>Fase 3: Contas do mês</li>
+            <li>Fase 4: Calendário de dias úteis e feriados</li>
+            <li>Fase 5: Teto de gastos</li>
+            <li>Fase 6: Painel inicial e gráficos</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="pagina-dividas" class="pagina" hidden>
+        <div class="cartao"><h2>Dívidas</h2><p class="sub">Em breve (Fase 2): cadastro das dívidas, cronograma de parcelas, checks de pago e total restante.</p></div>
+      </section>
+
+      <section id="pagina-contas" class="pagina" hidden>
+        <div class="cartao"><h2>Contas do mês</h2><p class="sub">Em breve (Fase 3): parcelas, contas fixas e variáveis, teto de gastos, total e valor por dia útil.</p></div>
+      </section>
+
+      <section id="pagina-teto" class="pagina" hidden>
+        <div class="cartao"><h2>Teto de gastos</h2><p class="sub">Em breve (Fase 5): lançamento dos gastos imprevistos e saldo restante do teto.</p></div>
+      </section>
+
+      <section id="pagina-config" class="pagina" hidden>
+        <div class="cartao">
+          <h2>Casa</h2>
+          <p class="rotulo">Nome</p>
+          <p id="cfg-nome" class="valor"></p>
+          <p class="rotulo">Membros</p>
+          <p id="cfg-membros" class="valor"></p>
+          <p class="rotulo">Código de convite</p>
+          <div class="linha">
+            <code id="cfg-codigo" class="codigo"></code>
+            <button id="btn-copiar" class="btn">Copiar</button>
+          </div>
+          <p class="sub pequeno">Envie este código para sua esposa. Ela entra com a conta Google dela e escolhe "Entrar com um código". A casa aceita no máximo 2 pessoas.</p>
+        </div>
+        <div class="cartao">
+          <h2>Conta</h2>
+          <p class="rotulo">Conectado como</p>
+          <p id="cfg-usuario" class="valor"></p>
+          <button id="btn-sair" class="btn">Sair da conta</button>
+        </div>
+      </section>
+    </main>
+
+    <nav class="abas" aria-label="Navegação principal">
+      <button class="aba ativa" data-pagina="inicio"><span class="ico">🏠</span><span>Início</span></button>
+      <button class="aba" data-pagina="dividas"><span class="ico">📉</span><span>Dívidas</span></button>
+      <button class="aba" data-pagina="contas"><span class="ico">🧾</span><span>Contas</span></button>
+      <button class="aba" data-pagina="teto"><span class="ico">🎯</span><span>Teto</span></button>
+      <button class="aba" data-pagina="config"><span class="ico">⚙️</span><span>Casa</span></button>
+    </nav>
+  </div>
+
+  <div id="aviso" class="aviso" hidden role="status"></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
