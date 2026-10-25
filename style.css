@@ -164,6 +164,153 @@ input[type="text"]:focus { outline: 2px solid var(--primaria); outline-offset: 1
 .checklist li.feito { color: var(--texto); }
 .checklist li.feito::before { content: "✓"; color: var(--ok); font-weight: 700; }
 
+/* ===== Tela de entrada (hero) ===== */
+.hero {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: linear-gradient(160deg, #ee5154 0%, #e03a3e 45%, #b5232d 100%);
+  color: #fff;
+}
+.hero-bg { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.hero-bg::before {
+  content: "";
+  position: absolute; inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, .16) 1.2px, transparent 1.5px);
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(ellipse at 50% 38%, #000 0%, transparent 72%);
+  mask-image: radial-gradient(ellipse at 50% 38%, #000 0%, transparent 72%);
+}
+.orb { position: absolute; border-radius: 50%; filter: blur(42px); opacity: .55; animation: flutua 14s ease-in-out infinite; }
+.orb.o1 { width: 280px; height: 280px; top: -90px; left: -80px; background: #ff9a8b; }
+.orb.o2 { width: 340px; height: 340px; bottom: -140px; right: -110px; background: #8f1620; animation-delay: -5s; }
+.orb.o3 { width: 180px; height: 180px; top: 42%; right: -60px; background: #ffb199; opacity: .4; animation-delay: -9s; }
+@keyframes flutua {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(24px, -30px) scale(1.08); }
+}
+
+.hero-conteudo {
+  width: 100%; max-width: 440px;
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center;
+  padding-block: 8px;
+}
+.hero .cartao-central { color: var(--texto); text-align: left; box-shadow: 0 20px 50px rgba(70, 0, 10, .35); }
+
+/* Logo animado: o ícone do app */
+.logo-tile {
+  position: relative;
+  width: 116px; height: 116px;
+  border-radius: 31px;
+  display: grid; place-items: center;
+  background: linear-gradient(135deg, #f25a5a, #cd2830);
+  box-shadow: 0 20px 44px rgba(80, 0, 10, .45), inset 0 1px 0 rgba(255, 255, 255, .4);
+  outline: 2px solid rgba(255, 255, 255, .4);
+  animation: flutuar-logo 5s ease-in-out infinite, entrar-logo .9s cubic-bezier(.2, .9, .3, 1.2) both;
+}
+.logo-tile::before, .logo-tile::after {
+  content: "";
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  border: 2px solid rgba(255, 255, 255, .6);
+  animation: onda 3.4s ease-out infinite;
+  pointer-events: none;
+}
+.logo-tile::after { animation-delay: 1.7s; }
+@keyframes onda { 0% { transform: scale(1); opacity: .7; } 100% { transform: scale(1.6); opacity: 0; } }
+@keyframes flutuar-logo { 0%, 100% { translate: 0 0; } 50% { translate: 0 -8px; } }
+@keyframes entrar-logo { from { opacity: 0; scale: .6; } to { opacity: 1; scale: 1; } }
+
+.inf { width: 80px; height: auto; overflow: visible; filter: drop-shadow(0 3px 5px rgba(90, 0, 10, .35)); }
+.inf .base {
+  fill: none; stroke: #fff; stroke-width: 12; stroke-linecap: round; stroke-linejoin: round;
+  animation: desenhar 1.7s .25s cubic-bezier(.65, 0, .35, 1) both;
+}
+@keyframes desenhar {
+  from { stroke-dasharray: 100; stroke-dashoffset: 100; }
+  to { stroke-dasharray: 100; stroke-dashoffset: 0; }
+}
+.inf .ponto { fill: #e03a3e; }
+
+.marca {
+  margin: 1.3rem 0 .3rem;
+  font-size: 2.5rem; font-weight: 800; letter-spacing: .01em;
+  text-shadow: 0 2px 14px rgba(80, 0, 10, .35);
+  animation: sobe .7s .35s both;
+}
+.lema { max-width: 32ch; margin: 0; font-size: 1.05rem; opacity: .95; animation: sobe .7s .5s both; }
+.lema strong { font-weight: 700; }
+
+.destaques {
+  list-style: none; margin: 1.6rem 0 1.4rem; padding: 0;
+  width: 100%;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;
+}
+.destaques li {
+  display: flex; flex-direction: column; gap: 2px;
+  text-align: left;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .14);
+  border: 1px solid rgba(255, 255, 255, .28);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  animation: sobe .7s both;
+}
+.destaques li:nth-child(1) { animation-delay: .65s; }
+.destaques li:nth-child(2) { animation-delay: .75s; }
+.destaques li:nth-child(3) { animation-delay: .85s; }
+.destaques li:nth-child(4) { animation-delay: .95s; }
+.destaques .d-ico { font-size: 1.3rem; line-height: 1.2; }
+.destaques b { font-size: .98rem; }
+.destaques small { font-size: .78rem; line-height: 1.3; opacity: .88; }
+
+.btn.google {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  background: #fff; color: #2b1a1a; border-color: #fff;
+  box-shadow: 0 12px 26px rgba(80, 0, 10, .35);
+  animation: sobe .7s 1.05s both;
+}
+.btn.google:active { transform: translateY(1px); }
+.hero .erro { color: #fff; background: rgba(60, 0, 8, .4); padding: 8px 12px; border-radius: 10px; }
+.hero .cartao-central .erro { color: var(--erro); background: none; padding: 0; }
+.rodape-hero { margin: 1rem 0 0; font-size: .8rem; opacity: .8; animation: sobe .7s 1.15s both; }
+@keyframes sobe { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+/* ===== Início ===== */
+.saudacao {
+  position: relative; overflow: hidden;
+  color: #fff; border: 0;
+  background: linear-gradient(135deg, #ee5154, #c52b34);
+}
+.saudacao::after {
+  content: "∞";
+  position: absolute; right: -6px; bottom: -40px;
+  font-size: 9rem; line-height: 1; font-weight: 700;
+  opacity: .16; pointer-events: none;
+}
+.saudacao h2 { font-size: 1.45rem; margin: 0; }
+.saudacao .data { margin: .15rem 0 .6rem; opacity: .9; text-transform: capitalize; }
+.saudacao .resumo { margin: 0; max-width: 34ch; opacity: .95; position: relative; z-index: 1; }
+
+.grade-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+.stat {
+  background: var(--cartao);
+  border: 1px solid var(--borda);
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: var(--sombra);
+}
+.stat .ic { font-size: 1.2rem; }
+.stat .num { font-size: 1.4rem; font-weight: 800; margin: .1rem 0; font-variant-numeric: tabular-nums; }
+.stat .leg { font-size: .78rem; color: var(--suave); }
+
+@media (prefers-reduced-motion: reduce) {
+  .orb, .logo-tile, .logo-tile::before, .logo-tile::after, .inf .base,
+  .marca, .lema, .destaques li, .btn.google, .rodape-hero { animation: none !important; }
+  .inf .ponto { display: none; }
+}
+
 /* Barra de abas */
 .abas {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;

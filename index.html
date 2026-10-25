@@ -20,40 +20,76 @@
     <div class="spinner" aria-label="Carregando"></div>
   </section>
 
-  <!-- Login -->
-  <section id="tela-login" class="tela centro" hidden>
-    <div class="cartao-central">
-      <h1>Conexões</h1>
-      <p class="sub">Dívidas, contas do mês e teto de gastos, sincronizados entre vocês dois.</p>
-      <button id="btn-login" class="btn primario grande">Entrar com Google</button>
+  <!-- Entrada -->
+  <section id="tela-login" class="tela hero centro" hidden>
+    <div class="hero-bg" aria-hidden="true"><span class="orb o1"></span><span class="orb o2"></span><span class="orb o3"></span></div>
+
+    <div class="hero-conteudo">
+      <div class="logo-tile" aria-hidden="true">
+        <svg class="inf" viewBox="0 0 160 100" xmlns="http://www.w3.org/2000/svg">
+          <path id="inf-caminho" class="base" pathLength="100"
+            d="M80 50 C95 22 142 22 142 50 C142 78 95 78 80 50 C65 22 18 22 18 50 C18 78 65 78 80 50 Z"/>
+          <circle class="ponto" r="4.6">
+            <animateMotion dur="4.4s" repeatCount="indefinite" begin="1.8s"><mpath href="#inf-caminho"/></animateMotion>
+          </circle>
+          <circle class="ponto" r="4.6">
+            <animateMotion dur="4.4s" repeatCount="indefinite" begin="-0.4s"><mpath href="#inf-caminho"/></animateMotion>
+          </circle>
+        </svg>
+      </div>
+
+      <h1 class="marca">Conexões</h1>
+      <p class="lema">Duas pessoas, uma meta: <strong>zerar as dívidas</strong> e manter a casa em ordem.</p>
+
+      <ul class="destaques">
+        <li><span class="d-ico">📉</span><b>Dívidas</b><small>Cada parcela marcada até o fim</small></li>
+        <li><span class="d-ico">🧾</span><b>Contas do mês</b><small>Total e valor por dia útil</small></li>
+        <li><span class="d-ico">🎯</span><b>Teto de gastos</b><small>Imprevistos sob controle</small></li>
+        <li><span class="d-ico">🔗</span><b>Em sincronia</b><small>Vocês dois veem os mesmos números</small></li>
+      </ul>
+
+      <button id="btn-login" class="btn google grande">
+        <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        <span>Entrar com Google</span>
+      </button>
       <p id="erro-login" class="erro" role="alert" hidden></p>
+      <p class="rodape-hero">Os dados ficam só entre vocês dois.</p>
     </div>
   </section>
 
   <!-- Criar ou entrar numa casa -->
-  <section id="tela-casa" class="tela centro" hidden>
-    <div class="cartao-central">
-      <h2>Vamos configurar a casa</h2>
-      <p class="sub">Olá, <strong id="nome-usuario"></strong>. Uma pessoa cria a casa e a outra entra com o código de convite.</p>
+  <section id="tela-casa" class="tela hero centro" hidden>
+    <div class="hero-bg" aria-hidden="true"><span class="orb o1"></span><span class="orb o2"></span><span class="orb o3"></span></div>
 
-      <div class="bloco">
-        <h3>Criar uma casa nova</h3>
-        <label for="nome-casa">Nome da casa</label>
-        <input id="nome-casa" type="text" maxlength="40" placeholder="Ex.: Nossa casa" autocomplete="off">
-        <button id="btn-criar" class="btn primario">Criar casa</button>
+    <div class="hero-conteudo">
+      <div class="cartao-central">
+        <h2>Vamos configurar a casa</h2>
+        <p class="sub">Olá, <strong id="nome-usuario"></strong>. Uma pessoa cria a casa e a outra entra com o código de convite.</p>
+
+        <div class="bloco">
+          <h3>Criar uma casa nova</h3>
+          <label for="nome-casa">Nome da casa</label>
+          <input id="nome-casa" type="text" maxlength="40" placeholder="Ex.: Nossa casa" autocomplete="off">
+          <button id="btn-criar" class="btn primario">Criar casa</button>
+        </div>
+
+        <div class="divisor"><span>ou</span></div>
+
+        <div class="bloco">
+          <h3>Entrar com um código</h3>
+          <label for="codigo-casa">Código de convite</label>
+          <input id="codigo-casa" type="text" maxlength="12" placeholder="Ex.: K7M2QX9P" autocapitalize="characters" autocomplete="off" spellcheck="false">
+          <button id="btn-entrar-casa" class="btn">Entrar na casa</button>
+        </div>
+
+        <p id="erro-casa" class="erro" role="alert" hidden></p>
+        <button id="btn-sair-casa" class="btn link">Sair da conta</button>
       </div>
-
-      <div class="divisor"><span>ou</span></div>
-
-      <div class="bloco">
-        <h3>Entrar com um código</h3>
-        <label for="codigo-casa">Código de convite</label>
-        <input id="codigo-casa" type="text" maxlength="12" placeholder="Ex.: K7M2QX9P" autocapitalize="characters" autocomplete="off" spellcheck="false">
-        <button id="btn-entrar-casa" class="btn">Entrar na casa</button>
-      </div>
-
-      <p id="erro-casa" class="erro" role="alert" hidden></p>
-      <button id="btn-sair-casa" class="btn link">Sair da conta</button>
     </div>
   </section>
 
@@ -69,10 +105,19 @@
 
     <main id="conteudo">
       <section id="pagina-inicio" class="pagina">
-        <div class="cartao">
-          <h2>Início</h2>
-          <p class="sub">Aqui vai ficar o resumo: total que ainda falta pagar, gasto do mês, valor por dia útil e saldo do teto.</p>
+        <div class="cartao saudacao">
+          <h2 id="saudacao-texto">Olá</h2>
+          <p class="data" id="saudacao-data"></p>
+          <p class="resumo">Aqui ficam os números da casa de vocês, sempre atualizados para os dois.</p>
         </div>
+
+        <div class="grade-stats">
+          <div class="stat"><span class="ic">📉</span><div class="leg">Falta pagar</div><div class="num">R$ —</div><div class="leg">com as Dívidas (Fase 2)</div></div>
+          <div class="stat"><span class="ic">🧾</span><div class="leg">Contas do mês</div><div class="num">R$ —</div><div class="leg">em Contas (Fase 3)</div></div>
+          <div class="stat"><span class="ic">📅</span><div class="leg">Por dia útil</div><div class="num">R$ —</div><div class="leg">segunda a sábado (Fase 4)</div></div>
+          <div class="stat"><span class="ic">🎯</span><div class="leg">Saldo do teto</div><div class="num">R$ —</div><div class="leg">de imprevistos (Fase 5)</div></div>
+        </div>
+
         <div class="cartao">
           <h3>Andamento do projeto</h3>
           <ul class="checklist">
