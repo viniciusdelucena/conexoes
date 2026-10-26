@@ -1,116 +1,21 @@
-// Conexões
-// O app fala com um "backend" (Firebase de verdade, ou uma demonstração em memória
-// usada só para pré-visualizar as telas). Para abrir a demonstração: adicione ?demo=1 ao endereço.
+// Conexões: ponto de entrada.
+// O app conversa com um "backend": o Firebase de verdade, ou uma demonstração em memória
+// usada só para pré-visualizar as telas (abra o endereço com ?demo=1).
+
+import { $, reais, mesCurto } from "./js/util.js";
+import { aplicarIcones } from "./js/icones.js";
+import * as dividasUI from "./js/dividas.js";
+
+
+
 
 const DEMO =
   window.__CONEXOES_DEMO__ === true ||
   new URLSearchParams(location.search).get("demo") === "1";
 
 const MAX_MEMBROS = 2;
-const CDN = "https://www.gstatic.com/firebasejs/10.14.1";
-
-// ---------- Backend: Firebase ----------
-async function criarBackendFirebase() {
-  const [{ initializeApp }, A, F, { firebaseConfig }] = await Promise.all([
-    import(`${CDN}/firebase-app.js`),
-    import(`${CDN}/firebase-auth.js`),
-    import(`${CDN}/firebase-firestore.js`),
-    import("./firebase-config.js")
-  ]);
-
-  const app = initializeApp(firebaseConfig);
-  const auth = A.getAuth(app);
-  const db = F.initializeFirestore(app, {
-    // Guarda os dados no aparelho: o app abre offline e sincroniza quando a internet volta.
-    localCache: F.persistentLocalCache({ tabManager: F.persistentMultipleTabManager() })
-  });
-
-  const paraUsuario = (u) =>
-    u ? { uid: u.uid, nome: u.displayName || "", email: u.email || "" } : null;
-
-  const gravarPerfil = (user, casaId) =>
-    F.setDoc(F.doc(db, "users", user.uid), { casaId, nome: user.nome, email: user.email });
-
-  return {
-    aoMudarLogin: (cb) => A.onAuthStateChanged(auth, (u) => cb(paraUsuario(u))),
-    login: () => A.signInWithPopup(auth, new A.GoogleAuthProvider()),
-    sair: () => A.signOut(auth),
-
-    async casaDoUsuario(uid) {
-      const snap = await F.getDoc(F.doc(db, "users", uid));
-      return snap.exists() ? snap.data().casaId || null : null;
-    },
-
-    async criarCasa(user, nome, id) {
-      await F.setDoc(F.doc(db, "households", id), {
-        nome,
-        members: [user.uid],
-        criadoEm: F.serverTimestamp()
-      });
-      await gravarPerfil(user, id);
-    },
-
-    async entrarNaCasa(user, codigo) {
-      const ref = F.doc(db, "households", codigo);
-      const snap = await F.getDoc(ref);
-      if (!snap.exists()) return { erro: "nao-existe" };
-      const membros = snap.data().members || [];
-      if (!membros.includes(user.uid)) {
-        if (membros.length >= MAX_MEMBROS) return { erro: "cheia" };
-        await F.updateDoc(ref, { members: F.arrayUnion(user.uid) });
-      }
-      await gravarPerfil(user, codigo);
-      return { ok: true };
-    },
-
-    observarCasa(id, aoReceber, aoFalhar) {
-      return F.onSnapshot(
-        F.doc(db, "households", id),
-        (snap) => {
-          if (!snap.exists()) return;
-          const d = snap.data();
-          aoReceber({ nome: d.nome || "", membros: (d.members || []).length });
-        },
-        aoFalhar
-      );
-    }
-  };
-}
-
-// ---------- Backend: demonstração (sem internet, sem Firebase) ----------
-function criarBackendDemo() {
-  let ouvinte = null;
-  let casaId = null;
-  let casa = { nome: "", membros: 0 };
-  const espera = (ms = 450) => new Promise((r) => setTimeout(r, ms));
-  const USUARIO = { uid: "demo", nome: "Vinicius Demo", email: "demo@exemplo.com" };
-
-  return {
-    aoMudarLogin(cb) {
-      ouvinte = cb;
-      setTimeout(() => cb(null), 700);
-      return () => {};
-    },
-    async login() { await espera(); ouvinte(USUARIO); },
-    async sair() { casaId = null; ouvinte(null); },
-    async casaDoUsuario() { await espera(250); return casaId; },
-    async criarCasa(user, nome, id) { await espera(); casaId = id; casa = { nome, membros: 1 }; },
-    async entrarNaCasa(user, codigo) {
-      await espera();
-      if (codigo !== "DEMO2026") return { erro: "nao-existe" };
-      casaId = codigo;
-      casa = { nome: "Nossa casa", membros: 2 };
-      return { ok: true };
-    },
-    observarCasa(id, aoReceber) {
-      setTimeout(() => aoReceber({ ...casa }), 120);
-      return () => {};
-    }
-  };
-}
 
 // ---------- Utilidades de tela ----------
-const $ = (id) => document.getElementById(id);
 const TELAS = ["tela-carregando", "tela-login", "tela-casa"];
 
 function mostrarTela(nome) {
@@ -130,7 +35,7 @@ function aviso(msg) {
   el.textContent = msg;
   el.hidden = false;
   clearTimeout(avisoTimer);
-  avisoTimer = setTimeout(() => (el.hidden = true), 2500);
+  avisoTimer = setTimeout(() => (el.hidden = true), 2600);
 }
 
 function gerarCodigo(tamanho = 8) {
@@ -156,6 +61,12 @@ let backend = null;
 let usuario = null;
 let casaId = null;
 let cancelarCasa = null;
+let cancelarDividas = null;
+
+function pararObservadores() {
+  if (cancelarCasa) { cancelarCasa(); cancelarCasa = null; }
+  if (cancelarDividas) { cancelarDividas(); cancelarDividas = null; }
+}
 
 // ---------- Login e sessão ----------
 $("btn-login").addEventListener("click", async () => {
@@ -174,7 +85,8 @@ $("btn-login").addEventListener("click", async () => {
 });
 
 async function sair() {
-  if (cancelarCasa) { cancelarCasa(); cancelarCasa = null; }
+  pararObservadores();
+  dividasUI.limpar();
   casaId = null;
   if (backend) await backend.sair();
 }
@@ -269,7 +181,7 @@ function entrarNoApp(id) {
   $("cfg-usuario").textContent = usuario.nome ? `${usuario.nome} (${usuario.email})` : usuario.email;
   $("cfg-codigo").textContent = id;
 
-  if (cancelarCasa) cancelarCasa();
+  pararObservadores();
   cancelarCasa = backend.observarCasa(
     id,
     ({ nome, membros }) => {
@@ -283,9 +195,39 @@ function entrarNoApp(id) {
       aviso(traduzirErro(e));
     }
   );
+  cancelarDividas = backend.observarDividas(
+    id,
+    (lista) => dividasUI.receber(lista),
+    (e) => {
+      console.error(e);
+      aviso(traduzirErro(e));
+    }
+  );
   abrirPagina(paginaAtual);
 }
 
+// Resumo das dívidas no cartão da tela Início.
+function mostrarResumoDividas(r) {
+  if (!r.quantidade) {
+    $("stat-divida-num").textContent = "R$ —";
+    $("stat-divida-leg").textContent = "cadastre em Dívidas";
+  } else if (r.parcelasRestantes === 0) {
+    $("stat-divida-num").textContent = reais(0);
+    $("stat-divida-leg").textContent = "tudo quitado";
+  } else {
+    $("stat-divida-num").textContent = reais(r.restanteCentavos);
+    $("stat-divida-leg").textContent = `${r.parcelasRestantes} parcelas · até ${mesCurto(r.fim)}`;
+  }
+}
+dividasUI.configurar({
+  obterBackend: () => backend,
+  obterCasaId: () => casaId,
+  aviso,
+  aoResumo: mostrarResumoDividas
+});
+
+// ---------- Navegação ----------
+const ORDEM = ["inicio", "dividas", "contas", "teto", "config"];
 const TITULOS = {
   inicio: "Início",
   dividas: "Dívidas",
@@ -298,7 +240,12 @@ let paginaAtual = "inicio";
 function abrirPagina(nome) {
   paginaAtual = nome;
   document.querySelectorAll(".pagina").forEach((p) => (p.hidden = p.id !== `pagina-${nome}`));
-  document.querySelectorAll(".aba").forEach((a) => a.classList.toggle("ativa", a.dataset.pagina === nome));
+  document.querySelectorAll(".aba").forEach((a) => {
+    const ativa = a.dataset.pagina === nome;
+    a.classList.toggle("ativa", ativa);
+    a.setAttribute("aria-current", ativa ? "page" : "false");
+  });
+  $("dock").style.setProperty("--idx", String(ORDEM.indexOf(nome)));
   $("subtitulo-pagina").textContent = TITULOS[nome] || "";
   window.scrollTo(0, 0);
 }
@@ -328,15 +275,20 @@ window.addEventListener("offline", atualizarRede);
 atualizarRede();
 
 // ---------- Início ----------
+aplicarIcones();
+
 (async function iniciar() {
   try {
-    backend = DEMO ? criarBackendDemo() : await criarBackendFirebase();
+    backend = DEMO
+      ? (await import("./js/backend-demo.js")).criarBackendDemo()
+      : await (await import("./js/backend-firebase.js")).criarBackendFirebase();
   } catch (e) {
     console.error(e);
     mostrarTela("tela-login");
     mostrarErro("erro-login", "Não foi possível carregar o Firebase. Verifique a conexão e recarregue a página.");
     return;
   }
+  abrirPagina("inicio");
   backend.aoMudarLogin(aoMudarLogin);
 })();
 

@@ -12,8 +12,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Conexões">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="dividas.css">
 </head>
 <body>
+
 
   <!-- Carregando -->
   <section id="tela-carregando" class="tela centro">
@@ -42,10 +44,10 @@
       <p class="lema">Duas pessoas, uma meta: <strong>zerar as dívidas</strong> e manter a casa em ordem.</p>
 
       <ul class="destaques">
-        <li><span class="d-ico">📉</span><b>Dívidas</b><small>Cada parcela marcada até o fim</small></li>
-        <li><span class="d-ico">🧾</span><b>Contas do mês</b><small>Total e valor por dia útil</small></li>
-        <li><span class="d-ico">🎯</span><b>Teto de gastos</b><small>Imprevistos sob controle</small></li>
-        <li><span class="d-ico">🔗</span><b>Em sincronia</b><small>Vocês dois veem os mesmos números</small></li>
+        <li><span class="d-ico" data-ico="dividas" data-tam="22"></span><b>Dívidas</b><small>Cada parcela marcada até o fim</small></li>
+        <li><span class="d-ico" data-ico="contas" data-tam="22"></span><b>Contas do mês</b><small>Total e valor por dia útil</small></li>
+        <li><span class="d-ico" data-ico="teto" data-tam="22"></span><b>Teto de gastos</b><small>Imprevistos sob controle</small></li>
+        <li><span class="d-ico" data-ico="link" data-tam="22"></span><b>Em sincronia</b><small>Vocês dois veem os mesmos números</small></li>
       </ul>
 
       <button id="btn-login" class="btn google grande">
@@ -112,17 +114,17 @@
         </div>
 
         <div class="grade-stats">
-          <div class="stat"><span class="ic">📉</span><div class="leg">Falta pagar</div><div class="num">R$ —</div><div class="leg">com as Dívidas (Fase 2)</div></div>
-          <div class="stat"><span class="ic">🧾</span><div class="leg">Contas do mês</div><div class="num">R$ —</div><div class="leg">em Contas (Fase 3)</div></div>
-          <div class="stat"><span class="ic">📅</span><div class="leg">Por dia útil</div><div class="num">R$ —</div><div class="leg">segunda a sábado (Fase 4)</div></div>
-          <div class="stat"><span class="ic">🎯</span><div class="leg">Saldo do teto</div><div class="num">R$ —</div><div class="leg">de imprevistos (Fase 5)</div></div>
+          <div class="stat"><span class="ic" data-ico="dividas" data-tam="22"></span><div class="leg">Falta pagar</div><div class="num" id="stat-divida-num">R$ —</div><div class="leg" id="stat-divida-leg">cadastre em Dívidas</div></div>
+          <div class="stat"><span class="ic" data-ico="contas" data-tam="22"></span><div class="leg">Contas do mês</div><div class="num">R$ —</div><div class="leg">em Contas (Fase 3)</div></div>
+          <div class="stat"><span class="ic" data-ico="calendario" data-tam="22"></span><div class="leg">Por dia útil</div><div class="num">R$ —</div><div class="leg">segunda a sábado (Fase 4)</div></div>
+          <div class="stat"><span class="ic" data-ico="teto" data-tam="22"></span><div class="leg">Saldo do teto</div><div class="num">R$ —</div><div class="leg">de imprevistos (Fase 5)</div></div>
         </div>
 
         <div class="cartao">
           <h3>Andamento do projeto</h3>
           <ul class="checklist">
             <li class="feito">Fase 1: login, casa compartilhada e instalação no celular</li>
-            <li>Fase 2: Dívidas</li>
+            <li class="feito">Fase 2: Dívidas</li>
             <li>Fase 3: Contas do mês</li>
             <li>Fase 4: Calendário de dias úteis e feriados</li>
             <li>Fase 5: Teto de gastos</li>
@@ -132,7 +134,15 @@
       </section>
 
       <section id="pagina-dividas" class="pagina" hidden>
-        <div class="cartao"><h2>Dívidas</h2><p class="sub">Em breve (Fase 2): cadastro das dívidas, cronograma de parcelas, checks de pago e total restante.</p></div>
+        <div id="div-resumo"></div>
+        <div class="barra-ferramentas">
+          <div class="segmentado" role="tablist" aria-label="Forma de ver as dívidas">
+            <button type="button" role="tab" data-visao="mes" class="ativo">Por mês</button>
+            <button type="button" role="tab" data-visao="divida">Por dívida</button>
+          </div>
+          <button type="button" id="btn-nova-divida" class="btn-add" aria-label="Nova dívida"><span data-ico="plus" data-tam="22"></span></button>
+        </div>
+        <div id="div-lista"></div>
       </section>
 
       <section id="pagina-contas" class="pagina" hidden>
@@ -166,13 +176,57 @@
       </section>
     </main>
 
-    <nav class="abas" aria-label="Navegação principal">
-      <button class="aba ativa" data-pagina="inicio"><span class="ico">🏠</span><span>Início</span></button>
-      <button class="aba" data-pagina="dividas"><span class="ico">📉</span><span>Dívidas</span></button>
-      <button class="aba" data-pagina="contas"><span class="ico">🧾</span><span>Contas</span></button>
-      <button class="aba" data-pagina="teto"><span class="ico">🎯</span><span>Teto</span></button>
-      <button class="aba" data-pagina="config"><span class="ico">⚙️</span><span>Casa</span></button>
+    <nav id="dock" class="dock" aria-label="Navegação principal">
+      <span class="dock-ind" aria-hidden="true"></span>
+      <button class="aba ativa" data-pagina="inicio"><span class="ico" data-ico="home" data-tam="22"></span><span class="rot">Início</span></button>
+      <button class="aba" data-pagina="dividas"><span class="ico" data-ico="dividas" data-tam="22"></span><span class="rot">Dívidas</span></button>
+      <button class="aba" data-pagina="contas"><span class="ico" data-ico="contas" data-tam="22"></span><span class="rot">Contas</span></button>
+      <button class="aba" data-pagina="teto"><span class="ico" data-ico="teto" data-tam="22"></span><span class="rot">Teto</span></button>
+      <button class="aba" data-pagina="config"><span class="ico" data-ico="casa" data-tam="22"></span><span class="rot">Casa</span></button>
     </nav>
+  </div>
+
+  <!-- Formulário de dívida (folha que sobe de baixo) -->
+  <div id="folha" class="folha" hidden>
+    <div class="folha-fundo" data-fechar></div>
+    <form id="form-divida" class="folha-painel" novalidate aria-labelledby="folha-titulo">
+      <div class="folha-alca" aria-hidden="true"></div>
+      <h2 id="folha-titulo">Nova dívida</h2>
+
+      <label for="div-nome">Nome</label>
+      <input id="div-nome" type="text" maxlength="40" placeholder="Ex.: Cartão, financiamento do carro" autocomplete="off">
+
+      <div class="duas-colunas">
+        <div>
+          <label for="div-valor">Valor da parcela (R$)</label>
+          <input id="div-valor" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off">
+        </div>
+        <div>
+          <label for="div-total">Nº de parcelas</label>
+          <input id="div-total" type="text" inputmode="numeric" maxlength="3" placeholder="24" autocomplete="off">
+        </div>
+      </div>
+
+      <label for="div-mes">Mês da primeira parcela</label>
+      <div class="duas-colunas">
+        <select id="div-mes"></select>
+        <select id="div-ano" aria-label="Ano da primeira parcela"></select>
+      </div>
+
+      <div id="bloco-ja-pagas">
+        <label for="div-pagas">Parcelas já pagas</label>
+        <input id="div-pagas" type="text" inputmode="numeric" maxlength="3" placeholder="0" autocomplete="off">
+        <p class="sub pequeno dica">Se algumas já foram pagas, informe aqui. As demais você marca no cronograma conforme for pagando.</p>
+      </div>
+
+      <p id="erro-divida" class="erro" role="alert" hidden></p>
+
+      <div class="folha-acoes">
+        <button type="button" id="btn-excluir-divida" class="btn perigo" hidden>Excluir</button>
+        <button type="button" class="btn" data-fechar>Cancelar</button>
+        <button type="submit" class="btn primario">Salvar</button>
+      </div>
+    </form>
   </div>
 
   <div id="aviso" class="aviso" hidden role="status"></div>

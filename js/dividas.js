@@ -1,0 +1,317 @@
+// Módulo de Dívidas: cadastro, cronograma por mês, visão por dívida e checks de parcela paga.
+//
+// Cada dívida: { id, nome, valorCentavos, totalParcelas, mesInicio: "AAAA-MM", pagas: [1, 2, ...] }
+// A parcela k cai no mês (mesInicio + k - 1).
+
+import {
+  $, h, reais, paraCampo, parseReais,
+  mesAtual, somarMeses, diffMeses, nomeMes, mesCurto, NOMES_MESES
+} from "./util.js";
+import { icone } from "./icones.js";
+
+let ctx = null;          // { obterBackend, obterCasaId, aviso, aoResumo }
+let dividas = [];
+let visao = "mes";       // "mes" | "divida"
+let mostrarQuitados = false;
+let editando = null;     // dívida aberta no formulário (null = nova)
+let confirmandoExclusao = false;
+
+// ---------- Cálculos (funções puras, fáceis de testar) ----------
+export function calcularDivida(d) {
+  const pagas = new Set((d.pagas || []).filter((n) => n >= 1 && n <= d.totalParcelas));
+  const restantes = d.totalParcelas - pagas.size;
+  return {
+    pagas,
+    pagasN: pagas.size,
+    restantes,
+    restanteCentavos: restantes * d.valorCentavos,
+    fim: somarMeses(d.mesInicio, d.totalParcelas - 1)
+  };
+}
+
+export function calcularResumo(lista) {
+  let restanteCentavos = 0, totalCentavos = 0, parcelasRestantes = 0, fim = null;
+  for (const d of lista) {
+    const c = calcularDivida(d);
+    restanteCentavos += c.restanteCentavos;
+    totalCentavos += d.totalParcelas * d.valorCentavos;
+    parcelasRestantes += c.restantes;
+    if (c.restantes > 0 && (fim === null || diffMeses(fim, c.fim) > 0)) fim = c.fim;
+  }
+  const quitadoPct = totalCentavos ? Math.round((1 - restanteCentavos / totalCentavos) * 100) : 0;
+  return { quantidade: lista.length, restanteCentavos, totalCentavos, parcelasRestantes, fim, quitadoPct };
+}
+
+// Um item por mês, do primeiro ao último mês com parcela, já com o que foi pago.
+export function montarMeses(lista) {
+  if (!lista.length) return [];
+  let min = lista[0].mesInicio;
+  let max = somarMeses(lista[0].mesInicio, lista[0].totalParcelas - 1);
+  for (const d of lista) {
+    const fim = somarMeses(d.mesInicio, d.totalParcelas - 1);
+    if (diffMeses(d.mesInicio, min) > 0) min = d.mesInicio;
+    if (diffMeses(max, fim) > 0) max = fim;
+  }
+  const calculos = new Map(lista.map((d) => [d.id, calcularDivida(d)]));
+  const meses = [];
+  for (let m = min; diffMeses(m, max) >= 0; m = somarMeses(m, 1)) {
+    const itens = [];
+    for (const d of [...lista].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))) {
+      const k = diffMeses(d.mesInicio, m) + 1;
+      if (k >= 1 && k <= d.totalParcelas) itens.push({ d, k, paga: calculos.get(d.id).pagas.has(k) });
+    }
+    const total = itens.reduce((s, i) => s + i.d.valorCentavos, 0);
+    const abertos = itens.filter((i) => !i.paga).length;
+    meses.push({ m, itens, total, abertos });
+  }
+  return meses;
+}
+
+// ---------- Interface ----------
+export function configurar(contexto) {
+  ctx = contexto;
+
+  // Anos do formulário: 3 para trás, 12 para frente.
+  const ano = new Date().getFullYear();
+  $("div-ano").replaceChildren(
+    ...Array.from({ length: 16 }, (_, i) => h("option", { value: ano - 3 + i }, ano - 3 + i))
+  );
+  $("div-mes").replaceChildren(...NOMES_MESES.map((n, i) => h("option", { value: i + 1 }, n)));
+
+  document.querySelectorAll("[data-visao]").forEach((b) =>
+    b.addEventListener("click", () => {
+      visao = b.dataset.visao;
+      renderizar();
+    })
+  );
+  $("btn-nova-divida").addEventListener("click", () => abrirFolha(null));
+
+  $("form-divida").addEventListener("submit", (e) => {
+    e.preventDefault();
+    salvar();
+  });
+  document.querySelectorAll("#folha [data-fechar]").forEach((b) => b.addEventListener("click", fecharFolha));
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !$("folha").hidden) fecharFolha();
+  });
+  $("btn-excluir-divida").addEventListener("click", excluir);
+}
+
+export function receber(lista) {
+  dividas = lista;
+  renderizar();
+  ctx.aoResumo(calcularResumo(dividas));
+}
+
+export function limpar() {
+  receber([]);
+}
+
+function falha(e) {
+  console.error(e);
+  ctx.aviso("Não foi possível salvar. Confira a conexão e as regras do Firestore.");
+}
+
+function alternar(d, k, pago) {
+  Promise.resolve(ctx.obterBackend().marcarParcela(ctx.obterCasaId(), d.id, k, pago)).catch(falha);
+}
+
+function renderizar() {
+  document.querySelectorAll("[data-visao]").forEach((b) => {
+    const ativo = b.dataset.visao === visao;
+    b.classList.toggle("ativo", ativo);
+    b.setAttribute("aria-selected", String(ativo));
+  });
+  renderizarResumo();
+  const lista = $("div-lista");
+  if (!dividas.length) {
+    lista.replaceChildren(estadoVazio());
+  } else if (visao === "mes") {
+    lista.replaceChildren(...listaMeses());
+  } else {
+    lista.replaceChildren(...[...dividas]
+      .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))
+      .map(cartaoDivida));
+  }
+}
+
+function renderizarResumo() {
+  const caixa = $("div-resumo");
+  if (!dividas.length) {
+    caixa.replaceChildren();
+    return;
+  }
+  const r = calcularResumo(dividas);
+  const quitado = r.parcelasRestantes === 0;
+  const meta = (rotulo, valor) =>
+    h("div", { class: "rd-item" }, h("small", {}, rotulo), h("strong", {}, valor));
+  caixa.replaceChildren(
+    h("div", { class: "cartao resumo-div" },
+      h("div", { class: "rd-rotulo" }, quitado ? "Tudo quitado" : "Falta pagar"),
+      h("div", { class: "rd-valor" }, reais(r.restanteCentavos)),
+      h("div", { class: "barra", role: "progressbar", "aria-valuemin": "0", "aria-valuemax": "100", "aria-valuenow": String(r.quitadoPct), "aria-label": "Quanto já foi quitado" },
+        h("span", { style: `width:${r.quitadoPct}%` })),
+      h("div", { class: "rd-meta" },
+        meta("Quitado", `${r.quitadoPct}%`),
+        meta("Parcelas", quitado ? "nenhuma" : `${r.parcelasRestantes} restantes`),
+        meta("Termina em", r.fim ? mesCurto(r.fim) : "—"))
+    )
+  );
+}
+
+function estadoVazio() {
+  return h("div", { class: "cartao vazio" },
+    h("div", { class: "vazio-ico", html: icone("dividas", 30) }),
+    h("h3", {}, "Nenhuma dívida cadastrada"),
+    h("p", { class: "sub" }, "Cadastre a primeira para ver o total que falta pagar e o mês em que tudo termina."),
+    h("button", { class: "btn primario", type: "button", onclick: () => abrirFolha(null) }, "Cadastrar dívida")
+  );
+}
+
+function listaMeses() {
+  const hoje = mesAtual();
+  const todos = montarMeses(dividas);
+  const quitados = todos.filter((m) => m.abertos === 0).length;
+  const visiveis = todos.filter((m) => mostrarQuitados || m.abertos > 0);
+  const nos = [];
+
+  if (quitados > 0) {
+    nos.push(h("button", {
+      class: "btn-sutil", type: "button",
+      onclick: () => { mostrarQuitados = !mostrarQuitados; renderizar(); }
+    }, mostrarQuitados
+      ? "Ocultar meses quitados"
+      : `Mostrar ${quitados} ${quitados === 1 ? "mês quitado" : "meses quitados"}`));
+  }
+
+  for (const m of visiveis) {
+    let chip = null;
+    if (m.abertos === 0) chip = h("span", { class: "chip ok" }, "Quitado");
+    else if (m.m === hoje) chip = h("span", { class: "chip atual" }, "Este mês");
+    else if (diffMeses(m.m, hoje) > 0) chip = h("span", { class: "chip atraso" }, "Em aberto");
+
+    nos.push(
+      h("article", { class: "mes" + (m.m === hoje ? " atual" : "") + (m.abertos === 0 ? " quitado" : "") },
+        h("header", { class: "mes-topo" },
+          h("div", {}, h("h3", {}, nomeMes(m.m)), chip),
+          h("div", { class: "mes-total" }, reais(m.total),
+            h("small", {}, `${m.itens.length - m.abertos} de ${m.itens.length} ${m.itens.length === 1 ? "paga" : "pagas"}`))),
+        h("ul", { class: "parcelas" }, m.itens.map((it) => linhaParcela(it)))
+      )
+    );
+  }
+  return nos;
+}
+
+function linhaParcela({ d, k, paga }) {
+  return h("li", { class: "parcela" + (paga ? " paga" : "") },
+    h("button", {
+      type: "button",
+      class: "chk" + (paga ? " on" : ""),
+      role: "checkbox",
+      "aria-checked": String(paga),
+      "aria-label": `${d.nome}, parcela ${k} de ${d.totalParcelas}`,
+      html: icone("check", 16),
+      onclick: () => alternar(d, k, !paga)
+    }),
+    h("div", { class: "p-info" },
+      h("span", { class: "p-nome" }, d.nome),
+      h("span", { class: "p-sub" }, `Parcela ${k} de ${d.totalParcelas}`)),
+    h("span", { class: "p-valor" }, reais(d.valorCentavos))
+  );
+}
+
+function cartaoDivida(d) {
+  const c = calcularDivida(d);
+  const pct = Math.round((c.pagasN / d.totalParcelas) * 100);
+  return h("article", {
+    class: "divida", tabindex: "0", role: "button",
+    "aria-label": `Editar ${d.nome}`,
+    onclick: () => abrirFolha(d),
+    onkeydown: (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); abrirFolha(d); } }
+  },
+    h("div", { class: "dv-topo" },
+      h("h3", {}, d.nome),
+      h("span", { class: "dv-editar", html: icone("editar", 16) })),
+    h("div", { class: "dv-valor" }, reais(d.valorCentavos), h("small", {}, ` × ${d.totalParcelas}`)),
+    h("div", { class: "barra" }, h("span", { style: `width:${pct}%` })),
+    h("div", { class: "dv-meta" },
+      h("span", {}, `${c.pagasN} de ${d.totalParcelas} pagas`),
+      h("span", {}, c.restantes > 0 ? `Falta ${reais(c.restanteCentavos)} · até ${mesCurto(c.fim)}` : "Quitada"))
+  );
+}
+
+// ---------- Formulário (folha que sobe de baixo) ----------
+function mostrarErroForm(msg) {
+  const el = $("erro-divida");
+  el.textContent = msg || "";
+  el.hidden = !msg;
+}
+
+function abrirFolha(d) {
+  editando = d;
+  confirmandoExclusao = false;
+  mostrarErroForm("");
+  $("folha-titulo").textContent = d ? "Editar dívida" : "Nova dívida";
+  $("div-nome").value = d ? d.nome : "";
+  $("div-valor").value = d ? paraCampo(d.valorCentavos) : "";
+  $("div-total").value = d ? String(d.totalParcelas) : "";
+  const [a, m] = (d ? d.mesInicio : mesAtual()).split("-").map(Number);
+  $("div-mes").value = String(m);
+  $("div-ano").value = String(a);
+  $("div-pagas").value = "";
+  $("bloco-ja-pagas").hidden = !!d;
+  const botao = $("btn-excluir-divida");
+  botao.hidden = !d;
+  botao.textContent = "Excluir";
+  botao.classList.remove("confirmar");
+  $("folha").hidden = false;
+  requestAnimationFrame(() => $("div-nome").focus());
+}
+
+function fecharFolha() {
+  $("folha").hidden = true;
+  editando = null;
+}
+
+function salvar() {
+  const nome = $("div-nome").value.trim();
+  const valorCentavos = parseReais($("div-valor").value);
+  const totalParcelas = parseInt($("div-total").value, 10);
+  const mesInicio = `${$("div-ano").value}-${String($("div-mes").value).padStart(2, "0")}`;
+  const jaPagas = editando ? 0 : parseInt($("div-pagas").value || "0", 10);
+
+  if (!nome) return mostrarErroForm("Dê um nome para a dívida.");
+  if (!(valorCentavos > 0)) return mostrarErroForm("Informe o valor da parcela, por exemplo 289,90.");
+  if (!(totalParcelas >= 1 && totalParcelas <= 600)) return mostrarErroForm("Informe o número de parcelas (de 1 a 600).");
+  if (!(jaPagas >= 0 && jaPagas <= totalParcelas)) return mostrarErroForm("As parcelas já pagas não podem passar do total.");
+
+  const dados = { nome, valorCentavos, totalParcelas, mesInicio };
+  if (editando) {
+    // Só mexe nas parcelas pagas se o novo total as deixar de fora.
+    const pagas = (editando.pagas || []).filter((n) => n <= totalParcelas);
+    if (pagas.length !== (editando.pagas || []).length) dados.pagas = pagas;
+  } else {
+    dados.pagas = Array.from({ length: jaPagas }, (_, i) => i + 1);
+  }
+
+  const id = editando ? editando.id : null;
+  Promise.resolve(ctx.obterBackend().salvarDivida(ctx.obterCasaId(), id, dados)).catch(falha);
+  fecharFolha();
+  ctx.aviso(id ? "Dívida atualizada" : "Dívida cadastrada");
+}
+
+function excluir() {
+  if (!editando) return;
+  const botao = $("btn-excluir-divida");
+  if (!confirmandoExclusao) {
+    confirmandoExclusao = true;
+    botao.textContent = "Confirmar exclusão";
+    botao.classList.add("confirmar");
+    return;
+  }
+  const id = editando.id;
+  Promise.resolve(ctx.obterBackend().excluirDivida(ctx.obterCasaId(), id)).catch(falha);
+  fecharFolha();
+  ctx.aviso("Dívida excluída");
+}
