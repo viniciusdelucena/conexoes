@@ -155,11 +155,11 @@ export function configurarContas(contexto) {
       h("div", { class: "rd-valor" }, reais(r.total)),
       h("div", { class: "rd-meta" },
         usarDias ? meta("Por dia útil", reais(r.porDia)) : null,
-        usarDias ? meta("Dias úteis", String(r.dias)) : null,
+        usarDias ? meta(`Dias úteis em ${NOMES_MESES[Number(mesSel.slice(5)) - 1].toLowerCase()}`, String(r.dias)) : null,
         meta("Com o gasto real", reais(r.totalReal))),
       h("div", { class: "rd-nota" },
         "O total usa o teto cheio. \"Com o gasto real\" troca o teto pelo que já foi gasto dele." +
-        (usarDias ? " Dias úteis contam de segunda a sábado, sem descontar feriados por enquanto." : ""))
+        (usarDias ? ` O valor por dia útil é o total de ${nomeMes(mesSel)} dividido pelos ${r.dias} dias úteis do mês (segunda a sábado, sem descontar feriados por enquanto).` : ""))
     );
   }
 

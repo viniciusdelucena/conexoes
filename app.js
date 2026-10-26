@@ -2,7 +2,7 @@
 // O app conversa com um "backend": o Firebase de verdade, ou uma demonstração em memória
 // usada só para pré-visualizar as telas (abra o endereço com ?demo=1).
 
-import { $, reais, mesCurto } from "./js/util.js";
+import { $, reais, mesCurto, nomeMes, mesAtual } from "./js/util.js";
 import { aplicarIcones } from "./js/icones.js";
 import * as dividasUI from "./js/dividas.js";
 import { configurarContas } from "./js/contas.js";
@@ -269,7 +269,7 @@ function mostrarResumoContas(r) {
   $("stat-contas-num").textContent = reais(r.total);
   $("stat-contas-leg").textContent = "total deste mês, com o teto";
   $("stat-dia-num").textContent = reais(r.porDia);
-  $("stat-dia-leg").textContent = `${r.dias} dias úteis (seg a sáb)`;
+  $("stat-dia-leg").textContent = `${nomeMes(mesAtual()).split(" ")[0].toLowerCase()}: ${r.dias} dias úteis (seg a sáb)`;
 }
 const contasUI = configurarContas({
   obterBackend: () => backend,
