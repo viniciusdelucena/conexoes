@@ -246,7 +246,7 @@ function abrirPagina(nome) {
     a.setAttribute("aria-current", ativa ? "page" : "false");
   });
   $("dock").style.setProperty("--idx", String(ORDEM.indexOf(nome)));
-  $("subtitulo-pagina").textContent = TITULOS[nome] || "";
+  $("titulo-pagina").textContent = TITULOS[nome] || "";
   window.scrollTo(0, 0);
 }
 
@@ -265,9 +265,12 @@ $("btn-copiar").addEventListener("click", async () => {
 
 // ---------- Estado da rede ----------
 function atualizarRede() {
+  // Só aparece quando importa: sem internet (os dados ficam salvos no aparelho) ou na demonstração.
   const el = $("estado-rede");
   const on = navigator.onLine;
-  el.textContent = DEMO ? "demonstração" : on ? "online" : "offline";
+  el.hidden = on && !DEMO;
+  el.textContent = DEMO ? "Demonstração" : "Sem internet";
+  el.title = DEMO ? "Dados de exemplo, nada é salvo" : "Suas alterações ficam salvas no aparelho e sincronizam quando a internet voltar";
   el.classList.toggle("offline", !DEMO && !on);
 }
 window.addEventListener("online", atualizarRede);

@@ -12,7 +12,7 @@ import { icone } from "./icones.js";
 let ctx = null;          // { obterBackend, obterCasaId, aviso, aoResumo }
 let dividas = [];
 let visao = "mes";       // "mes" | "divida"
-let mostrarQuitados = false;
+let mesSel = null;       // mês escolhido na visão "Por mês" ("AAAA-MM")
 let editando = null;     // dívida aberta no formulário (null = nova)
 let confirmandoExclusao = false;
 
@@ -171,36 +171,70 @@ function estadoVazio() {
 function listaMeses() {
   const hoje = mesAtual();
   const todos = montarMeses(dividas);
-  const quitados = todos.filter((m) => m.abertos === 0).length;
-  const visiveis = todos.filter((m) => mostrarQuitados || m.abertos > 0);
-  const nos = [];
+  if (!todos.length) return [];
+  const primeiro = todos[0].m;
+  const ultimo = todos[todos.length - 1].m;
 
-  if (quitados > 0) {
+  // O mês escolhido começa no atual e sempre fica dentro do período em que há parcelas.
+  if (!mesSel) mesSel = hoje;
+  if (diffMeses(primeiro, mesSel) < 0) mesSel = primeiro;
+  if (diffMeses(mesSel, ultimo) < 0) mesSel = ultimo;
+
+  const ir = (n) => () => { mesSel = somarMeses(mesSel, n); renderizar(); };
+  const opcoes = todos.map((x) => h("option", { value: x.m, selected: x.m === mesSel }, nomeMes(x.m)));
+
+  const nos = [
+    h("div", { class: "mes-nav" },
+      h("button", {
+        class: "mes-seta", type: "button", "aria-label": "Mês anterior",
+        disabled: mesSel === primeiro, onclick: ir(-1), html: icone("esq", 20)
+      }),
+      h("label", { class: "mes-escolha" },
+        h("span", { class: "mes-nome" }, nomeMes(mesSel)),
+        h("span", { class: "mes-dica" }, mesSel === hoje ? "Este mês" : "Toque para escolher o mês"),
+        h("select", {
+          class: "mes-select", "aria-label": "Escolher o mês",
+          onchange: (e) => { mesSel = e.target.value; renderizar(); }
+        }, opcoes)),
+      h("button", {
+        class: "mes-seta", type: "button", "aria-label": "Próximo mês",
+        disabled: mesSel === ultimo, onclick: ir(1), html: icone("dir", 20)
+      }))
+  ];
+
+  const hojeNoPeriodo = diffMeses(primeiro, hoje) >= 0 && diffMeses(hoje, ultimo) >= 0;
+  if (mesSel !== hoje && hojeNoPeriodo) {
     nos.push(h("button", {
       class: "btn-sutil", type: "button",
-      onclick: () => { mostrarQuitados = !mostrarQuitados; renderizar(); }
-    }, mostrarQuitados
-      ? "Ocultar meses quitados"
-      : `Mostrar ${quitados} ${quitados === 1 ? "mês quitado" : "meses quitados"}`));
+      onclick: () => { mesSel = hoje; renderizar(); }
+    }, "Voltar para este mês"));
   }
 
-  for (const m of visiveis) {
-    let chip = null;
-    if (m.abertos === 0) chip = h("span", { class: "chip ok" }, "Quitado");
-    else if (m.m === hoje) chip = h("span", { class: "chip atual" }, "Este mês");
-    else if (diffMeses(m.m, hoje) > 0) chip = h("span", { class: "chip atraso" }, "Em aberto");
-
-    nos.push(
-      h("article", { class: "mes" + (m.m === hoje ? " atual" : "") + (m.abertos === 0 ? " quitado" : "") },
-        h("header", { class: "mes-topo" },
-          h("div", {}, h("h3", {}, nomeMes(m.m)), chip),
-          h("div", { class: "mes-total" }, reais(m.total),
-            h("small", {}, `${m.itens.length - m.abertos} de ${m.itens.length} ${m.itens.length === 1 ? "paga" : "pagas"}`))),
-        h("ul", { class: "parcelas" }, m.itens.map((it) => linhaParcela(it)))
-      )
-    );
-  }
+  nos.push(cartaoMes(todos.find((x) => x.m === mesSel), hoje));
   return nos;
+}
+
+function cartaoMes(m, hoje) {
+  let chip = null;
+  if (m.itens.length && m.abertos === 0) chip = h("span", { class: "chip ok" }, "Quitado");
+  else if (m.itens.length && m.m === hoje) chip = h("span", { class: "chip atual" }, "Este mês");
+  else if (m.itens.length && diffMeses(m.m, hoje) > 0) chip = h("span", { class: "chip atraso" }, "Em aberto");
+
+  const faltam = m.itens.filter((i) => !i.paga).reduce((s, i) => s + i.d.valorCentavos, 0);
+  const quitado = m.itens.length > 0 && m.abertos === 0;
+
+  return h("article", { class: "mes" + (m.m === hoje ? " atual" : "") + (quitado ? " quitado" : "") },
+    h("header", { class: "mes-topo" },
+      h("div", {}, h("h3", {}, "Parcelas do mês"), chip),
+      h("div", { class: "mes-total" }, reais(m.total),
+        h("small", {}, `${m.itens.length - m.abertos} de ${m.itens.length} ${m.itens.length === 1 ? "paga" : "pagas"}`))),
+    m.itens.length
+      ? h("ul", { class: "parcelas" }, m.itens.map((it) => linhaParcela(it)))
+      : h("p", { class: "sub mes-vazio" }, "Nenhuma parcela neste mês."),
+    m.abertos > 0
+      ? h("p", { class: "mes-falta" }, "Falta pagar neste mês: ", h("strong", {}, reais(faltam)))
+      : null
+  );
 }
 
 function linhaParcela({ d, k, paga }) {

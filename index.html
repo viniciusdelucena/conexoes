@@ -98,11 +98,14 @@
   <!-- App principal -->
   <div id="app" hidden>
     <header class="topo">
-      <div>
-        <div class="topo-titulo" id="titulo-casa">Conexões</div>
-        <div class="topo-sub" id="subtitulo-pagina"></div>
+      <div class="topo-marca" aria-hidden="true">
+        <svg viewBox="0 0 160 100"><path d="M80 50 C95 22 142 22 142 50 C142 78 95 78 80 50 C65 22 18 22 18 50 C18 78 65 78 80 50 Z"/></svg>
       </div>
-      <div id="estado-rede" class="selo" title="Estado da conexão">online</div>
+      <div class="topo-textos">
+        <h1 class="topo-titulo" id="titulo-pagina">Início</h1>
+        <p class="topo-sub" id="titulo-casa">Conexões</p>
+      </div>
+      <div id="estado-rede" class="selo" role="status" hidden></div>
     </header>
 
     <main id="conteudo">

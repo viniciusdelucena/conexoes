@@ -178,3 +178,33 @@ select:focus { outline: 2px solid var(--primaria); outline-offset: 1px; }
     animation: none !important; transition: none !important;
   }
 }
+
+/* Seletor de mês (visão "Por mês") */
+.mes-nav { display: flex; align-items: stretch; gap: 8px; margin: 0 0 12px; }
+.mes-seta {
+  flex: none; width: 48px;
+  display: grid; place-items: center;
+  border: 1px solid var(--borda); border-radius: 16px;
+  background: var(--cartao); color: var(--texto); cursor: pointer;
+  transition: transform .15s, opacity .2s;
+}
+.mes-seta:active:not(:disabled) { transform: scale(.94); }
+.mes-seta:disabled { opacity: .35; cursor: default; }
+.mes-escolha {
+  position: relative; flex: 1; min-width: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  margin: 0; padding: 8px 12px;
+  font-size: inherit; color: var(--texto); text-align: center;
+  background: var(--cartao); border: 1px solid var(--borda); border-radius: 16px; cursor: pointer;
+}
+.mes-nome { font-size: 1.1rem; font-weight: 800; line-height: 1.2; }
+.mes-dica { font-size: .74rem; color: var(--suave); }
+.mes-select {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  padding: 0; border: 0; border-radius: 16px; background: transparent;
+  opacity: 0; cursor: pointer; font-size: 16px;
+}
+.mes-escolha:focus-within, .mes-seta:focus-visible { outline: 2px solid var(--primaria); outline-offset: 2px; }
+.mes-falta { margin: 0; padding: 12px 0 10px; border-top: 1px solid var(--borda); font-size: .88rem; color: var(--suave); }
+.mes-falta strong { color: var(--texto); font-variant-numeric: tabular-nums; }
+.mes-vazio { margin: 0; padding: 10px 0 16px; }

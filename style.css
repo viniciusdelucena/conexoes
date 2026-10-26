@@ -10,7 +10,8 @@
   --ok: #067647;
   --sombra: 0 1px 3px rgba(0, 0, 0, .08);
   --aba-altura: 68px;
-  --dock: rgba(255, 255, 255, .86);
+  --dock: rgba(255, 255, 255, .93);
+  --dock-solido: #ffffff;
   --alerta: #b45309;
   --alerta-fundo: rgba(217, 119, 6, .14);
   --realce: rgba(224, 58, 62, .12);
@@ -28,7 +29,8 @@
     --erro: #f97066;
     --ok: #47cd89;
     --sombra: none;
-    --dock: rgba(31, 24, 24, .86);
+    --dock: rgba(31, 24, 24, .93);
+    --dock-solido: #1f1818;
     --alerta: #fbbf24;
     --alerta-fundo: rgba(251, 191, 36, .14);
     --realce: rgba(255, 122, 125, .16);
@@ -118,24 +120,32 @@ input[type="text"]:focus { outline: 2px solid var(--primaria); outline-offset: 1
 /* App */
 #app { min-height: 100dvh; display: flex; flex-direction: column; }
 
+/* Cabeçalho: marca + título da página + nome da casa. Fica na cor do fundo, sem faixa. */
 .topo {
   position: sticky; top: 0; z-index: 5;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
-  background: linear-gradient(135deg, #ee5154, #c52b34);
-  color: #fff;
-  border-radius: 0 0 22px 22px;
-  box-shadow: 0 8px 22px rgba(120, 10, 20, .22);
+  display: flex; align-items: center; gap: 12px;
+  padding: calc(12px + env(safe-area-inset-top)) max(16px, calc((100% - 720px) / 2 + 16px)) 10px;
+  background: var(--fundo);
 }
-.topo-titulo { font-weight: 700; font-size: 1.1rem; }
-.topo-sub { font-size: .8rem; opacity: .85; }
+.topo-marca {
+  flex: none; width: 40px; height: 40px;
+  display: grid; place-items: center;
+  border-radius: 13px;
+  background: linear-gradient(135deg, #f25a5a, #cd2830);
+  box-shadow: 0 6px 14px rgba(205, 40, 48, .32), inset 0 1px 0 rgba(255, 255, 255, .35);
+}
+.topo-marca svg { width: 24px; height: auto; fill: none; stroke: #fff; stroke-width: 14; stroke-linecap: round; stroke-linejoin: round; }
+.topo-textos { flex: 1; min-width: 0; }
+.topo-titulo { margin: 0; font-size: 1.35rem; font-weight: 800; line-height: 1.15; }
+.topo-sub { margin: 0; font-size: .8rem; color: var(--suave); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .selo {
-  font-size: .75rem; font-weight: 600;
-  padding: 3px 10px; border-radius: 999px;
-  background: rgba(255, 255, 255, .22);
+  flex: none;
+  font-size: .74rem; font-weight: 700;
+  padding: 4px 10px; border-radius: 999px;
+  background: var(--realce); color: var(--primaria);
 }
-.selo.offline { background: #fbbf24; color: #3b2a00; }
+.selo.offline { background: var(--alerta-fundo); color: var(--alerta); }
 
 #conteudo {
   flex: 1;
@@ -332,11 +342,15 @@ input[type="text"]:focus { outline: 2px solid var(--primaria); outline-offset: 1
   height: var(--aba-altura);
   padding: 6px;
   display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
-  background: var(--dock);
+  background: var(--dock-solido);
+  user-select: none; -webkit-user-select: none;
   -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4);
   border: 1px solid var(--borda);
   border-radius: 28px;
   box-shadow: 0 14px 34px rgba(70, 0, 12, .2);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .dock { background: var(--dock); }
 }
 .dock-ind {
   position: absolute; top: 6px; bottom: 6px; left: 6px;
@@ -353,9 +367,11 @@ input[type="text"]:focus { outline: 2px solid var(--primaria); outline-offset: 1
   min-width: 0;
   font-size: .68rem; font-weight: 600; letter-spacing: .01em;
   color: var(--suave);
+  font-family: inherit; -webkit-appearance: none; appearance: none; touch-action: manipulation;
   background: none; border: 0; cursor: pointer;
   transition: color .25s;
 }
+@media (hover: hover) { .aba:not(.ativa):hover { color: var(--texto); } }
 .aba .ico { display: grid; place-items: center; line-height: 0; }
 .aba.ativa { color: #fff; }
 .aba.ativa .ico { animation: pula .5s cubic-bezier(.3, 1.6, .5, 1); }
