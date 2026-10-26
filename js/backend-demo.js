@@ -37,6 +37,16 @@ export function criarBackendDemo() {
   novaConta({ nome: "Alimentação", tipo: "variavel", valorCentavos: 90000, inicio: somarMeses(hoje, -8) });
   meses.set(somarMeses(hoje, -1), { valores: { c3: 19245, c4: 7120 } });
   meses.set(hoje, { valores: { c5: 96000 } });
+  const gastos = new Map();
+  let seqGasto = 0;
+  const dia2 = (n) => String(n).padStart(2, "0");
+  const hojeDia = new Date().getDate();
+  [["Farmácia", 4250, 2], ["Lanche", 2890, 5], ["Conserto da bike", 12000, hojeDia]].forEach(([descricao, valorCentavos, d]) => {
+    const id = `g${++seqGasto}`;
+    gastos.set(id, { id, descricao, valorCentavos, data: `${hoje}-${dia2(d)}` });
+  });
+  const ouvintesGastos = new Set();
+  const notificarGastos = () => ouvintesGastos.forEach((f) => f([...gastos.values()].map((g) => ({ ...g }))));
   const feriados = {};
   const ouvintesFeriados = new Set();
   const ouvintesContas = new Set();
@@ -111,6 +121,18 @@ export function criarBackendDemo() {
       notificarContas();
     },
     async excluirConta(id, contaId) { contas.delete(contaId); notificarContas(); },
+
+    observarGastos(id, aoReceber) {
+      ouvintesGastos.add(aoReceber);
+      setTimeout(() => aoReceber([...gastos.values()].map((g) => ({ ...g }))), 150);
+      return () => ouvintesGastos.delete(aoReceber);
+    },
+    async salvarGasto(id, gastoId, dados) {
+      if (gastoId) Object.assign(gastos.get(gastoId), dados);
+      else { gastoId = `g${++seqGasto}`; gastos.set(gastoId, { id: gastoId, ...dados }); }
+      notificarGastos();
+    },
+    async excluirGasto(id, gastoId) { gastos.delete(gastoId); notificarGastos(); },
 
     observarFeriados(id, aoReceber) {
       ouvintesFeriados.add(aoReceber);

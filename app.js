@@ -6,6 +6,7 @@ import { $, reais, mesCurto, nomeMes, mesAtual } from "./js/util.js";
 import { aplicarIcones } from "./js/icones.js";
 import * as dividasUI from "./js/dividas.js";
 import { configurarContas } from "./js/contas.js";
+import { configurarGastos } from "./js/gastos.js";
 
 
 
@@ -66,12 +67,14 @@ let cancelarDividas = null;
 let cancelarContas = null;
 let cancelarMeses = null;
 let cancelarFeriados = null;
+let cancelarGastos = null;
 
 function pararObservadores() {
   if (cancelarCasa) { cancelarCasa(); cancelarCasa = null; }
   if (cancelarDividas) { cancelarDividas(); cancelarDividas = null; }
   if (cancelarContas) { cancelarContas(); cancelarContas = null; }
   if (cancelarMeses) { cancelarMeses(); cancelarMeses = null; }
+  if (cancelarGastos) { cancelarGastos(); cancelarGastos = null; }
   if (cancelarFeriados) { cancelarFeriados(); cancelarFeriados = null; }
 }
 
@@ -95,6 +98,7 @@ async function sair() {
   pararObservadores();
   dividasUI.limpar();
   contasUI.limpar();
+  gastosUI.limpar();
   casaId = null;
   if (backend) await backend.sair();
 }
@@ -215,7 +219,8 @@ function entrarNoApp(id) {
   const falhou = (e) => { console.error(e); aviso(traduzirErro(e)); };
   cancelarContas = backend.observarContas(id, (l) => contasUI.receberContas(l), falhou);
   cancelarFeriados = backend.observarFeriados(id, (m) => contasUI.receberFeriados(m), falhou);
-  cancelarMeses = backend.observarMeses(id, (m) => contasUI.receberMeses(m), falhou);
+  cancelarGastos = backend.observarGastos(id, (l) => { contasUI.receberGastos(l); gastosUI.receberGastos(l); }, falhou);
+  cancelarMeses = backend.observarMeses(id, (m) => { contasUI.receberMeses(m); gastosUI.receberMeses(m); }, falhou);
   abrirPagina(paginaAtual);
 }
 
@@ -279,7 +284,22 @@ const contasUI = configurarContas({
   obterCasaId: () => casaId,
   aviso,
   abrirDividas: (ym) => { dividasUI.irParaMes(ym); abrirPagina("dividas"); },
+  abrirTetoPagina: () => abrirPagina("teto"),
   aoResumo: mostrarResumoContas
+});
+
+// Saldo do teto no cartão da tela Início.
+function mostrarResumoTeto(r) {
+  if (!r) { $("stat-teto-num").textContent = "R$ —"; $("stat-teto-leg").textContent = "de imprevistos"; return; }
+  $("stat-teto-num").textContent = reais(r.restante);
+  $("stat-teto-leg").textContent = r.estourou ? `passou do teto de ${reais(r.teto)}` : `de ${reais(r.teto)} · gasto ${reais(r.gasto)}`;
+}
+const gastosUI = configurarGastos({
+  obterBackend: () => backend,
+  obterCasaId: () => casaId,
+  aviso,
+  editarTeto: (ym) => contasUI.editarTeto(ym),
+  aoResumo: mostrarResumoTeto
 });
 
 // ---------- Navegação ----------

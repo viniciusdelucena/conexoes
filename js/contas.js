@@ -27,6 +27,10 @@ export function tetoDoMes(ym, meses) {
   return achado === null ? TETO_PADRAO_CENTAVOS : meses[achado].teto;
 }
 
+export function totalGastosDoMes(ym, gastos) {
+  return (gastos || []).filter((g) => g.data && g.data.startsWith(ym + "-")).reduce((s, g) => s + g.valorCentavos, 0);
+}
+
 export function parcelasDoMes(ym, dividas) {
   let total = 0;
   let quantidade = 0;
@@ -53,14 +57,14 @@ export function contasDoMes(ym, contas, meses) {
     .sort((a, b) => a.conta.nome.localeCompare(b.conta.nome, "pt-BR"));
 }
 
-export function calcularMes(ym, { dividas, contas, meses, feriados = [] }) {
+export function calcularMes(ym, { dividas, contas, meses, gastos = [], feriados = [] }) {
   const parcelas = parcelasDoMes(ym, dividas);
   const itens = contasDoMes(ym, contas, meses);
   const somar = (tipo) => itens.filter((i) => i.conta.tipo === tipo).reduce((s, i) => s + i.valor, 0);
   const fixas = somar("fixa");
   const variaveis = somar("variavel");
   const teto = tetoDoMes(ym, meses);
-  const gastoTeto = 0; // os lançamentos de gastos chegam na Fase 5
+  const gastoTeto = totalGastosDoMes(ym, gastos);
   const total = parcelas.total + fixas + variaveis + teto;
   const dias = diasUteisDoMes(ym, feriados);
   return {
@@ -93,7 +97,8 @@ export function configurarContas(contexto) {
   const backend = () => contexto.obterBackend();
   const casa = () => contexto.obterCasaId();
   const tudoPronto = () => pronto.dividas && pronto.contas && pronto.meses;
-  const dados = (ym) => ({ dividas, contas, meses, feriados: datasQueContam(feriadosMes(ym)) });
+  let gastos = [];
+  const dados = (ym) => ({ dividas, contas, meses, gastos, feriados: datasQueContam(feriadosMes(ym)) });
 
   function nacionaisDoAno(ano) {
     if (!nacionais[ano]) {
@@ -290,9 +295,9 @@ export function configurarContas(contexto) {
     return linha({
       icone: "teto",
       nome: "Reserva para imprevistos",
-      sub: `Gasto até agora: ${reais(r.gastoTeto)} · lançamentos na Fase 5`,
+      sub: `Gasto até agora: ${reais(r.gastoTeto)} · toque para ver os gastos`,
       valor: r.teto,
-      aoClicar: abrirTeto
+      aoClicar: () => contexto.abrirTetoPagina()
     });
   }
 
@@ -541,10 +546,12 @@ export function configurarContas(contexto) {
     receberDividas(lista) { dividas = lista; pronto.dividas = true; renderizar(); },
     receberContas(lista) { contas = lista; pronto.contas = true; renderizar(); },
     definirDiasUteis(ativo) { if (usarDias !== ativo) { usarDias = ativo; renderizar(); } },
+    receberGastos(lista) { gastos = lista; renderizar(); },
+    editarTeto(ym) { mesSel = ym; renderizar(); abrirTeto(); },
     receberFeriados(mapa) { manuais = mapa || {}; renderizar(); },
     receberMeses(mapa) { meses = mapa; pronto.meses = true; renderizar(); },
     limpar() {
-      dividas = []; contas = []; meses = {}; manuais = {};
+      dividas = []; contas = []; meses = {}; manuais = {}; gastos = [];
       pronto.dividas = pronto.contas = pronto.meses = false;
       mesSel = mesAtual();
       fecharFolhas();

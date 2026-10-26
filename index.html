@@ -122,7 +122,7 @@
           <div class="stat"><span class="ic" data-ico="dividas" data-tam="22"></span><div class="leg">Falta pagar</div><div class="num" id="stat-divida-num">R$ —</div><div class="leg" id="stat-divida-leg">cadastre em Dívidas</div></div>
           <div class="stat"><span class="ic" data-ico="contas" data-tam="22"></span><div class="leg">Contas do mês</div><div class="num" id="stat-contas-num">R$ —</div><div class="leg" id="stat-contas-leg">carregando…</div></div>
           <div class="stat" id="stat-dia" hidden><span class="ic" data-ico="calendario" data-tam="22"></span><div class="leg">Por dia útil</div><div class="num" id="stat-dia-num">R$ —</div><div class="leg" id="stat-dia-leg">segunda a sábado</div></div>
-          <div class="stat"><span class="ic" data-ico="teto" data-tam="22"></span><div class="leg">Saldo do teto</div><div class="num">R$ —</div><div class="leg">de imprevistos (Fase 5)</div></div>
+          <div class="stat"><span class="ic" data-ico="teto" data-tam="22"></span><div class="leg">Saldo do teto</div><div class="num" id="stat-teto-num">R$ —</div><div class="leg" id="stat-teto-leg">de imprevistos</div></div>
         </div>
 
         <div class="cartao">
@@ -132,7 +132,7 @@
             <li class="feito">Fase 2: Dívidas</li>
             <li class="feito">Fase 3: Contas do mês</li>
             <li>Fase 4: Calendário de dias úteis e feriados</li>
-            <li>Fase 5: Teto de gastos</li>
+            <li class="feito">Fase 5: Teto de gastos</li>
             <li>Fase 6: Painel inicial e gráficos</li>
           </ul>
         </div>
@@ -156,7 +156,7 @@
       </section>
 
       <section id="pagina-teto" class="pagina" hidden>
-        <div class="cartao"><h2>Teto de gastos</h2><p class="sub">Em breve (Fase 5): lançamento dos gastos imprevistos e saldo restante do teto.</p></div>
+        <div id="gt-conteudo"></div>
       </section>
 
       <section id="pagina-config" class="pagina" hidden>
@@ -314,6 +314,27 @@
         <button type="button" id="evo-aplicar" class="btn primario">Mostrar</button>
       </div>
     </div>
+  </div>
+
+  <!-- Teto: lançar gasto -->
+  <div id="folha-gasto" class="folha" hidden>
+    <div class="folha-fundo" data-fechar></div>
+    <form id="form-gasto" class="folha-painel" novalidate aria-labelledby="gasto-titulo">
+      <div class="folha-alca" aria-hidden="true"></div>
+      <h2 id="gasto-titulo">Novo gasto</h2>
+      <label for="gt-valor">Valor (R$)</label>
+      <input id="gt-valor" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off">
+      <label for="gt-desc">Com o quê? (opcional)</label>
+      <input id="gt-desc" type="text" maxlength="40" placeholder="Ex.: Farmácia, lanche, conserto" autocomplete="off">
+      <label for="gt-data">Data</label>
+      <input id="gt-data" type="date">
+      <p id="erro-gasto" class="erro" role="alert" hidden></p>
+      <div class="folha-acoes">
+        <button type="button" id="btn-excluir-gasto" class="btn perigo" hidden>Excluir</button>
+        <button type="button" class="btn" data-fechar>Cancelar</button>
+        <button type="submit" class="btn primario">Salvar</button>
+      </div>
+    </form>
   </div>
 
   <!-- Calendário: feriado -->
