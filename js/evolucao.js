@@ -144,12 +144,13 @@ export function montarEvolucao(lista, { filtro, animar }) {
       cursor.removeAttribute("hidden");
       mira.setAttribute("x1", xs[i]); mira.setAttribute("x2", xs[i]);
       ponto.setAttribute("cx", xs[i]); ponto.setAttribute("cy", ys[i]);
-      dica.replaceChildren(
+      dica.replaceChildren(...[
         h("strong", {}, p.inicio ? "Antes da 1ª parcela" : nomeMes(p.m)),
         h("span", {}, `Saldo: ${reais(p.saldo)}`),
         p.inicio ? null : h("span", { class: "suave" }, `Parcelas do mês: ${reais(p.parcelaMes)}`),
         p.atrasado ? h("span", { class: "atraso" }, `Em atraso: ${reais(p.atrasado)}`) : null,
-        p.futuro ? h("span", { class: "suave" }, "previsão") : null);
+        p.futuro ? h("span", { class: "suave" }, "previsão") : null
+      ].filter(Boolean));
       dica.hidden = false;
       const largura = dica.offsetWidth || 150;
       const esq = Math.min(Math.max(xs[i] - largura / 2, 0), W - largura);
