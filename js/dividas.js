@@ -299,8 +299,11 @@ function abrirFolha(d) {
   const [a, m] = (d ? d.mesInicio : mesAtual()).split("-").map(Number);
   $("div-mes").value = String(m);
   $("div-ano").value = String(a);
-  $("div-pagas").value = "";
-  $("bloco-ja-pagas").hidden = !!d;
+  const qtdPagas = d ? calcularDivida(d).pagasN : 0;
+  $("div-pagas").value = d ? String(qtdPagas) : "";
+  $("dica-pagas").textContent = d
+    ? "Se mudar este número, as marcações atuais são substituídas: as primeiras parcelas, na ordem, ficam como pagas. Se não mexer, nada muda."
+    : "Se algumas já foram pagas, informe aqui. As demais você marca no cronograma conforme for pagando.";
   const botao = $("btn-excluir-divida");
   botao.hidden = !d;
   botao.textContent = "Excluir";
@@ -319,7 +322,7 @@ function salvar() {
   const valorCentavos = parseReais($("div-valor").value);
   const totalParcelas = parseInt($("div-total").value, 10);
   const mesInicio = `${$("div-ano").value}-${String($("div-mes").value).padStart(2, "0")}`;
-  const jaPagas = editando ? 0 : parseInt($("div-pagas").value || "0", 10);
+  const jaPagas = parseInt($("div-pagas").value || "0", 10);
 
   if (!nome) return mostrarErroForm("Dê um nome para a dívida.");
   if (!(valorCentavos > 0)) return mostrarErroForm("Informe o valor da parcela, por exemplo 289,90.");
@@ -328,9 +331,14 @@ function salvar() {
 
   const dados = { nome, valorCentavos, totalParcelas, mesInicio };
   if (editando) {
-    // Só mexe nas parcelas pagas se o novo total as deixar de fora.
-    const pagas = (editando.pagas || []).filter((n) => n <= totalParcelas);
-    if (pagas.length !== (editando.pagas || []).length) dados.pagas = pagas;
+    const atuais = (editando.pagas || []).filter((n) => n <= totalParcelas);
+    if (jaPagas !== calcularDivida(editando).pagasN) {
+      // O número foi alterado: as primeiras N parcelas passam a ser as pagas.
+      dados.pagas = Array.from({ length: jaPagas }, (_, i) => i + 1);
+    } else if (atuais.length !== (editando.pagas || []).length) {
+      // Só o novo total deixou parcelas de fora.
+      dados.pagas = atuais;
+    }
   } else {
     dados.pagas = Array.from({ length: jaPagas }, (_, i) => i + 1);
   }
