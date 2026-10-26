@@ -1,0 +1,32 @@
+/* Contas do mês */
+.ct-nav { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
+.ct-nav .btn-sutil { align-self: center; }
+.ct-carregando { display: flex; justify-content: center; padding: 2rem; }
+.rd-nota { position: relative; z-index: 1; margin-top: .9rem; font-size: .76rem; opacity: .85; line-height: 1.4; }
+
+.ct-secao { padding: 1rem 1rem .4rem; }
+.ct-topo { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: .3rem; }
+.ct-topo h3 { margin: 0; }
+.ct-subtotal { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--primaria); }
+.ct-lista { list-style: none; margin: 0; padding: 0; }
+.ct-lista li + li { border-top: 1px solid var(--borda); }
+.ct-vazio { margin: .4rem 0 .9rem; color: var(--suave); font-size: .9rem; }
+
+.ct-linha {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 12px 2px; border: 0; background: none; font: inherit; color: inherit;
+  text-align: left; cursor: pointer; border-radius: 12px;
+}
+.ct-linha:active { background: var(--realce); }
+.ct-linha:focus-visible { outline: 2px solid var(--primaria); outline-offset: 2px; }
+.ct-ico {
+  flex: none; width: 38px; height: 38px; border-radius: 12px;
+  display: grid; place-items: center; background: var(--realce); color: var(--primaria);
+}
+.ct-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ct-nome { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ct-sub { font-size: .8rem; color: var(--suave); }
+.ct-sub .chip { margin-right: 4px; }
+.ct-valor { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ct-seta { flex: none; color: var(--suave); display: grid; }
+#pagina-contas > .cartao + .btn-sutil, #ct-conteudo > .btn-sutil { align-self: center; margin: .4rem auto 0; display: block; }

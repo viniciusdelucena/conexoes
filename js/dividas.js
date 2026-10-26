@@ -103,6 +103,12 @@ export function receber(lista) {
   ctx.aoResumo(calcularResumo(dividas));
 }
 
+export function irParaMes(ym) {
+  visao = "mes";
+  mesSel = ym;
+  renderizar();
+}
+
 export function limpar() {
   receber([]);
 }

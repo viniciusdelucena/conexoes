@@ -13,6 +13,7 @@
   <meta name="apple-mobile-web-app-title" content="Conexões">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="dividas.css">
+  <link rel="stylesheet" href="contas.css">
 </head>
 <body>
 
@@ -118,8 +119,8 @@
 
         <div class="grade-stats">
           <div class="stat"><span class="ic" data-ico="dividas" data-tam="22"></span><div class="leg">Falta pagar</div><div class="num" id="stat-divida-num">R$ —</div><div class="leg" id="stat-divida-leg">cadastre em Dívidas</div></div>
-          <div class="stat"><span class="ic" data-ico="contas" data-tam="22"></span><div class="leg">Contas do mês</div><div class="num">R$ —</div><div class="leg">em Contas (Fase 3)</div></div>
-          <div class="stat"><span class="ic" data-ico="calendario" data-tam="22"></span><div class="leg">Por dia útil</div><div class="num">R$ —</div><div class="leg">segunda a sábado (Fase 4)</div></div>
+          <div class="stat"><span class="ic" data-ico="contas" data-tam="22"></span><div class="leg">Contas do mês</div><div class="num" id="stat-contas-num">R$ —</div><div class="leg" id="stat-contas-leg">carregando…</div></div>
+          <div class="stat"><span class="ic" data-ico="calendario" data-tam="22"></span><div class="leg">Por dia útil</div><div class="num" id="stat-dia-num">R$ —</div><div class="leg" id="stat-dia-leg">segunda a sábado</div></div>
           <div class="stat"><span class="ic" data-ico="teto" data-tam="22"></span><div class="leg">Saldo do teto</div><div class="num">R$ —</div><div class="leg">de imprevistos (Fase 5)</div></div>
         </div>
 
@@ -128,7 +129,7 @@
           <ul class="checklist">
             <li class="feito">Fase 1: login, casa compartilhada e instalação no celular</li>
             <li class="feito">Fase 2: Dívidas</li>
-            <li>Fase 3: Contas do mês</li>
+            <li class="feito">Fase 3: Contas do mês</li>
             <li>Fase 4: Calendário de dias úteis e feriados</li>
             <li>Fase 5: Teto de gastos</li>
             <li>Fase 6: Painel inicial e gráficos</li>
@@ -149,7 +150,7 @@
       </section>
 
       <section id="pagina-contas" class="pagina" hidden>
-        <div class="cartao"><h2>Contas do mês</h2><p class="sub">Em breve (Fase 3): parcelas, contas fixas e variáveis, teto de gastos, total e valor por dia útil.</p></div>
+        <div id="ct-conteudo"></div>
       </section>
 
       <section id="pagina-teto" class="pagina" hidden>
@@ -226,6 +227,71 @@
 
       <div class="folha-acoes">
         <button type="button" id="btn-excluir-divida" class="btn perigo" hidden>Excluir</button>
+        <button type="button" class="btn" data-fechar>Cancelar</button>
+        <button type="submit" class="btn primario">Salvar</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Contas do mês: cadastro de conta -->
+  <div id="folha-conta" class="folha" hidden>
+    <div class="folha-fundo" data-fechar></div>
+    <form id="form-conta" class="folha-painel" novalidate aria-labelledby="conta-titulo">
+      <div class="folha-alca" aria-hidden="true"></div>
+      <h2 id="conta-titulo">Nova conta</h2>
+      <label for="cc-nome">Nome</label>
+      <input id="cc-nome" type="text" maxlength="40" placeholder="Ex.: Aluguel, energia, internet" autocomplete="off">
+      <label>Tipo</label>
+      <div id="cc-tipo" class="segmentado">
+        <button type="button" data-tipo="fixa" class="ativo" aria-pressed="true">Fixa</button>
+        <button type="button" data-tipo="variavel" aria-pressed="false">Variável</button>
+      </div>
+      <p id="cc-tipo-dica" class="sub pequeno dica"></p>
+      <label for="cc-valor" id="cc-valor-rotulo">Valor (R$)</label>
+      <input id="cc-valor" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off">
+      <label>Começa em</label>
+      <div class="duas-colunas"><select id="cc-inicio-mes" aria-label="Mês de início"></select><select id="cc-inicio-ano" aria-label="Ano de início"></select></div>
+      <label>Termina em (opcional)</label>
+      <div class="duas-colunas"><select id="cc-fim-ano" aria-label="Ano final"></select><select id="cc-fim-mes" aria-label="Mês final" hidden></select></div>
+      <p id="erro-conta" class="erro" role="alert" hidden></p>
+      <div class="folha-acoes">
+        <button type="button" id="btn-excluir-conta" class="btn perigo" hidden>Excluir</button>
+        <button type="button" class="btn" data-fechar>Cancelar</button>
+        <button type="submit" class="btn primario">Salvar</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Contas do mês: valor neste mês -->
+  <div id="folha-valor" class="folha" hidden>
+    <div class="folha-fundo" data-fechar></div>
+    <form id="form-valor" class="folha-painel" novalidate aria-labelledby="valor-titulo">
+      <div class="folha-alca" aria-hidden="true"></div>
+      <h2 id="valor-titulo">Valor</h2>
+      <label for="cv-valor" id="valor-rotulo">Valor (R$)</label>
+      <input id="cv-valor" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off">
+      <p id="valor-dica" class="sub pequeno dica"></p>
+      <button type="button" id="btn-valor-padrao" class="btn-sutil" hidden>Voltar ao valor padrão</button>
+      <button type="button" id="btn-editar-conta" class="btn-sutil">Editar conta (nome, tipo, período)</button>
+      <p id="erro-valor" class="erro" role="alert" hidden></p>
+      <div class="folha-acoes">
+        <button type="button" class="btn" data-fechar>Cancelar</button>
+        <button type="submit" class="btn primario">Salvar</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Contas do mês: teto -->
+  <div id="folha-teto" class="folha" hidden>
+    <div class="folha-fundo" data-fechar></div>
+    <form id="form-teto" class="folha-painel" novalidate aria-labelledby="teto-titulo">
+      <div class="folha-alca" aria-hidden="true"></div>
+      <h2 id="teto-titulo">Teto de gastos</h2>
+      <label for="ctt-valor" id="teto-rotulo">Teto (R$)</label>
+      <input id="ctt-valor" type="text" inputmode="decimal" placeholder="500,00" autocomplete="off">
+      <p class="sub pequeno dica">Vale a partir deste mês e continua nos seguintes até você mudar de novo.</p>
+      <p id="erro-teto" class="erro" role="alert" hidden></p>
+      <div class="folha-acoes">
         <button type="button" class="btn" data-fechar>Cancelar</button>
         <button type="submit" class="btn primario">Salvar</button>
       </div>

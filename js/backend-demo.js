@@ -24,6 +24,25 @@ export function criarBackendDemo() {
   const copia = () => [...dividas.values()].map((d) => ({ ...d, pagas: [...(d.pagas || [])] }));
   const notificar = () => ouvintesDividas.forEach((f) => f(copia()));
 
+  // Contas recorrentes de exemplo (valores inventados) e dados de cada mês.
+  const contas = new Map();
+  const meses = new Map();
+  let seqConta = 0;
+  const novaConta = (c) => contas.set(`c${++seqConta}`, { id: `c${seqConta}`, fim: null, ...c });
+  novaConta({ nome: "Aluguel", tipo: "fixa", valorCentavos: 120000, inicio: somarMeses(hoje, -8) });
+  novaConta({ nome: "Internet", tipo: "fixa", valorCentavos: 9990, inicio: somarMeses(hoje, -8) });
+  novaConta({ nome: "Energia", tipo: "variavel", valorCentavos: 18000, inicio: somarMeses(hoje, -8) });
+  novaConta({ nome: "Água", tipo: "variavel", valorCentavos: 7500, inicio: somarMeses(hoje, -8) });
+  novaConta({ nome: "Alimentação", tipo: "variavel", valorCentavos: 90000, inicio: somarMeses(hoje, -8) });
+  meses.set(somarMeses(hoje, -1), { valores: { c3: 19245, c4: 7120 } });
+  meses.set(hoje, { valores: { c5: 96000 } });
+  const ouvintesContas = new Set();
+  const ouvintesMeses = new Set();
+  const copiaContas = () => [...contas.values()].map((c) => ({ ...c }));
+  const copiaMeses = () => Object.fromEntries([...meses].map(([k, v]) => [k, { ...v, valores: { ...(v.valores || {}) } }]));
+  const notificarContas = () => ouvintesContas.forEach((f) => f(copiaContas()));
+  const notificarMeses = () => ouvintesMeses.forEach((f) => f(copiaMeses()));
+
   return {
     aoMudarLogin(cb) {
       ouvinte = cb;
@@ -67,6 +86,41 @@ export function criarBackendDemo() {
       if (pago) s.add(numero); else s.delete(numero);
       d.pagas = [...s];
       notificar();
+    },
+
+    observarContas(id, aoReceber) {
+      ouvintesContas.add(aoReceber);
+      setTimeout(() => aoReceber(copiaContas()), 150);
+      return () => ouvintesContas.delete(aoReceber);
+    },
+    async salvarConta(id, contaId, dados) {
+      if (contaId) {
+        Object.assign(contas.get(contaId), dados);
+      } else {
+        contaId = `c${++seqConta}`;
+        contas.set(contaId, { id: contaId, ...dados });
+      }
+      notificarContas();
+    },
+    async excluirConta(id, contaId) { contas.delete(contaId); notificarContas(); },
+
+    observarMeses(id, aoReceber) {
+      ouvintesMeses.add(aoReceber);
+      setTimeout(() => aoReceber(copiaMeses()), 150);
+      return () => ouvintesMeses.delete(aoReceber);
+    },
+    async salvarValorMes(id, ym, contaId, centavos) {
+      const m = meses.get(ym) || { valores: {} };
+      m.valores = { ...(m.valores || {}) };
+      if (centavos === null) delete m.valores[contaId]; else m.valores[contaId] = centavos;
+      meses.set(ym, m);
+      notificarMeses();
+    },
+    async salvarTeto(id, ym, centavos) {
+      const m = meses.get(ym) || { valores: {} };
+      m.teto = centavos;
+      meses.set(ym, m);
+      notificarMeses();
     }
   };
 }

@@ -5,6 +5,7 @@
 import { $, reais, mesCurto } from "./js/util.js";
 import { aplicarIcones } from "./js/icones.js";
 import * as dividasUI from "./js/dividas.js";
+import { configurarContas } from "./js/contas.js";
 
 
 
@@ -62,10 +63,14 @@ let usuario = null;
 let casaId = null;
 let cancelarCasa = null;
 let cancelarDividas = null;
+let cancelarContas = null;
+let cancelarMeses = null;
 
 function pararObservadores() {
   if (cancelarCasa) { cancelarCasa(); cancelarCasa = null; }
   if (cancelarDividas) { cancelarDividas(); cancelarDividas = null; }
+  if (cancelarContas) { cancelarContas(); cancelarContas = null; }
+  if (cancelarMeses) { cancelarMeses(); cancelarMeses = null; }
 }
 
 // ---------- Login e sessão ----------
@@ -87,6 +92,7 @@ $("btn-login").addEventListener("click", async () => {
 async function sair() {
   pararObservadores();
   dividasUI.limpar();
+  contasUI.limpar();
   casaId = null;
   if (backend) await backend.sair();
 }
@@ -197,12 +203,15 @@ function entrarNoApp(id) {
   );
   cancelarDividas = backend.observarDividas(
     id,
-    (lista) => dividasUI.receber(lista),
+    (lista) => { dividasUI.receber(lista); contasUI.receberDividas(lista); },
     (e) => {
       console.error(e);
       aviso(traduzirErro(e));
     }
   );
+  const falhou = (e) => { console.error(e); aviso(traduzirErro(e)); };
+  cancelarContas = backend.observarContas(id, (l) => contasUI.receberContas(l), falhou);
+  cancelarMeses = backend.observarMeses(id, (m) => contasUI.receberMeses(m), falhou);
   abrirPagina(paginaAtual);
 }
 
@@ -224,6 +233,27 @@ dividasUI.configurar({
   obterCasaId: () => casaId,
   aviso,
   aoResumo: mostrarResumoDividas
+});
+
+// Resumo do mês atual nos cartões da tela Início.
+function mostrarResumoContas(r) {
+  if (!r) {
+    $("stat-contas-num").textContent = "R$ —";
+    $("stat-contas-leg").textContent = "carregando…";
+    $("stat-dia-num").textContent = "R$ —";
+    return;
+  }
+  $("stat-contas-num").textContent = reais(r.total);
+  $("stat-contas-leg").textContent = "total deste mês, com o teto";
+  $("stat-dia-num").textContent = reais(r.porDia);
+  $("stat-dia-leg").textContent = `${r.dias} dias úteis (seg a sáb)`;
+}
+const contasUI = configurarContas({
+  obterBackend: () => backend,
+  obterCasaId: () => casaId,
+  aviso,
+  abrirDividas: (ym) => { dividasUI.irParaMes(ym); abrirPagina("dividas"); },
+  aoResumo: mostrarResumoContas
 });
 
 // ---------- Navegação ----------

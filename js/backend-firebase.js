@@ -26,6 +26,8 @@ export async function criarBackendFirebase() {
     F.setDoc(F.doc(db, "users", user.uid), { casaId, nome: user.nome, email: user.email });
 
   const colecaoDividas = (casaId) => F.collection(db, "households", casaId, "debts");
+  const colecaoContas = (casaId) => F.collection(db, "households", casaId, "bills");
+  const docMes = (casaId, ym) => F.doc(db, "households", casaId, "months", ym);
 
   return {
     // ----- Conta e casa -----
@@ -98,6 +100,55 @@ export async function criarBackendFirebase() {
       return F.updateDoc(F.doc(db, "households", casaId, "debts", id), {
         pagas: pago ? F.arrayUnion(numero) : F.arrayRemove(numero)
       });
+    },
+
+    // ----- Contas do mês -----
+    // Conta recorrente (households/{casa}/bills/{id}):
+    //   { nome, tipo: "fixa" | "variavel", valorCentavos, inicio: "AAAA-MM", fim: "AAAA-MM" | null }
+    observarContas(casaId, aoReceber, aoFalhar) {
+      return F.onSnapshot(
+        colecaoContas(casaId),
+        (snap) => aoReceber(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+        aoFalhar
+      );
+    },
+
+    salvarConta(casaId, id, dados) {
+      if (id) return F.updateDoc(F.doc(db, "households", casaId, "bills", id), dados);
+      const ref = F.doc(colecaoContas(casaId));
+      return F.setDoc(ref, { ...dados, criadoEm: F.serverTimestamp() });
+    },
+
+    excluirConta(casaId, id) {
+      return F.deleteDoc(F.doc(db, "households", casaId, "bills", id));
+    },
+
+    // Dados de cada mês (households/{casa}/months/{AAAA-MM}):
+    //   { valores: { [idDaConta]: centavos }, teto: centavos }
+    // "valores" guarda o valor real de um mês (energia, água...) ou um reajuste só daquele mês.
+    observarMeses(casaId, aoReceber, aoFalhar) {
+      return F.onSnapshot(
+        F.collection(db, "households", casaId, "months"),
+        (snap) => {
+          const mapa = {};
+          snap.docs.forEach((d) => { mapa[d.id] = d.data(); });
+          aoReceber(mapa);
+        },
+        aoFalhar
+      );
+    },
+
+    // centavos = null volta ao valor padrão da conta.
+    salvarValorMes(casaId, ym, contaId, centavos) {
+      return F.setDoc(
+        docMes(casaId, ym),
+        { valores: { [contaId]: centavos === null ? F.deleteField() : centavos } },
+        { merge: true }
+      );
+    },
+
+    salvarTeto(casaId, ym, centavos) {
+      return F.setDoc(docMes(casaId, ym), { teto: centavos }, { merge: true });
     }
   };
 }
