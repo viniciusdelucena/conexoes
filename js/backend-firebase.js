@@ -79,6 +79,28 @@ export async function criarBackendFirebase() {
       return F.updateDoc(F.doc(db, "households", casaId), prefs);
     },
 
+    // ----- Feriados da casa (households/{casa}/holidays/{AAAA-MM-DD}) -----
+    //   { nome, tipo: "extra" | "removido" }
+    observarFeriados(casaId, aoReceber, aoFalhar) {
+      return F.onSnapshot(
+        F.collection(db, "households", casaId, "holidays"),
+        (snap) => {
+          const mapa = {};
+          snap.docs.forEach((d) => { mapa[d.id] = d.data(); });
+          aoReceber(mapa);
+        },
+        aoFalhar
+      );
+    },
+
+    salvarFeriado(casaId, data, dados) {
+      return F.setDoc(F.doc(db, "households", casaId, "holidays", data), dados);
+    },
+
+    excluirFeriado(casaId, data) {
+      return F.deleteDoc(F.doc(db, "households", casaId, "holidays", data));
+    },
+
     // ----- Dívidas -----
     // Documento: { nome, valorCentavos, totalParcelas, mesInicio: "AAAA-MM", pagas: [1, 2, ...] }
     observarDividas(casaId, aoReceber, aoFalhar) {

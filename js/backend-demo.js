@@ -37,6 +37,8 @@ export function criarBackendDemo() {
   novaConta({ nome: "Alimentação", tipo: "variavel", valorCentavos: 90000, inicio: somarMeses(hoje, -8) });
   meses.set(somarMeses(hoje, -1), { valores: { c3: 19245, c4: 7120 } });
   meses.set(hoje, { valores: { c5: 96000 } });
+  const feriados = {};
+  const ouvintesFeriados = new Set();
   const ouvintesContas = new Set();
   const ouvintesMeses = new Set();
   const copiaContas = () => [...contas.values()].map((c) => ({ ...c }));
@@ -109,6 +111,14 @@ export function criarBackendDemo() {
       notificarContas();
     },
     async excluirConta(id, contaId) { contas.delete(contaId); notificarContas(); },
+
+    observarFeriados(id, aoReceber) {
+      ouvintesFeriados.add(aoReceber);
+      setTimeout(() => aoReceber({ ...feriados }), 150);
+      return () => ouvintesFeriados.delete(aoReceber);
+    },
+    async salvarFeriado(id, data, dados) { feriados[data] = { ...dados }; ouvintesFeriados.forEach((f) => f({ ...feriados })); },
+    async excluirFeriado(id, data) { delete feriados[data]; ouvintesFeriados.forEach((f) => f({ ...feriados })); },
 
     observarMeses(id, aoReceber) {
       ouvintesMeses.add(aoReceber);

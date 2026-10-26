@@ -11,7 +11,10 @@ import {
   mesAtual, somarMeses, diffMeses, nomeMes, mesCurto, NOMES_MESES
 } from "./util.js";
 import { icone } from "./icones.js";
-import { diasUteisDoMes } from "./calendario.js";
+import {
+  diasUteisDoMes, feriadosNacionaisCalculados, buscarFeriadosApi, feriadosDoMes,
+  datasQueContam, feriadosEmDiaDeSemana, gradeDoMes, diaDaSemana, DIAS_SEMANA
+} from "./calendario.js";
 
 export const TETO_PADRAO_CENTAVOS = 50000;
 
@@ -64,6 +67,7 @@ export function calcularMes(ym, { dividas, contas, meses, feriados = [] }) {
     ym, parcelas, itens, fixas, variaveis, teto, gastoTeto, total,
     totalReal: total - teto + gastoTeto,
     dias,
+    feriados: feriados.filter((d) => diaDaSemana(d) !== 0).length,
     porDia: dias ? Math.round(total / dias) : 0
   };
 }
@@ -81,11 +85,40 @@ export function configurarContas(contexto) {
   let valorAlvo = null;      // { conta, alterada } da folha de valor
   let confirmandoExclusao = false;
   let usarDias = false;      // preferência da casa: mostrar valor por dia útil
+  let manuais = {};          // feriados da casa: { "AAAA-MM-DD": { nome, tipo } }
+  const nacionais = {};      // feriados nacionais por ano
+  const baixados = new Set(); // anos que já tentaram a BrasilAPI nesta sessão
+  let feriadoAlvo = null;    // feriado aberto na folha (null = novo)
 
   const backend = () => contexto.obterBackend();
   const casa = () => contexto.obterCasaId();
   const tudoPronto = () => pronto.dividas && pronto.contas && pronto.meses;
-  const dados = () => ({ dividas, contas, meses });
+  const dados = (ym) => ({ dividas, contas, meses, feriados: datasQueContam(feriadosMes(ym)) });
+
+  function nacionaisDoAno(ano) {
+    if (!nacionais[ano]) {
+      let guardado = null;
+      try { guardado = JSON.parse(localStorage.getItem(`conexoes-feriados-${ano}`)); } catch (_) { /* sem cache */ }
+      nacionais[ano] = guardado || feriadosNacionaisCalculados(ano);
+    }
+    return nacionais[ano];
+  }
+  const feriadosMes = (ym) => feriadosDoMes(ym, nacionaisDoAno(Number(ym.slice(0, 4))), manuais);
+
+  // Só vai à internet quando o valor por dia útil está ligado.
+  function atualizarFeriadosNacionais() {
+    if (!usarDias) return;
+    for (const ano of new Set([Number(mesSel.slice(0, 4)), Number(mesAtual().slice(0, 4))])) {
+      if (baixados.has(ano)) continue;
+      baixados.add(ano);
+      buscarFeriadosApi(ano).then((mapa) => {
+        if (!mapa) return;
+        nacionais[ano] = mapa;
+        try { localStorage.setItem(`conexoes-feriados-${ano}`, JSON.stringify(mapa)); } catch (_) { /* ignora */ }
+        renderizar();
+      });
+    }
+  }
   const dois = (n) => String(n).padStart(2, "0");
 
   function falha(e) {
@@ -103,9 +136,10 @@ export function configurarContas(contexto) {
       contexto.aoResumo(null);
       return;
     }
-    const r = calcularMes(mesSel, dados());
+    const r = calcularMes(mesSel, dados(mesSel));
     caixa.replaceChildren(navegacao(), ...corpo(r));
-    contexto.aoResumo(calcularMes(mesAtual(), dados()));
+    contexto.aoResumo(calcularMes(mesAtual(), dados(mesAtual())));
+    atualizarFeriadosNacionais();
   }
 
   function navegacao() {
@@ -140,6 +174,7 @@ export function configurarContas(contexto) {
   function corpo(r) {
     return [
       resumo(r),
+      ...(usarDias ? [calendario()] : []),
       secao("Dívidas", r.parcelas.total, [linhaParcelas(r)]),
       secao("Contas fixas", r.fixas, linhasContas(r, "fixa"), "Nenhuma conta fixa neste mês."),
       secao("Contas variáveis", r.variaveis, linhasContas(r, "variavel"), "Nenhuma conta variável neste mês."),
@@ -159,9 +194,59 @@ export function configurarContas(contexto) {
         meta("Com o gasto real", reais(r.totalReal))),
       h("div", { class: "rd-nota" },
         "O total usa o teto cheio. \"Com o gasto real\" troca o teto pelo que já foi gasto dele." +
-        (usarDias ? ` O valor por dia útil é o total de ${nomeMes(mesSel)} dividido pelos ${r.dias} dias úteis do mês (segunda a sábado, sem descontar feriados por enquanto).` : ""))
+        (usarDias ? ` O valor por dia útil é o total de ${nomeMes(mesSel)} dividido pelos ${r.dias} dias úteis do mês (segunda a sábado, sem os feriados).` : ""))
     );
   }
+
+  // ----- Calendário e feriados (só com o valor por dia útil ligado) -----
+  function calendario() {
+    const lista = feriadosMes(mesSel);
+    const porData = new Map(lista.map((f) => [f.data, f]));
+    const hoje = new Date();
+    const hojeIso = `${hoje.getFullYear()}-${dois(hoje.getMonth() + 1)}-${dois(hoje.getDate())}`;
+    const alertas = feriadosEmDiaDeSemana(lista);
+
+    const aviso = alertas.length
+      ? h("div", { class: "cal-aviso" },
+          h("strong", {}, alertas.length === 1 ? "Atenção: 1 feriado de segunda a sexta" : `Atenção: ${alertas.length} feriados de segunda a sexta`),
+          h("span", {}, alertas.map((f) => `${DIAS_SEMANA[f.diaSemana]}, ${f.dia} (${f.nome})`).join(" · ")))
+      : h("div", { class: "cal-aviso ok" }, "Nenhum feriado de segunda a sexta neste mês.");
+
+    const cabecalho = ["D", "S", "T", "Q", "Q", "S", "S"].map((l) => h("span", { class: "cal-cab" }, l));
+    const dias = gradeDoMes(mesSel).map((d) => {
+      if (!d) return h("span", { class: "cal-vazio" });
+      const data = `${mesSel}-${dois(d)}`;
+      const f = porData.get(data);
+      const dow = new Date(Number(mesSel.slice(0, 4)), Number(mesSel.slice(5)) - 1, d).getDay();
+      const classes = ["cal-dia"];
+      if (dow === 0) classes.push("domingo");
+      if (f) classes.push(f.conta ? "feriado" : "isento");
+      if (data === hojeIso) classes.push("hoje");
+      return h("button", {
+        class: classes.join(" "), type: "button",
+        "aria-label": `${d} de ${nomeMes(mesSel)}${f ? `, ${f.nome}` : ""}`,
+        onclick: () => abrirFeriado(data, f || null)
+      }, String(d));
+    });
+
+    const linhas = lista.map((f) => h("li", {},
+      h("button", { class: "ct-linha", type: "button", onclick: () => abrirFeriado(f.data, f) },
+        h("span", { class: "ct-ico", html: icone("calendario", 20) }),
+        h("span", { class: "ct-info" },
+          h("span", { class: "ct-nome" }, f.nome),
+          h("span", { class: "ct-sub" }, `${DIAS_SEMANA[f.diaSemana]}, ${f.dia} · ${f.origem === "nacional" ? "nacional" : "adicionado por vocês"}`)),
+        h("span", { class: "ct-valor cal-efeito" }, !f.conta ? "não desconta" : f.diaSemana === 0 ? "domingo" : "−1 dia útil"),
+        h("span", { class: "ct-seta", html: icone("dir", 16) }))));
+
+    return h("article", { class: "cartao ct-secao" },
+      h("header", { class: "ct-topo" }, h("h3", {}, "Calendário e feriados"), h("span", { class: "ct-subtotal" }, r0(lista) === 1 ? "1 dia descontado" : `${r0(lista)} dias descontados`)),
+      aviso,
+      h("div", { class: "cal-grade" }, cabecalho, dias),
+      linhas.length ? h("ul", { class: "ct-lista" }, linhas) : null,
+      h("button", { class: "btn-sutil cal-add", type: "button", onclick: () => abrirFeriado(null, null) }, "+ Adicionar feriado ou folga"),
+      h("p", { class: "ct-vazio cal-nota" }, "Feriados nacionais vêm da BrasilAPI (ou são calculados pelo app, sem internet). Toque num dia para adicionar uma folga ou deixar de descontar um feriado."));
+  }
+  const r0 = (lista) => lista.filter((f) => f.conta && f.diaSemana !== 0).length;
 
   function secao(titulo, subtotal, linhas, vazio) {
     return h("article", { class: "cartao ct-secao" },
@@ -212,7 +297,7 @@ export function configurarContas(contexto) {
   }
 
   // ----- Folhas (formulários que sobem de baixo) -----
-  const FOLHAS = ["folha-conta", "folha-valor", "folha-teto"];
+  const FOLHAS = ["folha-conta", "folha-valor", "folha-teto", "folha-feriado"];
   function fecharFolhas() {
     FOLHAS.forEach((id) => { $(id).hidden = true; });
     contaForm = null;
@@ -362,6 +447,59 @@ export function configurarContas(contexto) {
     executar(() => backend().salvarTeto(casa(), ym, centavos));
   }
 
+  // Feriado: novo, adicionado por vocês (editar/excluir) ou nacional (descontar ou não)
+  function abrirFeriado(data, f) {
+    fecharFolhas();
+    feriadoAlvo = { data, f };
+    mostrarErro("erro-feriado", "");
+    const novo = !f;
+    $("feriado-titulo").textContent = novo ? "Novo feriado ou folga" : f.nome;
+    $("fr-data").value = data || (mesSel === mesAtual() ? new Date().toISOString().slice(0, 10) : `${mesSel}-01`);
+    $("fr-data").disabled = !novo;
+    $("fr-nome").value = f ? f.nome : "";
+    $("fr-nome").disabled = !!f && f.origem === "nacional";
+    $("btn-feriado-salvar").hidden = !!f && f.origem === "nacional";
+    const alt = $("btn-feriado-alt");
+    alt.hidden = novo;
+    alt.classList.toggle("perigo", !!f && f.origem === "extra");
+    if (f) alt.textContent = f.origem === "extra" ? "Excluir" : f.conta ? "Não descontar" : "Voltar a descontar";
+    $("feriado-dica").textContent = novo
+      ? "Use para feriado municipal, ponte ou qualquer dia em que você não trabalha. Ele sai dos dias úteis."
+      : f.origem === "nacional"
+        ? (f.conta ? "Feriado nacional. Se você trabalha neste dia, toque em \"Não descontar\"." : "Este feriado não está sendo descontado dos dias úteis.")
+        : "Folga adicionada por vocês. Ela sai dos dias úteis do mês.";
+    $("folha-feriado").hidden = false;
+    if (novo) requestAnimationFrame(() => $("fr-nome").focus());
+  }
+
+  function salvarFeriado() {
+    const alvo = feriadoAlvo;
+    if (!alvo) return;
+    const data = alvo.f ? alvo.data : $("fr-data").value;
+    const nome = $("fr-nome").value.trim() || "Folga";
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) return mostrarErro("erro-feriado", "Escolha a data.");
+    fecharFolhas();
+    contexto.aviso("Feriado salvo");
+    executar(() => backend().salvarFeriado(casa(), data, { nome, tipo: "extra" }));
+  }
+
+  function alternarFeriado() {
+    const alvo = feriadoAlvo;
+    if (!alvo || !alvo.f) return;
+    const { data, f } = alvo;
+    fecharFolhas();
+    if (f.origem === "extra") {
+      contexto.aviso("Feriado excluído");
+      executar(() => backend().excluirFeriado(casa(), data));
+    } else if (f.conta) {
+      contexto.aviso("Este feriado não será descontado");
+      executar(() => backend().salvarFeriado(casa(), data, { nome: f.nome, tipo: "removido" }));
+    } else {
+      contexto.aviso("Voltou a descontar este feriado");
+      executar(() => backend().excluirFeriado(casa(), data));
+    }
+  }
+
   // ----- Preparação -----
   const ano = new Date().getFullYear();
   const opcoesMes = () => NOMES_MESES.map((n, i) => h("option", { value: i + 1 }, n));
@@ -390,6 +528,8 @@ export function configurarContas(contexto) {
   $("form-valor").addEventListener("submit", (e) => { e.preventDefault(); salvarValor(); });
   $("form-teto").addEventListener("submit", (e) => { e.preventDefault(); salvarTeto(); });
   $("btn-excluir-conta").addEventListener("click", excluirConta);
+  $("form-feriado").addEventListener("submit", (e) => { e.preventDefault(); salvarFeriado(); });
+  $("btn-feriado-alt").addEventListener("click", alternarFeriado);
   $("btn-valor-padrao").addEventListener("click", voltarAoPadrao);
   $("btn-editar-conta").addEventListener("click", () => {
     if (valorAlvo) abrirConta(valorAlvo.conta);
@@ -401,9 +541,10 @@ export function configurarContas(contexto) {
     receberDividas(lista) { dividas = lista; pronto.dividas = true; renderizar(); },
     receberContas(lista) { contas = lista; pronto.contas = true; renderizar(); },
     definirDiasUteis(ativo) { if (usarDias !== ativo) { usarDias = ativo; renderizar(); } },
+    receberFeriados(mapa) { manuais = mapa || {}; renderizar(); },
     receberMeses(mapa) { meses = mapa; pronto.meses = true; renderizar(); },
     limpar() {
-      dividas = []; contas = []; meses = {};
+      dividas = []; contas = []; meses = {}; manuais = {};
       pronto.dividas = pronto.contas = pronto.meses = false;
       mesSel = mesAtual();
       fecharFolhas();

@@ -65,12 +65,14 @@ let cancelarCasa = null;
 let cancelarDividas = null;
 let cancelarContas = null;
 let cancelarMeses = null;
+let cancelarFeriados = null;
 
 function pararObservadores() {
   if (cancelarCasa) { cancelarCasa(); cancelarCasa = null; }
   if (cancelarDividas) { cancelarDividas(); cancelarDividas = null; }
   if (cancelarContas) { cancelarContas(); cancelarContas = null; }
   if (cancelarMeses) { cancelarMeses(); cancelarMeses = null; }
+  if (cancelarFeriados) { cancelarFeriados(); cancelarFeriados = null; }
 }
 
 // ---------- Login e sessão ----------
@@ -212,6 +214,7 @@ function entrarNoApp(id) {
   );
   const falhou = (e) => { console.error(e); aviso(traduzirErro(e)); };
   cancelarContas = backend.observarContas(id, (l) => contasUI.receberContas(l), falhou);
+  cancelarFeriados = backend.observarFeriados(id, (m) => contasUI.receberFeriados(m), falhou);
   cancelarMeses = backend.observarMeses(id, (m) => contasUI.receberMeses(m), falhou);
   abrirPagina(paginaAtual);
 }
@@ -269,7 +272,7 @@ function mostrarResumoContas(r) {
   $("stat-contas-num").textContent = reais(r.total);
   $("stat-contas-leg").textContent = "total deste mês, com o teto";
   $("stat-dia-num").textContent = reais(r.porDia);
-  $("stat-dia-leg").textContent = `${nomeMes(mesAtual()).split(" ")[0].toLowerCase()}: ${r.dias} dias úteis (seg a sáb)`;
+  $("stat-dia-leg").textContent = `${nomeMes(mesAtual()).split(" ")[0].toLowerCase()}: ${r.dias} dias úteis` + (r.feriados ? ` · ${r.feriados} feriado${r.feriados > 1 ? "s" : ""}` : "");
 }
 const contasUI = configurarContas({
   obterBackend: () => backend,

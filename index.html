@@ -298,6 +298,26 @@
     </form>
   </div>
 
+  <!-- Calendário: feriado -->
+  <div id="folha-feriado" class="folha" hidden>
+    <div class="folha-fundo" data-fechar></div>
+    <form id="form-feriado" class="folha-painel" novalidate aria-labelledby="feriado-titulo">
+      <div class="folha-alca" aria-hidden="true"></div>
+      <h2 id="feriado-titulo">Feriado</h2>
+      <label for="fr-data">Data</label>
+      <input id="fr-data" type="date">
+      <label for="fr-nome">Nome</label>
+      <input id="fr-nome" type="text" maxlength="40" placeholder="Ex.: Aniversário da cidade" autocomplete="off">
+      <p id="feriado-dica" class="sub pequeno dica"></p>
+      <p id="erro-feriado" class="erro" role="alert" hidden></p>
+      <div class="folha-acoes">
+        <button type="button" id="btn-feriado-alt" class="btn" hidden>Excluir</button>
+        <button type="button" class="btn" data-fechar>Fechar</button>
+        <button type="submit" id="btn-feriado-salvar" class="btn primario">Salvar</button>
+      </div>
+    </form>
+  </div>
+
   <div id="aviso" class="aviso" hidden role="status"></div>
 
   <script type="module" src="app.js"></script>
