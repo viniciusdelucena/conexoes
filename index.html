@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="dividas.css">
   <link rel="stylesheet" href="contas.css">
+  <link rel="stylesheet" href="evolucao.css">
 </head>
 <body>
 
@@ -143,6 +144,7 @@
           <div class="segmentado" role="tablist" aria-label="Forma de ver as dívidas">
             <button type="button" role="tab" data-visao="mes" class="ativo">Por mês</button>
             <button type="button" role="tab" data-visao="divida">Por dívida</button>
+            <button type="button" role="tab" data-visao="evolucao">Evolução</button>
           </div>
           <button type="button" id="btn-nova-divida" class="btn-add" aria-label="Nova dívida"><span data-ico="plus" data-tam="22"></span></button>
         </div>
@@ -296,6 +298,22 @@
         <button type="submit" class="btn primario">Salvar</button>
       </div>
     </form>
+  </div>
+
+  <!-- Evolução: escolher dívidas -->
+  <div id="folha-evo" class="folha" hidden>
+    <div class="folha-fundo" data-fechar></div>
+    <div class="folha-painel" role="dialog" aria-labelledby="evo-titulo">
+      <div class="folha-alca" aria-hidden="true"></div>
+      <h2 id="evo-titulo">Quais dívidas mostrar</h2>
+      <input id="evo-busca" class="evo-busca" type="search" placeholder="Buscar dívida" autocomplete="off" aria-label="Buscar dívida">
+      <div class="evo-sel-barra"><span id="evo-contagem"></span><button type="button" id="evo-alternar-todas"></button></div>
+      <ul id="evo-lista" class="evo-lista"></ul>
+      <div class="folha-acoes">
+        <button type="button" class="btn" data-fechar>Cancelar</button>
+        <button type="button" id="evo-aplicar" class="btn primario">Mostrar</button>
+      </div>
+    </div>
   </div>
 
   <!-- Calendário: feriado -->

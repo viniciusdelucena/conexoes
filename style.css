@@ -81,7 +81,7 @@ p { margin: 0 0 .75rem; }
 
 /* Formulários e botões */
 label { display: block; font-size: .85rem; color: var(--suave); margin: .6rem 0 .25rem; }
-input[type="text"] {
+input[type="text"], input[type="search"], input[type="date"] {
   width: 100%;
   padding: 12px;
   font-size: 1rem;
@@ -90,7 +90,7 @@ input[type="text"] {
   border: 1px solid var(--borda);
   border-radius: 10px;
 }
-input[type="text"]:focus { outline: 2px solid var(--primaria); outline-offset: 1px; }
+input[type="text"]:focus, input[type="search"]:focus, input[type="date"]:focus { outline: 2px solid var(--primaria); outline-offset: 1px; }
 
 .btn {
   display: inline-block;

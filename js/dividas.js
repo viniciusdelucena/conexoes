@@ -8,10 +8,14 @@ import {
   mesAtual, somarMeses, diffMeses, nomeMes, mesCurto, NOMES_MESES
 } from "./util.js";
 import { icone } from "./icones.js";
+import { montarEvolucao } from "./evolucao.js";
 
 let ctx = null;          // { obterBackend, obterCasaId, aviso, aoResumo }
 let dividas = [];
-let visao = "mes";       // "mes" | "divida"
+let visao = "mes";       // "mes" | "divida" | "evolucao"
+let evoSel = new Set();  // dívidas escolhidas no gráfico de evolução (vazio = todas)
+let evoTemp = new Set(); // seleção em edição na folha
+let evoAnimar = false;   // anima o gráfico só ao abrir a aba ou trocar o filtro
 let mesSel = null;       // mês escolhido na visão "Por mês" ("AAAA-MM")
 let editando = null;     // dívida aberta no formulário (null = nova)
 let confirmandoExclusao = false;
@@ -81,6 +85,7 @@ export function configurar(contexto) {
   document.querySelectorAll("[data-visao]").forEach((b) =>
     b.addEventListener("click", () => {
       visao = b.dataset.visao;
+      evoAnimar = true;
       renderizar();
     })
   );
@@ -95,7 +100,56 @@ export function configurar(contexto) {
     if (e.key === "Escape" && !$("folha").hidden) fecharFolha();
   });
   $("btn-excluir-divida").addEventListener("click", excluir);
+
+  $("evo-busca").addEventListener("input", desenharListaEvo);
+  $("evo-alternar-todas").addEventListener("click", () => {
+    evoTemp = evoTemp.size === dividas.length ? new Set() : new Set(dividas.map((d) => d.id));
+    desenharListaEvo();
+    atualizarContagemEvo();
+  });
+  $("evo-aplicar").addEventListener("click", () => {
+    evoSel = evoTemp.size === dividas.length ? new Set() : new Set(evoTemp);
+    fecharSeletorEvo();
+    evoAnimar = true;
+    renderizar();
+  });
+  document.querySelectorAll("#folha-evo [data-fechar]").forEach((b) => b.addEventListener("click", fecharSeletorEvo));
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("folha-evo").hidden) fecharSeletorEvo(); });
 }
+
+// ----- Seletor de dívidas do gráfico (folha com busca e caixas de seleção) -----
+function desenharListaEvo() {
+  const termo = $("evo-busca").value.trim().toLowerCase();
+  const ordenadas = [...dividas].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+  const visiveis = ordenadas.filter((d) => d.nome.toLowerCase().includes(termo));
+  $("evo-lista").replaceChildren(...(visiveis.length ? visiveis.map((d) => {
+    const c = calcularDivida(d);
+    return h("li", {}, h("label", { class: "evo-opcao" },
+      h("input", {
+        type: "checkbox", checked: evoTemp.has(d.id),
+        onchange: (e) => { if (e.target.checked) evoTemp.add(d.id); else evoTemp.delete(d.id); atualizarContagemEvo(); }
+      }),
+      h("span", { class: "evo-opcao-txt" },
+        h("strong", {}, d.nome),
+        h("small", {}, `${reais(d.valorCentavos)} × ${d.totalParcelas} · ${c.restantes ? `termina em ${mesCurto(c.fim)}` : "quitada"}`))));
+  }) : [h("li", { class: "evo-vazio" }, "Nenhuma dívida com esse nome.")]));
+}
+
+function atualizarContagemEvo() {
+  const n = evoTemp.size, total = dividas.length;
+  $("evo-contagem").textContent = n === 0 ? "Nenhuma marcada: mostra todas" : `${n} de ${total} marcadas`;
+  $("evo-alternar-todas").textContent = n === total ? "Limpar" : "Marcar todas";
+}
+
+function abrirSeletorEvo() {
+  evoTemp = new Set(evoSel);
+  $("evo-busca").value = "";
+  desenharListaEvo();
+  atualizarContagemEvo();
+  $("folha-evo").hidden = false;
+}
+
+function fecharSeletorEvo() { $("folha-evo").hidden = true; }
 
 export function receber(lista) {
   dividas = lista;
@@ -132,6 +186,21 @@ function renderizar() {
   const lista = $("div-lista");
   if (!dividas.length) {
     lista.replaceChildren(estadoVazio());
+  } else if (visao === "evolucao") {
+    evoSel = new Set([...evoSel].filter((id) => dividas.some((d) => d.id === id)));
+    const animar = evoAnimar;
+    evoAnimar = false;
+    const filtradas = evoSel.size ? dividas.filter((d) => evoSel.has(d.id)) : dividas;
+    lista.replaceChildren(montarEvolucao(filtradas, {
+      filtro: dividas.length > 1 ? {
+        filtrado: evoSel.size > 0 && evoSel.size < dividas.length,
+        texto: evoSel.size === 0 || evoSel.size === dividas.length
+          ? `Todas as dívidas (${dividas.length})`
+          : evoSel.size === 1 ? filtradas[0].nome : `${evoSel.size} de ${dividas.length} dívidas`,
+        aoAbrir: abrirSeletorEvo
+      } : null,
+      animar
+    }));
   } else if (visao === "mes") {
     lista.replaceChildren(...listaMeses());
   } else {

@@ -1,0 +1,60 @@
+/* Evolução da dívida */
+.evo { padding: 1.1rem 1rem 1rem; overflow: hidden; }
+.evo-topo { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
+.evo-topo small { display: block; color: var(--suave); font-size: .8rem; }
+.evo-num { display: block; font-size: 1.9rem; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.evo-legenda { display: inline-flex; align-items: center; gap: 6px; font-size: .75rem; color: var(--suave); }
+.evo-legenda i { display: inline-block; width: 18px; height: 0; border-top: 3px solid var(--primaria); border-radius: 2px; margin-left: 6px; }
+.evo-legenda i.l-proj { border-top: 2px dashed var(--primaria); }
+.evo-filtro { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; margin-top: 12px; padding: 10px 14px; border: 1px solid var(--borda); border-radius: 14px; background: none; color: var(--texto); font: inherit; font-size: .9rem; font-weight: 600; cursor: pointer; text-align: left; }
+.evo-filtro > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.evo-filtro.ativo { border-color: var(--primaria); background: var(--realce); }
+.evo-filtro-seta { color: var(--suave); }
+.evo-filtro:focus-visible { outline: 2px solid var(--primaria); outline-offset: 2px; }
+
+/* Seletor de dívidas (folha) */
+.evo-busca { margin-bottom: 8px; }
+.evo-lista { list-style: none; margin: 0; padding: 0; max-height: 42vh; overflow-y: auto; border: 1px solid var(--borda); border-radius: 14px; }
+.evo-lista li + li { border-top: 1px solid var(--borda); }
+.evo-opcao { display: flex; align-items: center; gap: 12px; padding: 11px 12px; cursor: pointer; }
+.evo-opcao input { width: 20px; height: 20px; margin: 0; accent-color: var(--primaria); flex: none; }
+.evo-opcao-txt { display: flex; flex-direction: column; min-width: 0; }
+.evo-opcao-txt strong { font-size: .92rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.evo-opcao-txt small { color: var(--suave); font-size: .76rem; }
+.evo-vazio { padding: 14px; color: var(--suave); font-size: .88rem; }
+.evo-sel-barra { display: flex; justify-content: space-between; align-items: center; margin: 4px 0 8px; font-size: .82rem; color: var(--suave); }
+.evo-sel-barra button { border: 0; background: none; color: var(--primaria); font: inherit; font-weight: 700; cursor: pointer; padding: 4px 0; }
+
+.evo-area { position: relative; margin-top: 6px; touch-action: pan-y; }
+.evo-grafico { width: 100%; min-height: 230px; }
+.evo-svg { display: block; overflow: visible; outline: none; }
+.evo-svg:focus-visible { outline: 2px solid var(--primaria); outline-offset: 4px; border-radius: 8px; }
+.evo-svg .g { stroke: var(--borda); stroke-width: 1; }
+.evo-svg .eixo { fill: var(--suave); font-size: 11px; font-variant-numeric: tabular-nums; }
+.evo-svg .linha { fill: none; stroke: var(--primaria); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.evo-svg .linha.proj { stroke-dasharray: 2 7; stroke-width: 3; }
+.evo-svg .mira { stroke: var(--suave); stroke-width: 1; stroke-dasharray: 3 3; }
+.evo-svg .ponto, .evo-svg .miolo { fill: var(--primaria); stroke: var(--cartao); stroke-width: 2; }
+.evo-svg .pulso { fill: var(--primaria); opacity: .35; transform-box: fill-box; transform-origin: center; animation: evo-pulso 2s ease-out infinite; }
+.evo-svg .rot-hoje { fill: var(--suave); font-size: 11px; font-weight: 700; }
+.evo-svg .plot.anima { animation: evo-revelar 1.4s cubic-bezier(.22, 1, .36, 1) both; }
+.evo-svg .hoje { animation: evo-surgir .5s ease 1.1s both; }
+@keyframes evo-revelar { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 -2px 0 0); } }
+@keyframes evo-surgir { from { opacity: 0; } to { opacity: 1; } }
+@keyframes evo-pulso { 0% { transform: scale(.8); opacity: .45; } 100% { transform: scale(2.6); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .evo-svg .plot.anima, .evo-svg .hoje, .evo-svg .pulso { animation: none; } }
+
+.evo-dica { position: absolute; z-index: 2; pointer-events: none; display: flex; flex-direction: column; gap: 2px; padding: 8px 11px; min-width: 140px; border-radius: 12px; background: var(--cartao); border: 1px solid var(--borda); box-shadow: 0 6px 20px rgba(0,0,0,.16); font-size: .8rem; font-variant-numeric: tabular-nums; }
+.evo-dica[hidden] { display: none; }
+.evo-dica strong { font-size: .85rem; }
+.evo-dica .suave { color: var(--suave); }
+.evo-dica .atraso { color: var(--alerta); font-weight: 600; }
+
+.evo-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; padding-top: 12px; border-top: 1px solid var(--borda); }
+.evo-stat small { display: block; color: var(--suave); font-size: .72rem; }
+.evo-stat strong { font-size: .92rem; font-variant-numeric: tabular-nums; }
+.evo-tabela { margin-top: 12px; font-size: .82rem; }
+.evo-tabela summary { cursor: pointer; color: var(--suave); font-weight: 600; }
+.evo-tabela table { width: 100%; border-collapse: collapse; margin-top: 8px; font-variant-numeric: tabular-nums; }
+.evo-tabela th, .evo-tabela td { text-align: right; padding: 5px 4px; border-bottom: 1px solid var(--borda); }
+.evo-tabela th:first-child, .evo-tabela td:first-child { text-align: left; }
