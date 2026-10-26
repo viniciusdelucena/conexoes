@@ -30,3 +30,5 @@
 .ct-valor { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .ct-seta { flex: none; color: var(--suave); display: grid; }
 #pagina-contas > .cartao + .btn-sutil, #ct-conteudo > .btn-sutil { align-self: center; margin: .4rem auto 0; display: block; }
+
+.grade-stats.sem-dia .stat:last-child { grid-column: 1 / -1; }

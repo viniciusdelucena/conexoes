@@ -190,9 +190,10 @@ function entrarNoApp(id) {
   pararObservadores();
   cancelarCasa = backend.observarCasa(
     id,
-    ({ nome, membros }) => {
+    ({ nome, membros, diasUteis }) => {
       $("titulo-casa").textContent = nome || "Conexões";
       $("cfg-nome").textContent = nome;
+      aplicarDiasUteis(diasUteis === true);
       $("cfg-membros").textContent =
         `${membros} de ${MAX_MEMBROS}` + (membros < MAX_MEMBROS ? " (falta convidar)" : "");
     },
@@ -233,6 +234,28 @@ dividasUI.configurar({
   obterCasaId: () => casaId,
   aviso,
   aoResumo: mostrarResumoDividas
+});
+
+// Preferência da casa: mostrar o valor por dia útil (desligada por padrão).
+function aplicarDiasUteis(ativo) {
+  diasUteisAtivo = ativo;
+  $("stat-dia").hidden = !ativo;
+  $("grade-stats").classList.toggle("sem-dia", !ativo);
+  contasUI.definirDiasUteis(ativo);
+}
+// Easter egg: 5 toques seguidos no símbolo do topo ligam/desligam o valor por dia útil.
+let diasUteisAtivo = false;
+let toquesLogo = [];
+document.querySelector(".topo-marca").addEventListener("click", () => {
+  const agora = Date.now();
+  toquesLogo = toquesLogo.filter((t) => agora - t < 2500).concat(agora);
+  if (toquesLogo.length < 5) return;
+  toquesLogo = [];
+  const novo = !diasUteisAtivo;
+  aplicarDiasUteis(novo);
+  aviso(novo ? "Valor por dia útil ligado" : "Valor por dia útil desligado");
+  Promise.resolve(backend.salvarPreferencias(casaId, { diasUteis: novo }))
+    .catch((e) => { console.error(e); aviso(traduzirErro(e)); aplicarDiasUteis(!novo); });
 });
 
 // Resumo do mês atual nos cartões da tela Início.

@@ -80,6 +80,7 @@ export function configurarContas(contexto) {
   let tipoForm = "fixa";
   let valorAlvo = null;      // { conta, alterada } da folha de valor
   let confirmandoExclusao = false;
+  let usarDias = false;      // preferência da casa: mostrar valor por dia útil
 
   const backend = () => contexto.obterBackend();
   const casa = () => contexto.obterCasaId();
@@ -153,11 +154,12 @@ export function configurarContas(contexto) {
       h("div", { class: "rd-rotulo" }, "Total do mês"),
       h("div", { class: "rd-valor" }, reais(r.total)),
       h("div", { class: "rd-meta" },
-        meta("Por dia útil", reais(r.porDia)),
-        meta("Dias úteis", String(r.dias)),
+        usarDias ? meta("Por dia útil", reais(r.porDia)) : null,
+        usarDias ? meta("Dias úteis", String(r.dias)) : null,
         meta("Com o gasto real", reais(r.totalReal))),
       h("div", { class: "rd-nota" },
-        "O total usa o teto cheio. \"Com o gasto real\" troca o teto pelo que já foi gasto dele. Dias úteis contam de segunda a sábado, sem descontar feriados por enquanto.")
+        "O total usa o teto cheio. \"Com o gasto real\" troca o teto pelo que já foi gasto dele." +
+        (usarDias ? " Dias úteis contam de segunda a sábado, sem descontar feriados por enquanto." : ""))
     );
   }
 
@@ -398,6 +400,7 @@ export function configurarContas(contexto) {
   return {
     receberDividas(lista) { dividas = lista; pronto.dividas = true; renderizar(); },
     receberContas(lista) { contas = lista; pronto.contas = true; renderizar(); },
+    definirDiasUteis(ativo) { if (usarDias !== ativo) { usarDias = ativo; renderizar(); } },
     receberMeses(mapa) { meses = mapa; pronto.meses = true; renderizar(); },
     limpar() {
       dividas = []; contas = []; meses = {};

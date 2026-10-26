@@ -6,7 +6,8 @@ import { mesAtual, somarMeses } from "./util.js";
 export function criarBackendDemo() {
   let ouvinte = null;
   let casaId = null;
-  let casa = { nome: "", membros: 0 };
+  let casa = { nome: "", membros: 0, diasUteis: false };
+  let ouvinteCasa = null;
   const espera = (ms = 450) => new Promise((r) => setTimeout(r, ms));
   const USUARIO = { uid: "demo", nome: "Vinicius Demo", email: "demo@exemplo.com" };
 
@@ -61,8 +62,13 @@ export function criarBackendDemo() {
       return { ok: true };
     },
     observarCasa(id, aoReceber) {
+      ouvinteCasa = aoReceber;
       setTimeout(() => aoReceber({ ...casa }), 120);
-      return () => {};
+      return () => { ouvinteCasa = null; };
+    },
+    async salvarPreferencias(id, prefs) {
+      Object.assign(casa, prefs);
+      if (ouvinteCasa) ouvinteCasa({ ...casa });
     },
 
     observarDividas(id, aoReceber) {

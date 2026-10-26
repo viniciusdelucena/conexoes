@@ -68,10 +68,15 @@ export async function criarBackendFirebase() {
         (snap) => {
           if (!snap.exists()) return;
           const d = snap.data();
-          aoReceber({ nome: d.nome || "", membros: (d.members || []).length });
+          aoReceber({ nome: d.nome || "", membros: (d.members || []).length, diasUteis: d.diasUteis === true });
         },
         aoFalhar
       );
+    },
+
+    // Preferências da casa (valem para os dois): { diasUteis: boolean }
+    salvarPreferencias(casaId, prefs) {
+      return F.updateDoc(F.doc(db, "households", casaId), prefs);
     },
 
     // ----- Dívidas -----
