@@ -18,7 +18,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --fundo: #141010;
     --cartao: #1f1818;
     --texto: #f3ecec;
@@ -36,6 +36,28 @@
     --realce: rgba(255, 122, 125, .16);
   }
 }
+:root[data-theme="dark"] {
+    --fundo: #141010;
+    --cartao: #1f1818;
+    --texto: #f3ecec;
+    --suave: #b09f9f;
+    --borda: #3a2d2d;
+    --primaria: #ff7a7d;
+    --primaria-texto: #2a0a0b;
+    --erro: #f97066;
+    --ok: #47cd89;
+    --sombra: none;
+    --dock: rgba(31, 24, 24, .93);
+    --dock-solido: #1f1818;
+    --alerta: #fbbf24;
+    --alerta-fundo: rgba(251, 191, 36, .14);
+    --realce: rgba(255, 122, 125, .16);
+}
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
+
+/* Declara que o app já tem tema claro e escuro: impede o "escurecer páginas" do navegador de recolorir por cima. */
+:root { color-scheme: light dark; }
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }

@@ -344,6 +344,32 @@ $("btn-copiar").addEventListener("click", async () => {
   }
 });
 
+// ---------- Tema (por aparelho) ----------
+function temaSalvo() {
+  try { const t = localStorage.getItem("conexoes-tema"); return t === "claro" || t === "escuro" ? t : "auto"; } catch { return "auto"; }
+}
+function aplicarTema(modo) {
+  const raiz = document.documentElement;
+  if (modo === "auto") {
+    if (raiz.hasAttribute("data-tema-app")) { raiz.removeAttribute("data-theme"); raiz.removeAttribute("data-tema-app"); }
+  } else {
+    raiz.setAttribute("data-theme", modo === "escuro" ? "dark" : "light");
+    raiz.setAttribute("data-tema-app", "1");
+  }
+  document.querySelectorAll("#seletor-tema [data-tema]").forEach((b) => {
+    const ativo = b.dataset.tema === modo;
+    b.classList.toggle("ativo", ativo);
+    b.setAttribute("aria-pressed", String(ativo));
+  });
+}
+document.querySelectorAll("#seletor-tema [data-tema]").forEach((b) =>
+  b.addEventListener("click", () => {
+    try { if (b.dataset.tema === "auto") localStorage.removeItem("conexoes-tema"); else localStorage.setItem("conexoes-tema", b.dataset.tema); } catch (_) { /* sem armazenamento */ }
+    aplicarTema(b.dataset.tema);
+  })
+);
+aplicarTema(temaSalvo());
+
 // ---------- Estado da rede ----------
 function atualizarRede() {
   // Só aparece quando importa: sem internet (os dados ficam salvos no aparelho) ou na demonstração.

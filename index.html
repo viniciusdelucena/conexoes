@@ -4,6 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Conexões</title>
+  <meta name="color-scheme" content="light dark">
+  <script>
+    // Aplica o tema escolhido antes de desenhar a tela (evita piscar).
+    try { var t = localStorage.getItem("conexoes-tema"); if (t === "claro" || t === "escuro") { document.documentElement.setAttribute("data-theme", t === "escuro" ? "dark" : "light"); document.documentElement.setAttribute("data-tema-app", "1"); } } catch (e) {}
+  </script>
   <meta name="theme-color" content="#e03a3e">
   <meta name="description" content="Dívidas, contas do mês e teto de gastos da casa.">
   <link rel="manifest" href="manifest.webmanifest">
@@ -163,6 +168,15 @@
             <button id="btn-copiar" class="btn">Copiar</button>
           </div>
           <p class="sub pequeno">Envie este código para sua esposa. Ela entra com a conta Google dela e escolhe "Entrar com um código". A casa aceita no máximo 2 pessoas.</p>
+        </div>
+        <div class="cartao">
+          <h2>Aparência</h2>
+          <p class="sub pequeno">Vale só neste aparelho.</p>
+          <div id="seletor-tema" class="segmentado" role="group" aria-label="Tema do app">
+            <button type="button" data-tema="auto" class="ativo" aria-pressed="true">Automático</button>
+            <button type="button" data-tema="claro" aria-pressed="false">Claro</button>
+            <button type="button" data-tema="escuro" aria-pressed="false">Escuro</button>
+          </div>
         </div>
         <div class="cartao">
           <h2>Conta</h2>
