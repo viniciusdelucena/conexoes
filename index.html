@@ -9,11 +9,12 @@
     // Aplica o tema escolhido antes de desenhar a tela (evita piscar).
     try { var t = localStorage.getItem("conexoes-tema"); if (t === "claro" || t === "escuro") { document.documentElement.setAttribute("data-theme", t === "escuro" ? "dark" : "light"); document.documentElement.setAttribute("data-tema-app", "1"); } } catch (e) {}
   </script>
-  <meta name="theme-color" content="#e03a3e">
+  <meta name="theme-color" id="meta-cor" content="#f7f4f4">
   <meta name="description" content="Dívidas, contas do mês e teto de gastos da casa.">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="icons/icon-192.png">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="icon" type="image/svg+xml" href="icons/icone.svg">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Conexões">
   <link rel="stylesheet" href="style.css">
@@ -36,15 +37,13 @@
 
     <div class="hero-conteudo">
       <div class="logo-tile" aria-hidden="true">
-        <svg class="inf" viewBox="0 0 160 100" xmlns="http://www.w3.org/2000/svg">
-          <path id="inf-caminho" class="base" pathLength="100"
-            d="M80 50 C95 22 142 22 142 50 C142 78 95 78 80 50 C65 22 18 22 18 50 C18 78 65 78 80 50 Z"/>
-          <circle class="ponto" r="4.6">
-            <animateMotion dur="4.4s" repeatCount="indefinite" begin="1.8s"><mpath href="#inf-caminho"/></animateMotion>
-          </circle>
-          <circle class="ponto" r="4.6">
-            <animateMotion dur="4.4s" repeatCount="indefinite" begin="-0.4s"><mpath href="#inf-caminho"/></animateMotion>
-          </circle>
+        <svg class="elos" viewBox="104 158 304 196" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs><clipPath id="elos-cima"><rect x="212" y="120" width="88" height="136"/></clipPath></defs>
+          <g fill="none" stroke-width="34">
+            <circle class="anel e" cx="204" cy="256" r="74" pathLength="100" stroke="#fff"/>
+            <circle class="anel d" cx="308" cy="256" r="74" pathLength="100" stroke="#ffc4bd"/>
+            <circle class="anel e" cx="204" cy="256" r="74" pathLength="100" stroke="#fff" clip-path="url(#elos-cima)"/>
+          </g>
         </svg>
       </div>
 
@@ -107,7 +106,14 @@
   <div id="app" hidden>
     <header class="topo">
       <div class="topo-marca" aria-hidden="true">
-        <svg viewBox="0 0 160 100"><path d="M80 50 C95 22 142 22 142 50 C142 78 95 78 80 50 C65 22 18 22 18 50 C18 78 65 78 80 50 Z"/></svg>
+        <svg class="elos-topo" viewBox="104 158 304 196" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs><clipPath id="elos-topo-cima"><rect x="212" y="120" width="88" height="136"/></clipPath></defs>
+          <g fill="none" stroke-width="34">
+            <circle class="anel e" cx="204" cy="256" r="74" pathLength="100" stroke="#fff"/>
+            <circle class="anel d" cx="308" cy="256" r="74" pathLength="100" stroke="#ffc4bd"/>
+            <circle class="anel e" cx="204" cy="256" r="74" pathLength="100" stroke="#fff" clip-path="url(#elos-topo-cima)"/>
+          </g>
+        </svg>
       </div>
       <div class="topo-textos">
         <h1 class="topo-titulo" id="titulo-pagina">Início</h1>

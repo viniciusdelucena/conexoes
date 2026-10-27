@@ -153,10 +153,10 @@ input[type="text"]:focus, input[type="search"]:focus, input[type="date"]:focus {
   flex: none; width: 40px; height: 40px;
   display: grid; place-items: center;
   border-radius: 13px;
-  background: linear-gradient(135deg, #f25a5a, #cd2830);
-  box-shadow: 0 6px 14px rgba(205, 40, 48, .32), inset 0 1px 0 rgba(255, 255, 255, .35);
+  background: radial-gradient(circle at 22% 12%, rgba(255, 255, 255, .38), transparent 62%), linear-gradient(135deg, #ff7a6e, #e63b48 50%, #a8142a);
+  box-shadow: 0 6px 14px rgba(168, 20, 42, .34), inset 0 1px 0 rgba(255, 255, 255, .35);
 }
-.topo-marca svg { width: 24px; height: auto; fill: none; stroke: #fff; stroke-width: 14; stroke-linecap: round; stroke-linejoin: round; }
+.topo-marca svg { width: 25px; height: auto; overflow: visible; filter: drop-shadow(0 2px 2px rgba(90, 0, 16, .3)); }
 .topo-textos { flex: 1; min-width: 0; }
 .topo-titulo { margin: 0; font-size: 1.35rem; font-weight: 800; line-height: 1.15; }
 .topo-sub { margin: 0; font-size: .8rem; color: var(--suave); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -246,7 +246,7 @@ input[type="text"]:focus, input[type="search"]:focus, input[type="date"]:focus {
   width: 116px; height: 116px;
   border-radius: 31px;
   display: grid; place-items: center;
-  background: linear-gradient(135deg, #f25a5a, #cd2830);
+  background: radial-gradient(circle at 22% 12%, rgba(255, 255, 255, .4), transparent 62%), linear-gradient(135deg, #ff7a6e, #e63b48 50%, #a8142a);
   box-shadow: 0 20px 44px rgba(80, 0, 10, .45), inset 0 1px 0 rgba(255, 255, 255, .4);
   outline: 2px solid rgba(255, 255, 255, .4);
   animation: flutuar-logo 5s ease-in-out infinite, entrar-logo .9s cubic-bezier(.2, .9, .3, 1.2) both;
@@ -260,23 +260,20 @@ input[type="text"]:focus, input[type="search"]:focus, input[type="date"]:focus {
   pointer-events: none;
 }
 .logo-tile::after { animation-delay: 1.7s; }
-@keyframes onda { 0% { transform: scale(1); opacity: .7; } 100% { transform: scale(1.6); opacity: 0; } }
+@keyframes onda { 0% { inset: 0; border-radius: 31px; opacity: .7; } 100% { inset: -30px; border-radius: 61px; opacity: 0; } }
 @keyframes flutuar-logo { 0%, 100% { translate: 0 0; } 50% { translate: 0 -8px; } }
 @keyframes entrar-logo { from { opacity: 0; scale: .6; } to { opacity: 1; scale: 1; } }
 
-.inf { width: 80px; height: auto; overflow: visible; filter: drop-shadow(0 3px 5px rgba(90, 0, 10, .35)); }
-.inf .base {
-  fill: none; stroke: #fff; stroke-width: 12; stroke-linecap: round; stroke-linejoin: round;
-  animation: desenhar 1.7s .25s cubic-bezier(.65, 0, .35, 1) both;
-}
+.elos { width: 84px; height: auto; overflow: visible; filter: drop-shadow(0 4px 7px rgba(90, 0, 16, .38)); }
+.elos .anel { stroke-linecap: round; animation: desenhar 1.3s .25s cubic-bezier(.65, 0, .35, 1) both; }
+.elos .anel.d { animation-delay: .65s; }
 @keyframes desenhar {
   from { stroke-dasharray: 100; stroke-dashoffset: 100; }
   to { stroke-dasharray: 100; stroke-dashoffset: 0; }
 }
-.inf .ponto { fill: #e03a3e; }
 
 .marca {
-  margin: 1.3rem 0 .3rem;
+  margin: 2.7rem 0 .4rem;
   font-size: 2.5rem; font-weight: 800; letter-spacing: .01em;
   text-shadow: 0 2px 14px rgba(80, 0, 10, .35);
   animation: sobe .7s .35s both;
@@ -349,9 +346,8 @@ input[type="text"]:focus, input[type="search"]:focus, input[type="date"]:focus {
 .stat .leg { font-size: .78rem; color: var(--suave); }
 
 @media (prefers-reduced-motion: reduce) {
-  .orb, .logo-tile, .logo-tile::before, .logo-tile::after, .inf .base,
+  .orb, .logo-tile, .logo-tile::before, .logo-tile::after, .elos, .elos .anel,
   .marca, .lema, .destaques li, .btn.google, .rodape-hero { animation: none !important; }
-  .inf .ponto { display: none; }
 }
 
 /* Barra de navegação flutuante, com indicador que desliza até a aba ativa */

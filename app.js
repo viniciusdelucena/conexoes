@@ -21,10 +21,24 @@ const MAX_MEMBROS = 2;
 // ---------- Utilidades de tela ----------
 const TELAS = ["tela-carregando", "tela-login", "tela-casa"];
 
+let telaAtual = "tela-carregando";
 function mostrarTela(nome) {
+  telaAtual = nome;
   for (const t of TELAS) $(t).hidden = t !== nome;
   $("app").hidden = nome !== "app";
+  atualizarCorBarra();
 }
+
+// Cor das barras do sistema (status e navegação) acompanha a tela: sem "faixas" de outra cor.
+function atualizarCorBarra() {
+  const meta = document.getElementById("meta-cor");
+  if (!meta) return;
+  const attr = document.documentElement.getAttribute("data-theme");
+  const escuro = attr ? attr === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const heroVermelho = telaAtual === "tela-login" || telaAtual === "tela-casa";
+  meta.setAttribute("content", heroVermelho ? "#ee5154" : escuro ? "#141010" : "#f7f4f4");
+}
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", atualizarCorBarra);
 
 function mostrarErro(elId, msg) {
   const el = $(elId);
@@ -356,6 +370,7 @@ function aplicarTema(modo) {
     raiz.setAttribute("data-theme", modo === "escuro" ? "dark" : "light");
     raiz.setAttribute("data-tema-app", "1");
   }
+  atualizarCorBarra();
   document.querySelectorAll("#seletor-tema [data-tema]").forEach((b) => {
     const ativo = b.dataset.tema === modo;
     b.classList.toggle("ativo", ativo);
