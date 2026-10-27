@@ -139,11 +139,16 @@ export function configurarContas(contexto) {
     if (!tudoPronto()) {
       caixa.replaceChildren(navegacao(), h("div", { class: "cartao ct-carregando" }, h("div", { class: "spinner", "aria-label": "Carregando" })));
       contexto.aoResumo(null);
+      if (contexto.aoSerie) contexto.aoSerie([]);
       return;
     }
     const r = calcularMes(mesSel, dados(mesSel));
     caixa.replaceChildren(navegacao(), ...corpo(r));
     contexto.aoResumo(calcularMes(mesAtual(), dados(mesAtual())));
+    if (contexto.aoSerie) {
+      const hoje = mesAtual();
+      contexto.aoSerie(Array.from({ length: 8 }, (_, i) => { const ym = somarMeses(hoje, i - 1); return calcularMes(ym, dados(ym)); }));
+    }
     atualizarFeriadosNacionais();
   }
 

@@ -7,6 +7,7 @@ import { aplicarIcones } from "./js/icones.js";
 import * as dividasUI from "./js/dividas.js";
 import { configurarContas } from "./js/contas.js";
 import { configurarGastos } from "./js/gastos.js";
+import { configurarPainel } from "./js/painel.js";
 
 
 
@@ -99,6 +100,7 @@ async function sair() {
   dividasUI.limpar();
   contasUI.limpar();
   gastosUI.limpar();
+  painelUI.limpar();
   casaId = null;
   if (backend) await backend.sair();
 }
@@ -279,12 +281,14 @@ function mostrarResumoContas(r) {
   $("stat-dia-num").textContent = reais(r.porDia);
   $("stat-dia-leg").textContent = `${nomeMes(mesAtual()).split(" ")[0].toLowerCase()}: ${r.dias} dias úteis` + (r.feriados ? ` · ${r.feriados} feriado${r.feriados > 1 ? "s" : ""}` : "");
 }
+const painelUI = configurarPainel();
 const contasUI = configurarContas({
   obterBackend: () => backend,
   obterCasaId: () => casaId,
   aviso,
   abrirDividas: (ym) => { dividasUI.irParaMes(ym); abrirPagina("dividas"); },
   abrirTetoPagina: () => abrirPagina("teto"),
+  aoSerie: (s) => painelUI.atualizar(s),
   aoResumo: mostrarResumoContas
 });
 
@@ -323,6 +327,7 @@ function abrirPagina(nome) {
   });
   $("dock").style.setProperty("--idx", String(ORDEM.indexOf(nome)));
   $("titulo-pagina").textContent = TITULOS[nome] || "";
+  if (nome === "inicio" && typeof painelUI !== "undefined") painelUI.animar();
   window.scrollTo(0, 0);
 }
 
