@@ -46,7 +46,7 @@ export function configurarGastos(contexto) {
       return;
     }
     const r = resumoTeto(mesSel, meses, gastos);
-    caixa.replaceChildren(navegacao(), resumo(r), acoes(), lista());
+    caixa.replaceChildren(navegacao(), resumo(r), acoes(), ...excesso(r), lista());
     contexto.aoResumo(resumoTeto(mesAtual(), meses, gastos));
   }
 
@@ -88,6 +88,48 @@ export function configurarGastos(contexto) {
       h("button", { class: "btn", type: "button", onclick: () => contexto.editarTeto(mesSel) }, "Alterar teto"));
   }
 
+  // Excesso do teto: leva o que passou do teto para o mês seguinte (vira um gasto lá, dia 1).
+  function excesso(r) {
+    const prox = somarMeses(mesSel, 1);
+    const nomeProx = nomeMes(prox);
+    const levado = gastos.find((g) => g.excessoDe === mesSel);
+    if (r.estourou) {
+      // Não conta o próprio excesso levado deste mês (ele está no mês seguinte, não aqui).
+      return [h("button", { class: "btn-sutil gt-excesso", type: "button", onclick: () => levarExcesso(r.gasto - r.teto, levado) },
+        levado ? `Atualizar o excesso levado para ${nomeProx} (${reais(r.gasto - r.teto)})` : `Levar o excesso de ${reais(r.gasto - r.teto)} para ${nomeProx}`)];
+    }
+    if (levado) {
+      return [h("button", { class: "btn-sutil gt-excesso", type: "button", onclick: () => desfazerExcesso(levado) },
+        `Desfazer o excesso levado para ${nomeProx}`)];
+    }
+    return [];
+  }
+
+  function levarExcesso(valor, levado) {
+    const prox = somarMeses(mesSel, 1);
+    const dados = { valorCentavos: valor, descricao: `Excesso de ${nomeMes(mesSel)}`, data: `${prox}-01`, excessoDe: mesSel };
+    contexto.aviso(`Excesso levado para ${nomeMes(prox)}`);
+    executar(() => backend().salvarGasto(casa(), levado ? levado.id : null, dados));
+  }
+
+  function desfazerExcesso(levado) {
+    contexto.aviso("Excesso desfeito");
+    executar(() => backend().excluirGasto(casa(), levado.id));
+  }
+
+  // Move um gasto para o mesmo dia do mês seguinte (ou o último dia, se o mês for mais curto).
+  function moverParaProximoMes() {
+    if (!alvo) return;
+    const g = alvo;
+    const ym = g.data.slice(0, 7);
+    const prox = somarMeses(ym, 1);
+    const dia = Math.min(Number(g.data.slice(8)), diasNoMes(prox));
+    const data = `${prox}-${dois(dia)}`;
+    fechar();
+    contexto.aviso(`Gasto movido para ${nomeMes(prox)}`);
+    executar(() => backend().salvarGasto(casa(), g.id, { data }));
+  }
+
   function lista() {
     const doMes = gastos.filter((g) => g.data.startsWith(mesSel + "-"))
       .sort((a, b) => (a.data === b.data ? 0 : a.data < b.data ? 1 : -1));
@@ -104,7 +146,7 @@ export function configurarGastos(contexto) {
           h("span", { class: "ct-ico", html: icone("teto", 20) }),
           h("span", { class: "ct-info" },
             h("span", { class: "ct-nome" }, g.descricao || "Gasto"),
-            h("span", { class: "ct-sub" }, `${DIAS_SEMANA[diaDaSemana(g.data)]}, ${Number(g.data.slice(8))}`)),
+            h("span", { class: "ct-sub" }, `${DIAS_SEMANA[diaDaSemana(g.data)]}, ${Number(g.data.slice(8))}` + (g.excessoDe ? " · levado do mês anterior" : ""))),
           h("span", { class: "ct-valor" }, reais(g.valorCentavos)),
           h("span", { class: "ct-seta", html: icone("dir", 16) }))))));
   }
@@ -122,6 +164,7 @@ export function configurarGastos(contexto) {
     $("gt-data").value = g ? g.data : (mesSel === mesAtual() ? hojeIso() : `${mesSel}-01`);
     const botao = $("btn-excluir-gasto");
     botao.hidden = !g;
+    $("btn-gasto-proximo").hidden = !g;
     $("folha-gasto").hidden = false;
     requestAnimationFrame(() => $("gt-valor").focus());
   }
@@ -150,6 +193,7 @@ export function configurarGastos(contexto) {
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("folha-gasto").hidden) fechar(); });
   $("form-gasto").addEventListener("submit", (e) => { e.preventDefault(); salvar(); });
   $("btn-excluir-gasto").addEventListener("click", excluir);
+  $("btn-gasto-proximo").addEventListener("click", moverParaProximoMes);
 
   renderizar();
 

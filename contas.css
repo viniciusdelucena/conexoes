@@ -54,3 +54,5 @@
 .gt-acoes .btn { flex: 1; margin-top: 0; }
 .resumo-div.estourou { background: linear-gradient(135deg, #b42318, #7a1710); }
 .resumo-div .barra span { transition: width .9s cubic-bezier(.22, 1, .36, 1); }
+
+.gt-excesso { display: block; margin: 0 auto 14px; }
