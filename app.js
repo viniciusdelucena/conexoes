@@ -241,17 +241,33 @@ function entrarNoApp(id) {
 }
 
 // Resumo das dívidas no cartão da tela Início.
+let resumoVazio = { dividas: null, contas: null };
+function atualizarVazio() {
+  const vazio = resumoVazio.dividas === 0 && resumoVazio.contas === 0;
+  $("ini-vazio").hidden = !vazio;
+  $("ini-dados").hidden = vazio || resumoVazio.dividas === null || resumoVazio.contas === null;
+}
+function barra(id, pct) { $(id).style.width = `${Math.max(0, Math.min(100, pct))}%`; }
+
 function mostrarResumoDividas(r) {
+  resumoVazio.dividas = r.quantidade;
   if (!r.quantidade) {
-    $("stat-divida-num").textContent = "R$ —";
-    $("stat-divida-leg").textContent = "cadastre em Dívidas";
+    $("stat-divida-num").textContent = "R$ 0,00";
+    $("stat-divida-rot").textContent = "nenhuma dívida";
+    $("stat-divida-leg").textContent = "toque para cadastrar";
+    barra("ini-div-barra", 0);
   } else if (r.parcelasRestantes === 0) {
     $("stat-divida-num").textContent = reais(0);
-    $("stat-divida-leg").textContent = "tudo quitado";
+    $("stat-divida-rot").textContent = "tudo quitado";
+    $("stat-divida-leg").textContent = "parabéns!";
+    barra("ini-div-barra", 100);
   } else {
     $("stat-divida-num").textContent = reais(r.restanteCentavos);
-    $("stat-divida-leg").textContent = `${r.parcelasRestantes} parcelas · até ${mesCurto(r.fim)}`;
+    $("stat-divida-rot").textContent = "falta pagar";
+    $("stat-divida-leg").textContent = `${r.quitadoPct}% quitado · até ${mesCurto(r.fim)}`;
+    barra("ini-div-barra", r.quitadoPct);
   }
+  atualizarVazio();
 }
 dividasUI.configurar({
   obterBackend: () => backend,
@@ -264,7 +280,6 @@ dividasUI.configurar({
 function aplicarDiasUteis(ativo) {
   diasUteisAtivo = ativo;
   $("stat-dia").hidden = !ativo;
-  $("grade-stats").classList.toggle("sem-dia", !ativo);
   contasUI.definirDiasUteis(ativo);
 }
 // Easter egg: 5 toques seguidos no símbolo do topo ligam/desligam o valor por dia útil.
@@ -284,16 +299,19 @@ document.querySelector(".topo-marca").addEventListener("click", () => {
 
 // Resumo do mês atual nos cartões da tela Início.
 function mostrarResumoContas(r) {
+  const mes = nomeMes(mesAtual()).split(" ")[0].toLowerCase();
   if (!r) {
+    resumoVazio.contas = null;
     $("stat-contas-num").textContent = "R$ —";
-    $("stat-contas-leg").textContent = "carregando…";
-    $("stat-dia-num").textContent = "R$ —";
+    atualizarVazio();
     return;
   }
+  resumoVazio.contas = r.itens.length;
+  $("ini-mes").textContent = `Contas de ${mes}`;
   $("stat-contas-num").textContent = reais(r.total);
-  $("stat-contas-leg").textContent = "total deste mês, com o teto";
-  $("stat-dia-num").textContent = reais(r.porDia);
-  $("stat-dia-leg").textContent = `${nomeMes(mesAtual()).split(" ")[0].toLowerCase()}: ${r.dias} dias úteis` + (r.feriados ? ` · ${r.feriados} feriado${r.feriados > 1 ? "s" : ""}` : "");
+  $("stat-contas-leg").textContent = "tudo que vence no mês, com o teto";
+  $("stat-dia").textContent = `${reais(r.porDia)} por dia útil · ${r.dias} dias úteis` + (r.feriados ? ` · ${r.feriados} feriado${r.feriados > 1 ? "s" : ""}` : "");
+  atualizarVazio();
 }
 const painelUI = configurarPainel();
 const contasUI = configurarContas({
@@ -308,9 +326,13 @@ const contasUI = configurarContas({
 
 // Saldo do teto no cartão da tela Início.
 function mostrarResumoTeto(r) {
-  if (!r) { $("stat-teto-num").textContent = "R$ —"; $("stat-teto-leg").textContent = "de imprevistos"; return; }
-  $("stat-teto-num").textContent = reais(r.restante);
-  $("stat-teto-leg").textContent = r.estourou ? `passou do teto de ${reais(r.teto)}` : `de ${reais(r.teto)} · gasto ${reais(r.gasto)}`;
+  const tile = $("ini-tile-teto");
+  if (!r) { $("stat-teto-num").textContent = "R$ —"; return; }
+  tile.classList.toggle("estourou", r.estourou);
+  $("stat-teto-num").textContent = reais(Math.abs(r.restante));
+  $("stat-teto-rot").textContent = r.estourou ? "passou do teto" : "ainda dá para gastar";
+  $("stat-teto-leg").textContent = `${reais(r.gasto)} gastos de ${reais(r.teto)}`;
+  barra("ini-teto-barra", r.teto > 0 ? (r.gasto / r.teto) * 100 : (r.gasto > 0 ? 100 : 0));
 }
 const gastosUI = configurarGastos({
   obterBackend: () => backend,
@@ -334,7 +356,10 @@ let paginaAtual = "inicio";
 function abrirPagina(nome) {
   paginaAtual = nome;
   document.querySelectorAll(".pagina").forEach((p) => (p.hidden = p.id !== `pagina-${nome}`));
-  document.querySelectorAll(".aba").forEach((a) => {
+  document.querySelectorAll("[data-ir]").forEach((el) =>
+  el.addEventListener("click", () => abrirPagina(el.dataset.ir))
+);
+document.querySelectorAll(".aba").forEach((a) => {
     const ativa = a.dataset.pagina === nome;
     a.classList.toggle("ativa", ativa);
     a.setAttribute("aria-current", ativa ? "page" : "false");

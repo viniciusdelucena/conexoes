@@ -40,27 +40,8 @@ export function configurarPainel() {
     if (!serie.length) { raiz.replaceChildren(); return; }
     const animar = animarProximo && !reduzir();
     animarProximo = false;
-    raiz.replaceChildren(cartaoComposicao(animar), cartaoMeses(animar));
+    raiz.replaceChildren(cartaoMeses(animar));
     jaAnimou = true;
-  }
-
-  // ----- Composição do mês atual -----
-  function cartaoComposicao(animar) {
-    const r = serie.find((x) => x.ym === mesAtual()) || serie[0];
-    const partes = CATEGORIAS.map((c) => ({ ...c, v: c.valor(r) })).filter((p) => p.v > 0);
-    const total = partes.reduce((s, p) => s + p.v, 0) || 1;
-    const barra = h("div", { class: "pn-barra", role: "img", "aria-label": `Composição de ${nomeMes(r.ym)}: ${partes.map((p) => `${p.nome} ${Math.round((p.v / total) * 100)}%`).join(", ")}` },
-      partes.map((p, i) => h("span", { class: "pn-seg", style: `--w:${(p.v / total) * 100}%;--i:${i};background:${p.cor}`, title: `${p.nome}: ${reais(p.v)}` })));
-    if (animar) barra.classList.add("anima");
-    return h("article", { class: "cartao pn-cartao" },
-      h("header", { class: "pn-topo" }, h("h3", {}, "Para onde vai o mês"), h("span", { class: "pn-total" }, reais(r.total))),
-      h("p", { class: "sub pequeno" }, `${nomeMes(r.ym)}, com o teto cheio`),
-      barra,
-      h("ul", { class: "pn-lista" }, partes.map((p) => h("li", {},
-        h("i", { class: "pn-cor", style: `background:${p.cor}` }),
-        h("span", { class: "pn-nome" }, p.nome),
-        h("span", { class: "pn-pct" }, `${Math.round((p.v / total) * 100)}%`),
-        h("strong", {}, reais(p.v))))));
   }
 
   // ----- Colunas empilhadas mês a mês -----
@@ -75,7 +56,7 @@ export function configurarPainel() {
         h("thead", {}, h("tr", {}, h("th", {}, "Mês"), CATEGORIAS.map((c) => h("th", {}, c.nome)), h("th", {}, "Total"))),
         h("tbody", {}, serie.map((r) => h("tr", {}, h("td", {}, mesCurto(r.ym)), CATEGORIAS.map((c) => h("td", {}, reais(c.valor(r)))), h("td", {}, reais(r.total)))))));
     const cartao = h("article", { class: "cartao pn-cartao" },
-      h("header", { class: "pn-topo" }, h("h3", {}, "Mês a mês"), h("span", { class: "sub pequeno" }, "total com o teto")),
+      h("header", { class: "pn-topo" }, h("h3", {}, "Próximos meses"), h("span", { class: "sub pequeno" }, "total de cada mês")),
       legenda,
       h("div", { class: "pn-area" }, caixa, dica),
       queda ? h("p", { class: "pn-insight" }, `Em ${nomeMes(queda.ym)} o total cai ${reais(queda.queda)} em relação ao mês anterior.`) : null,

@@ -22,6 +22,7 @@
   <link rel="stylesheet" href="contas.css">
   <link rel="stylesheet" href="evolucao.css">
   <link rel="stylesheet" href="painel.css">
+  <link rel="stylesheet" href="inicio.css">
 </head>
 <body>
 
@@ -124,20 +125,50 @@
 
     <main id="conteudo">
       <section id="pagina-inicio" class="pagina">
-        <div class="cartao saudacao">
+        <header class="ini-saudacao">
           <h2 id="saudacao-texto">Olá</h2>
           <p class="data" id="saudacao-data"></p>
-          <p class="resumo">Aqui ficam os números da casa de vocês, sempre atualizados para os dois.</p>
+        </header>
+
+        <!-- Primeiro acesso: nada cadastrado ainda -->
+        <div id="ini-vazio" class="cartao ini-comeco" hidden>
+          <h3>Vamos começar?</h3>
+          <p class="sub">Três passos e o app já mostra o que falta pagar e quanto sobra para gastar.</p>
+          <ol class="ini-passos">
+            <li><button type="button" data-ir="dividas"><span class="ini-n">1</span><span><strong>Cadastre suas dívidas</strong><small>Parcelas de cartão, financiamento, empréstimo</small></span><span class="ini-seta" data-ico="dir" data-tam="18"></span></button></li>
+            <li><button type="button" data-ir="contas"><span class="ini-n">2</span><span><strong>Adicione as contas do mês</strong><small>Aluguel, internet, energia, água</small></span><span class="ini-seta" data-ico="dir" data-tam="18"></span></button></li>
+            <li><button type="button" data-ir="teto"><span class="ini-n">3</span><span><strong>Lance os gastos do dia a dia</strong><small>Eles saem do teto de gastos</small></span><span class="ini-seta" data-ico="dir" data-tam="18"></span></button></li>
+          </ol>
         </div>
 
-        <div class="grade-stats sem-dia" id="grade-stats">
-          <div class="stat"><span class="ic" data-ico="dividas" data-tam="22"></span><div class="leg">Falta pagar</div><div class="num" id="stat-divida-num">R$ —</div><div class="leg" id="stat-divida-leg">cadastre em Dívidas</div></div>
-          <div class="stat"><span class="ic" data-ico="contas" data-tam="22"></span><div class="leg">Contas do mês</div><div class="num" id="stat-contas-num">R$ —</div><div class="leg" id="stat-contas-leg">carregando…</div></div>
-          <div class="stat" id="stat-dia" hidden><span class="ic" data-ico="calendario" data-tam="22"></span><div class="leg">Por dia útil</div><div class="num" id="stat-dia-num">R$ —</div><div class="leg" id="stat-dia-leg">segunda a sábado</div></div>
-          <div class="stat"><span class="ic" data-ico="teto" data-tam="22"></span><div class="leg">Saldo do teto</div><div class="num" id="stat-teto-num">R$ —</div><div class="leg" id="stat-teto-leg">de imprevistos</div></div>
-        </div>
+        <div id="ini-dados">
+          <button type="button" class="ini-hero" data-ir="contas">
+            <span class="ini-rotulo" id="ini-mes">Contas do mês</span>
+            <strong class="ini-valor" id="stat-contas-num">R$ —</strong>
+            <span class="ini-sub" id="stat-contas-leg">Dívidas, contas e teto</span>
+            <span class="ini-dia" id="stat-dia" hidden></span>
+            <span class="ini-ver">Ver detalhes <span data-ico="dir" data-tam="16"></span></span>
+          </button>
 
-        <div id="painel"></div>
+          <div class="ini-tiles">
+            <button type="button" class="ini-tile" data-ir="dividas">
+              <span class="ini-tile-topo"><span class="ini-ic" data-ico="dividas" data-tam="20"></span>Dívidas</span>
+              <strong class="ini-num" id="stat-divida-num">R$ —</strong>
+              <span class="ini-leg" id="stat-divida-rot">falta pagar</span>
+              <span class="ini-trilho"><span id="ini-div-barra"></span></span>
+              <span class="ini-leg" id="stat-divida-leg">cadastre em Dívidas</span>
+            </button>
+            <button type="button" class="ini-tile" id="ini-tile-teto" data-ir="teto">
+              <span class="ini-tile-topo"><span class="ini-ic" data-ico="teto" data-tam="20"></span>Teto de gastos</span>
+              <strong class="ini-num" id="stat-teto-num">R$ —</strong>
+              <span class="ini-leg" id="stat-teto-rot">ainda dá para gastar</span>
+              <span class="ini-trilho"><span id="ini-teto-barra"></span></span>
+              <span class="ini-leg" id="stat-teto-leg">de imprevistos</span>
+            </button>
+          </div>
+
+          <div id="painel"></div>
+        </div>
       </section>
 
       <section id="pagina-dividas" class="pagina" hidden>
