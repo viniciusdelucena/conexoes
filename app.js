@@ -36,7 +36,7 @@ function atualizarCorBarra() {
   const attr = document.documentElement.getAttribute("data-theme");
   const escuro = attr ? attr === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
   const heroVermelho = telaAtual === "tela-login" || telaAtual === "tela-casa";
-  meta.setAttribute("content", heroVermelho ? "#ee5154" : escuro ? "#141010" : "#f7f4f4");
+  meta.setAttribute("content", heroVermelho ? "#e0545a" : escuro ? "#141010" : "#f6f3f2");
 }
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", atualizarCorBarra);
 
@@ -385,7 +385,7 @@ $("btn-copiar").addEventListener("click", async () => {
 
 // ---------- Tema (por aparelho) ----------
 function temaSalvo() {
-  try { const t = localStorage.getItem("conexoes-tema"); return t === "claro" || t === "escuro" ? t : "auto"; } catch { return "auto"; }
+  try { const t = localStorage.getItem("conexoes-tema"); return t === "escuro" || t === "auto" ? t : "claro"; } catch { return "claro"; }
 }
 function aplicarTema(modo) {
   const raiz = document.documentElement;
@@ -404,7 +404,7 @@ function aplicarTema(modo) {
 }
 document.querySelectorAll("#seletor-tema [data-tema]").forEach((b) =>
   b.addEventListener("click", () => {
-    try { if (b.dataset.tema === "auto") localStorage.removeItem("conexoes-tema"); else localStorage.setItem("conexoes-tema", b.dataset.tema); } catch (_) { /* sem armazenamento */ }
+    try { localStorage.setItem("conexoes-tema", b.dataset.tema); } catch (_) { /* sem armazenamento */ }
     aplicarTema(b.dataset.tema);
   })
 );

@@ -7,9 +7,9 @@
   <meta name="color-scheme" content="light dark">
   <script>
     // Aplica o tema escolhido antes de desenhar a tela (evita piscar).
-    try { var t = localStorage.getItem("conexoes-tema"); if (t === "claro" || t === "escuro") { document.documentElement.setAttribute("data-theme", t === "escuro" ? "dark" : "light"); document.documentElement.setAttribute("data-tema-app", "1"); } } catch (e) {}
+    try { var t = localStorage.getItem("conexoes-tema"); if (t !== "auto") { document.documentElement.setAttribute("data-theme", t === "escuro" ? "dark" : "light"); document.documentElement.setAttribute("data-tema-app", "1"); } } catch (e) { document.documentElement.setAttribute("data-theme", "light"); document.documentElement.setAttribute("data-tema-app", "1"); }
   </script>
-  <meta name="theme-color" id="meta-cor" content="#f7f4f4">
+  <meta name="theme-color" id="meta-cor" content="#f6f3f2">
   <meta name="description" content="Dívidas, contas do mês e teto de gastos da casa.">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/svg+xml" href="icons/icone.svg">

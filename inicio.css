@@ -9,13 +9,15 @@
   display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
   padding: 1.25rem 1.2rem 1.1rem; margin-bottom: 12px;
   border: 0; border-radius: 24px; color: #fff; font: inherit; text-align: left; cursor: pointer;
-  background: radial-gradient(circle at 18% 0%, rgba(255, 255, 255, .3), transparent 60%), linear-gradient(135deg, #f0525a, #d0303a 55%, #a8142a);
-  box-shadow: 0 16px 34px rgba(168, 20, 42, .28), inset 0 1px 0 rgba(255, 255, 255, .3);
+  background: var(--grad-marca);
+  box-shadow: 0 10px 24px var(--marca-sombra);
   animation: ini-sobe .55s cubic-bezier(.22, 1, .36, 1) both;
 }
 .ini-hero::after {
-  content: ""; position: absolute; right: -34px; bottom: -40px; width: 170px; height: 170px;
-  border-radius: 50%; border: 26px solid rgba(255, 255, 255, .1); box-shadow: -70px 0 0 -2px rgba(255, 255, 255, .07);
+  content: "∞";
+  position: absolute; right: -6px; bottom: -44px;
+  font-size: 9rem; line-height: 1; font-weight: 700;
+  opacity: .14; pointer-events: none;
 }
 .ini-hero:active { transform: scale(.985); }
 .ini-hero:focus-visible, .ini-tile:focus-visible { outline: 3px solid var(--primaria); outline-offset: 3px; }
@@ -40,7 +42,7 @@
 .ini-num { font-size: clamp(.9rem, 4.8vw, 1.2rem); font-weight: 800; letter-spacing: -.01em; font-variant-numeric: tabular-nums; max-width: 100%; white-space: nowrap; }
 .ini-leg { font-size: .78rem; color: var(--suave); }
 .ini-trilho { width: 100%; height: 7px; margin: 8px 0 4px; border-radius: 99px; background: var(--realce); overflow: hidden; }
-.ini-trilho > span { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, #f25a5a, #cd2830); transition: width .9s cubic-bezier(.22, 1, .36, 1); }
+.ini-trilho > span { display: block; height: 100%; width: 0; border-radius: 99px; background: var(--grad-barra); transition: width .9s cubic-bezier(.22, 1, .36, 1); }
 .ini-tile.estourou .ini-num, .ini-tile.estourou .ini-leg:nth-of-type(1) { color: var(--erro); }
 .ini-tile.estourou .ini-trilho > span { background: var(--erro); }
 
@@ -53,7 +55,7 @@
 .ini-passos button:active { background: var(--realce); }
 .ini-passos button > span:nth-child(2) { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 .ini-passos small { color: var(--suave); font-size: .8rem; }
-.ini-n { flex: none; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #f25a5a, #cd2830); color: #fff; font-weight: 800; }
+.ini-n { flex: none; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--grad-marca); color: #fff; font-weight: 800; }
 .ini-seta { color: var(--suave); display: grid; }
 
 @keyframes ini-sobe { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }

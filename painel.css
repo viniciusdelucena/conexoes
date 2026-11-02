@@ -1,9 +1,9 @@
-/* Painel do Início. Cores categóricas validadas (azul, laranja, verde-água, amarelo). */
-:root { --cat-1: #2a78d6; --cat-2: #eb6834; --cat-3: #1baf7a; --cat-4: #eda100; }
+/* Painel do Início. Cores suaves: carmim (marca), azul-acinzentado, verde-água e areia. */
+:root { --cat-1: #c9444c; --cat-2: #5877a8; --cat-3: #4f9a8e; --cat-4: #d4a24c; }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) { --cat-1: #3987e5; --cat-2: #d95926; --cat-3: #199e70; --cat-4: #c98500; }
+  :root:not([data-theme="light"]) { --cat-1: #e0646c; --cat-2: #7a97c4; --cat-3: #63b3a6; --cat-4: #d9ad5c; }
 }
-:root[data-theme="dark"] { --cat-1: #3987e5; --cat-2: #d95926; --cat-3: #199e70; --cat-4: #c98500; }
+:root[data-theme="dark"] { --cat-1: #e0646c; --cat-2: #7a97c4; --cat-3: #63b3a6; --cat-4: #d9ad5c; }
 
 .pn-cartao { padding: 1.1rem 1rem 1rem; }
 .pn-topo { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }

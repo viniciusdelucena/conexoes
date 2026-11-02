@@ -7,7 +7,7 @@
 .resumo-div {
   position: relative; overflow: hidden;
   color: #fff; border: 0;
-  background: linear-gradient(135deg, #ee5154, #c52b34);
+  background: var(--grad-marca);
 }
 .resumo-div::after {
   content: "∞";
@@ -50,7 +50,7 @@
   display: grid; place-items: center;
   border: 0; border-radius: 16px; cursor: pointer;
   color: #fff;
-  background: linear-gradient(135deg, #f25a5a, #cd2830);
+  background: var(--grad-marca);
   box-shadow: 0 8px 18px rgba(205, 40, 48, .38);
   transition: transform .15s;
 }
@@ -113,7 +113,7 @@
   transition: background .2s, border-color .2s, transform .2s;
 }
 .chk .svg-ico { opacity: 0; transform: scale(.4); transition: opacity .2s, transform .3s cubic-bezier(.3, 1.6, .5, 1); }
-.chk.on { background: linear-gradient(135deg, #f25a5a, #cd2830); border-color: transparent; }
+.chk.on { background: var(--grad-marca); border-color: transparent; }
 .chk.on .svg-ico { opacity: 1; transform: none; }
 .chk:active { transform: scale(.9); }
 
@@ -133,7 +133,7 @@
 .dv-valor { font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; margin: 4px 0 10px; }
 .dv-valor small { font-size: .9rem; font-weight: 600; color: var(--suave); }
 .divida .barra { background: var(--borda); }
-.divida .barra > span { background: linear-gradient(90deg, #f25a5a, #cd2830); }
+.divida .barra > span { background: var(--grad-barra); }
 .dv-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; margin-top: 8px; font-size: .8rem; color: var(--suave); }
 
 /* Estado vazio */
