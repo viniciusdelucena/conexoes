@@ -346,6 +346,26 @@
     </form>
   </div>
 
+  <!-- Dívidas: vencimento de uma parcela -->
+  <div id="folha-venc" class="folha" hidden>
+    <div class="folha-fundo" data-fechar></div>
+    <form id="form-venc" class="folha-painel" novalidate aria-labelledby="venc-titulo">
+      <div class="folha-alca" aria-hidden="true"></div>
+      <h2 id="venc-titulo">Vencimento</h2>
+      <p id="venc-quem" class="sub"></p>
+      <label for="venc-dia">Dia do vencimento neste mês</label>
+      <input id="venc-dia" type="text" inputmode="numeric" maxlength="2" placeholder="Ex.: 12" autocomplete="off">
+      <label class="venc-check"><input id="venc-repetir" type="checkbox"> Repetir nos meses seguintes</label>
+      <p class="sub pequeno dica">Sem marcar, o dia vale só para este mês. Marcando, ele passa a valer daqui até a última parcela.</p>
+      <button type="button" id="btn-venc-padrao" class="btn-sutil" hidden>Voltar ao dia padrão</button>
+      <p id="erro-venc" class="erro" role="alert" hidden></p>
+      <div class="folha-acoes">
+        <button type="button" class="btn" data-fechar>Cancelar</button>
+        <button type="submit" class="btn primario">Salvar</button>
+      </div>
+    </form>
+  </div>
+
   <!-- Evolução: escolher dívidas -->
   <div id="folha-evo" class="folha" hidden>
     <div class="folha-fundo" data-fechar></div>

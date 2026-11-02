@@ -23,8 +23,10 @@ let confirmandoExclusao = false;
 
 // ---------- Cálculos (funções puras, fáceis de testar) ----------
 // Dia em que a parcela vence naquele mês (null se a dívida não tem dia). Dia 31 em fevereiro vira o último dia.
+// Cada mês pode ter um dia próprio (d.vencimentos["AAAA-MM"]); sem ele, vale o dia padrão da dívida.
 export function diaDaParcela(d, ym) {
-  const dia = Number(d.diaVencimento);
+  const proprio = d.vencimentos && Number(d.vencimentos[ym]);
+  const dia = proprio >= 1 && proprio <= 31 ? proprio : Number(d.diaVencimento);
   if (!(dia >= 1 && dia <= 31)) return null;
   return Math.min(dia, diasNoMes(ym));
 }
@@ -110,6 +112,11 @@ export function configurar(contexto) {
     if (e.key === "Escape" && !$("folha").hidden) fecharFolha();
   });
   $("btn-excluir-divida").addEventListener("click", excluir);
+
+  $("form-venc").addEventListener("submit", (e) => { e.preventDefault(); salvarVencimento(false); });
+  $("btn-venc-padrao").addEventListener("click", () => salvarVencimento(true));
+  document.querySelectorAll("#folha-venc [data-fechar]").forEach((b) => b.addEventListener("click", fecharVencimento));
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("folha-venc").hidden) fecharVencimento(); });
 
   $("evo-busca").addEventListener("input", desenharListaEvo);
   $("evo-alternar-todas").addEventListener("click", () => {
@@ -350,7 +357,12 @@ function linhaParcela({ d, k, paga, dia }, ym) {
     h("div", { class: "p-info" },
       h("span", { class: "p-nome" }, d.nome),
       h("span", { class: "p-sub" },
-        `Parcela ${k} de ${d.totalParcelas}` + (dia ? ` · vence dia ${dia}` : ""),
+        `Parcela ${k} de ${d.totalParcelas} · `,
+        h("button", {
+          type: "button", class: "p-venc" + (dia ? "" : " vazio"),
+          "aria-label": `Vencimento de ${d.nome} em ${nomeMes(ym)}`,
+          onclick: () => abrirVencimento(d, k, ym, dia ?? null)
+        }, dia ? `vence dia ${dia}` : "definir vencimento"),
         sit ? h("span", { class: `chip ${sit.tom} p-chip` }, sit.texto) : null)),
     h("span", { class: "p-valor" }, reais(d.valorCentavos))
   );
@@ -374,6 +386,47 @@ function cartaoDivida(d) {
       h("span", {}, `${c.pagasN} de ${d.totalParcelas} pagas`),
       h("span", {}, c.restantes > 0 ? `Falta ${reais(c.restanteCentavos)} · até ${mesCurto(c.fim)}` : "Quitada"))
   );
+}
+
+// ---------- Vencimento de uma parcela (pode variar de um mês para o outro) ----------
+let vencAlvo = null; // { d, k, ym }
+
+function abrirVencimento(d, k, ym, dia) {
+  vencAlvo = { d, k, ym };
+  $("erro-venc").hidden = true;
+  $("venc-titulo").textContent = `Vencimento · ${nomeMes(ym)}`;
+  $("venc-quem").textContent = `${d.nome} · parcela ${k} de ${d.totalParcelas}`;
+  $("venc-dia").value = dia ? String(dia) : "";
+  $("venc-repetir").checked = false;
+  const tem = !!(d.vencimentos && d.vencimentos[ym]);
+  $("btn-venc-padrao").hidden = !tem;
+  $("btn-venc-padrao").textContent = d.diaVencimento ? `Voltar ao dia padrão (${d.diaVencimento})` : "Remover o dia deste mês";
+  $("folha-venc").hidden = false;
+  requestAnimationFrame(() => $("venc-dia").select());
+}
+
+function fecharVencimento() { $("folha-venc").hidden = true; vencAlvo = null; }
+
+function salvarVencimento(voltarPadrao) {
+  if (!vencAlvo) return;
+  const { d, k, ym } = vencAlvo;
+  const texto = $("venc-dia").value.trim();
+  const dia = voltarPadrao || texto === "" ? null : parseInt(texto, 10);
+  if (dia !== null && !(dia >= 1 && dia <= 31)) {
+    $("erro-venc").textContent = "Informe um dia entre 1 e 31.";
+    $("erro-venc").hidden = false;
+    return;
+  }
+  const mapa = { ...(d.vencimentos || {}) };
+  const repetir = $("venc-repetir").checked && !voltarPadrao;
+  const ultimo = somarMeses(d.mesInicio, d.totalParcelas - 1);
+  for (let m = ym; diffMeses(m, ultimo) >= 0; m = somarMeses(m, 1)) {
+    if (dia === null) delete mapa[m]; else mapa[m] = dia;
+    if (!repetir) break;
+  }
+  fecharVencimento();
+  ctx.aviso(dia === null ? "Voltou ao dia padrão" : repetir ? "Vencimento salvo para este e os próximos meses" : "Vencimento salvo");
+  Promise.resolve(ctx.obterBackend().salvarDivida(ctx.obterCasaId(), d.id, { vencimentos: mapa })).catch(falha);
 }
 
 // ---------- Formulário (folha que sobe de baixo) ----------
