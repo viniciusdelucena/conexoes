@@ -17,9 +17,9 @@ export function criarBackendDemo() {
   const dividas = new Map();
   let seq = 0;
   const semear = (d) => dividas.set(`d${++seq}`, { id: `d${seq}`, ...d });
-  semear({ nome: "Cartão de crédito", valorCentavos: 28900, totalParcelas: 12, mesInicio: somarMeses(hoje, -4), pagas: faixa(4) });
-  semear({ nome: "Financiamento da moto", valorCentavos: 41250, totalParcelas: 36, mesInicio: somarMeses(hoje, -10), pagas: faixa(10) });
-  semear({ nome: "Empréstimo pessoal", valorCentavos: 18500, totalParcelas: 18, mesInicio: somarMeses(hoje, -2), pagas: [1] });
+  semear({ nome: "Cartão de crédito", valorCentavos: 28900, totalParcelas: 12, mesInicio: somarMeses(hoje, -4), diaVencimento: 5, pagas: faixa(4) });
+  semear({ nome: "Financiamento da moto", valorCentavos: 41250, totalParcelas: 36, mesInicio: somarMeses(hoje, -10), diaVencimento: 15, pagas: faixa(10) });
+  semear({ nome: "Empréstimo pessoal", valorCentavos: 18500, totalParcelas: 18, mesInicio: somarMeses(hoje, -2), diaVencimento: 28, pagas: [1] });
   semear({ nome: "Notebook", valorCentavos: 24990, totalParcelas: 10, mesInicio: somarMeses(hoje, 1), pagas: [] });
   const ouvintesDividas = new Set();
   const copia = () => [...dividas.values()].map((d) => ({ ...d, pagas: [...(d.pagas || [])] }));

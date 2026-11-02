@@ -9,6 +9,7 @@ import {
 } from "./util.js";
 import { icone } from "./icones.js";
 import { montarEvolucao } from "./evolucao.js";
+import { diasNoMes } from "./calendario.js";
 
 let ctx = null;          // { obterBackend, obterCasaId, aviso, aoResumo }
 let dividas = [];
@@ -21,6 +22,13 @@ let editando = null;     // dívida aberta no formulário (null = nova)
 let confirmandoExclusao = false;
 
 // ---------- Cálculos (funções puras, fáceis de testar) ----------
+// Dia em que a parcela vence naquele mês (null se a dívida não tem dia). Dia 31 em fevereiro vira o último dia.
+export function diaDaParcela(d, ym) {
+  const dia = Number(d.diaVencimento);
+  if (!(dia >= 1 && dia <= 31)) return null;
+  return Math.min(dia, diasNoMes(ym));
+}
+
 export function calcularDivida(d) {
   const pagas = new Set((d.pagas || []).filter((n) => n >= 1 && n <= d.totalParcelas));
   const restantes = d.totalParcelas - pagas.size;
@@ -64,6 +72,8 @@ export function montarMeses(lista) {
       const k = diffMeses(d.mesInicio, m) + 1;
       if (k >= 1 && k <= d.totalParcelas) itens.push({ d, k, paga: calculos.get(d.id).pagas.has(k) });
     }
+    for (const it of itens) it.dia = diaDaParcela(it.d, m);
+    itens.sort((a, b) => (a.dia ?? 99) - (b.dia ?? 99) || a.d.nome.localeCompare(b.d.nome, "pt-BR"));
     const total = itens.reduce((s, i) => s + i.d.valorCentavos, 0);
     const abertos = itens.filter((i) => !i.paga).length;
     meses.push({ m, itens, total, abertos });
@@ -304,7 +314,7 @@ function cartaoMes(m, hoje) {
       h("div", { class: "mes-total" }, reais(m.total),
         h("small", {}, `${m.itens.length - m.abertos} de ${m.itens.length} ${m.itens.length === 1 ? "paga" : "pagas"}`))),
     m.itens.length
-      ? h("ul", { class: "parcelas" }, m.itens.map((it) => linhaParcela(it)))
+      ? h("ul", { class: "parcelas" }, m.itens.map((it) => linhaParcela(it, m.m)))
       : h("p", { class: "sub mes-vazio" }, "Nenhuma parcela neste mês."),
     m.abertos > 0
       ? h("p", { class: "mes-falta" }, "Falta pagar neste mês: ", h("strong", {}, reais(faltam)))
@@ -312,7 +322,21 @@ function cartaoMes(m, hoje) {
   );
 }
 
-function linhaParcela({ d, k, paga }) {
+// Situação da parcela em aberto: "vence hoje", "vence amanhã", "venceu dia 10" ou "atrasada".
+function situacaoParcela(ym, dia, paga) {
+  if (paga) return null;
+  const hoje = mesAtual();
+  if (diffMeses(ym, hoje) > 0) return { texto: "atrasada", tom: "atraso" };
+  if (ym !== hoje || dia === null) return null;
+  const hojeDia = new Date().getDate();
+  if (dia < hojeDia) return { texto: `venceu dia ${dia}`, tom: "atraso" };
+  if (dia === hojeDia) return { texto: "vence hoje", tom: "atual" };
+  if (dia === hojeDia + 1) return { texto: "vence amanhã", tom: "atual" };
+  return null;
+}
+
+function linhaParcela({ d, k, paga, dia }, ym) {
+  const sit = situacaoParcela(ym, dia ?? null, paga);
   return h("li", { class: "parcela" + (paga ? " paga" : "") },
     h("button", {
       type: "button",
@@ -325,7 +349,9 @@ function linhaParcela({ d, k, paga }) {
     }),
     h("div", { class: "p-info" },
       h("span", { class: "p-nome" }, d.nome),
-      h("span", { class: "p-sub" }, `Parcela ${k} de ${d.totalParcelas}`)),
+      h("span", { class: "p-sub" },
+        `Parcela ${k} de ${d.totalParcelas}` + (dia ? ` · vence dia ${dia}` : ""),
+        sit ? h("span", { class: `chip ${sit.tom} p-chip` }, sit.texto) : null)),
     h("span", { class: "p-valor" }, reais(d.valorCentavos))
   );
 }
@@ -342,7 +368,7 @@ function cartaoDivida(d) {
     h("div", { class: "dv-topo" },
       h("h3", {}, d.nome),
       h("span", { class: "dv-editar", html: icone("editar", 16) })),
-    h("div", { class: "dv-valor" }, reais(d.valorCentavos), h("small", {}, ` × ${d.totalParcelas}`)),
+    h("div", { class: "dv-valor" }, reais(d.valorCentavos), h("small", {}, ` × ${d.totalParcelas}` + (d.diaVencimento ? ` · vence dia ${d.diaVencimento}` : ""))),
     h("div", { class: "barra" }, h("span", { style: `width:${pct}%` })),
     h("div", { class: "dv-meta" },
       h("span", {}, `${c.pagasN} de ${d.totalParcelas} pagas`),
@@ -369,6 +395,7 @@ function abrirFolha(d) {
   $("div-mes").value = String(m);
   $("div-ano").value = String(a);
   const qtdPagas = d ? calcularDivida(d).pagasN : 0;
+  $("div-dia").value = d && d.diaVencimento ? String(d.diaVencimento) : "";
   $("div-pagas").value = d ? String(qtdPagas) : "";
   $("dica-pagas").textContent = d
     ? "Se mudar este número, as marcações atuais são substituídas: as primeiras parcelas, na ordem, ficam como pagas. Se não mexer, nada muda."
@@ -392,13 +419,17 @@ function salvar() {
   const totalParcelas = parseInt($("div-total").value, 10);
   const mesInicio = `${$("div-ano").value}-${String($("div-mes").value).padStart(2, "0")}`;
   const jaPagas = parseInt($("div-pagas").value || "0", 10);
+  const diaTexto = $("div-dia").value.trim();
+  const diaVencimento = diaTexto === "" ? null : parseInt(diaTexto, 10);
 
   if (!nome) return mostrarErroForm("Dê um nome para a dívida.");
   if (!(valorCentavos > 0)) return mostrarErroForm("Informe o valor da parcela, por exemplo 289,90.");
   if (!(totalParcelas >= 1 && totalParcelas <= 600)) return mostrarErroForm("Informe o número de parcelas (de 1 a 600).");
   if (!(jaPagas >= 0 && jaPagas <= totalParcelas)) return mostrarErroForm("As parcelas já pagas não podem passar do total.");
 
-  const dados = { nome, valorCentavos, totalParcelas, mesInicio };
+  if (diaVencimento !== null && !(diaVencimento >= 1 && diaVencimento <= 31)) return mostrarErroForm("O dia do vencimento deve ficar entre 1 e 31, ou em branco.");
+
+  const dados = { nome, valorCentavos, totalParcelas, mesInicio, diaVencimento };
   if (editando) {
     const atuais = (editando.pagas || []).filter((n) => n <= totalParcelas);
     if (jaPagas !== calcularDivida(editando).pagasN) {

@@ -208,3 +208,5 @@ select:focus { outline: 2px solid var(--primaria); outline-offset: 1px; }
 .mes-falta { margin: 0; padding: 12px 0 10px; border-top: 1px solid var(--borda); font-size: .88rem; color: var(--suave); }
 .mes-falta strong { color: var(--texto); font-variant-numeric: tabular-nums; }
 .mes-vazio { margin: 0; padding: 10px 0 16px; }
+
+.p-chip { margin-left: 6px; }
