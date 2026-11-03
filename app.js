@@ -2,7 +2,8 @@
 // O app conversa com um "backend": o Firebase de verdade, ou uma demonstração em memória
 // usada só para pré-visualizar as telas (abra o endereço com ?demo=1).
 
-import { $, reais, mesCurto, nomeMes, mesAtual } from "./js/util.js";
+import { $, reais, mesCurto } from "./js/util.js";
+import { rotuloPeriodo } from "./js/periodos.js";
 import { aplicarIcones } from "./js/icones.js";
 import * as dividasUI from "./js/dividas.js";
 import { configurarContas } from "./js/contas.js";
@@ -17,6 +18,14 @@ const DEMO =
   new URLSearchParams(location.search).get("demo") === "1";
 
 const MAX_MEMBROS = 2;
+
+// Todo formulário em folha ganha o botão de fechar (×) no canto.
+document.querySelectorAll(".folha-painel").forEach((p) => {
+  const x = document.createElement("button");
+  x.type = "button"; x.className = "folha-x"; x.setAttribute("data-fechar", ""); x.setAttribute("aria-label", "Fechar");
+  x.innerHTML = '<span data-ico="x" data-tam="18"></span>';
+  p.prepend(x);
+});
 
 // ---------- Utilidades de tela ----------
 const TELAS = ["tela-carregando", "tela-login", "tela-casa"];
@@ -226,7 +235,7 @@ function entrarNoApp(id) {
   );
   cancelarDividas = backend.observarDividas(
     id,
-    (lista) => { dividasUI.receber(lista); contasUI.receberDividas(lista); },
+    (lista) => dividasUI.receber(lista),
     (e) => {
       console.error(e);
       aviso(traduzirErro(e));
@@ -297,19 +306,27 @@ document.querySelector(".topo-marca").addEventListener("click", () => {
     .catch((e) => { console.error(e); aviso(traduzirErro(e)); aplicarDiasUteis(!novo); });
 });
 
-// Resumo do mês atual nos cartões da tela Início.
+// Resumo do período de hoje nos cartões da tela Início.
 function mostrarResumoContas(r) {
-  const mes = nomeMes(mesAtual()).split(" ")[0].toLowerCase();
   if (!r) {
     resumoVazio.contas = null;
     $("stat-contas-num").textContent = "R$ —";
     atualizarVazio();
     return;
   }
-  resumoVazio.contas = r.itens.length;
-  $("ini-mes").textContent = `Contas de ${mes}`;
+  resumoVazio.contas = r.quantidadeContas;
+  if (r.semPeriodo) {
+    $("ini-mes").textContent = "Contas do período";
+    $("stat-contas-num").textContent = "R$ —";
+    $("stat-contas-leg").textContent = "hoje não está em nenhum período: crie um em Contas";
+    $("stat-dia").hidden = true;
+    atualizarVazio();
+    return;
+  }
+  $("stat-dia").hidden = !diasUteisAtivo;
+  $("ini-mes").textContent = `Contas de ${rotuloPeriodo(r.p)}`;
   $("stat-contas-num").textContent = reais(r.total);
-  $("stat-contas-leg").textContent = "tudo que vence no mês, com o teto";
+  $("stat-contas-leg").textContent = "contas fixas, variáveis e o teto do período";
   $("stat-dia").textContent = `${reais(r.porDia)} por dia útil · ${r.dias} dias úteis` + (r.feriados ? ` · ${r.feriados} feriado${r.feriados > 1 ? "s" : ""}` : "");
   atualizarVazio();
 }
@@ -318,7 +335,6 @@ const contasUI = configurarContas({
   obterBackend: () => backend,
   obterCasaId: () => casaId,
   aviso,
-  abrirDividas: (ym) => { dividasUI.irParaMes(ym); abrirPagina("dividas"); },
   abrirTetoPagina: () => abrirPagina("teto"),
   aoSerie: (s) => painelUI.atualizar(s),
   aoResumo: mostrarResumoContas
@@ -328,6 +344,14 @@ const contasUI = configurarContas({
 function mostrarResumoTeto(r) {
   const tile = $("ini-tile-teto");
   if (!r) { $("stat-teto-num").textContent = "R$ —"; return; }
+  if (r.semPeriodo) {
+    tile.classList.remove("estourou");
+    $("stat-teto-num").textContent = "R$ —";
+    $("stat-teto-rot").textContent = "sem período hoje";
+    $("stat-teto-leg").textContent = "crie um em Contas";
+    barra("ini-teto-barra", 0);
+    return;
+  }
   tile.classList.toggle("estourou", r.estourou);
   $("stat-teto-num").textContent = reais(Math.abs(r.restante));
   $("stat-teto-rot").textContent = r.estourou ? "passou do teto" : "ainda dá para gastar";
@@ -338,7 +362,9 @@ const gastosUI = configurarGastos({
   obterBackend: () => backend,
   obterCasaId: () => casaId,
   aviso,
-  editarTeto: (ym) => contasUI.editarTeto(ym),
+  editarTeto: () => contasUI.editarTeto(),
+  novoPeriodo: () => contasUI.novoPeriodo(),
+  editarPeriodo: (p) => contasUI.editarPeriodo(p),
   aoResumo: mostrarResumoTeto
 });
 
@@ -347,7 +373,7 @@ const ORDEM = ["inicio", "dividas", "contas", "teto", "config"];
 const TITULOS = {
   inicio: "Início",
   dividas: "Dívidas",
-  contas: "Contas do mês",
+  contas: "Contas",
   teto: "Teto de gastos",
   config: "Casa e conta"
 };
@@ -367,6 +393,8 @@ document.querySelectorAll(".aba").forEach((a) => {
   $("dock").style.setProperty("--idx", String(ORDEM.indexOf(nome)));
   $("titulo-pagina").textContent = TITULOS[nome] || "";
   if (nome === "inicio" && typeof painelUI !== "undefined") painelUI.animar();
+  if (nome === "contas") contasUI.atualizar();
+  if (nome === "teto") gastosUI.atualizar();
   window.scrollTo(0, 0);
 }
 
@@ -425,13 +453,6 @@ window.addEventListener("offline", atualizarRede);
 atualizarRede();
 
 // ---------- Início ----------
-// Todo formulário em folha ganha o botão de fechar (×) no canto.
-document.querySelectorAll(".folha-painel").forEach((p) => {
-  const x = document.createElement("button");
-  x.type = "button"; x.className = "folha-x"; x.setAttribute("data-fechar", ""); x.setAttribute("aria-label", "Fechar");
-  x.innerHTML = '<span data-ico="x" data-tam="18"></span>';
-  p.prepend(x);
-});
 aplicarIcones();
 
 (async function iniciar() {

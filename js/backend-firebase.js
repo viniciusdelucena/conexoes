@@ -151,7 +151,7 @@ export async function criarBackendFirebase() {
 
     // ----- Contas do mês -----
     // Conta recorrente (households/{casa}/bills/{id}):
-    //   { nome, tipo: "fixa" | "variavel", valorCentavos, inicio: "AAAA-MM", fim: "AAAA-MM" | null }
+    //   { nome, tipo: "fixa" | "variavel", valorCentavos, inicio: "AAAA-MM", fim: "AAAA-MM" | null, dia: 1..31 | null }
     observarContas(casaId, aoReceber, aoFalhar) {
       return F.onSnapshot(
         colecaoContas(casaId),
@@ -170,8 +170,9 @@ export async function criarBackendFirebase() {
       return F.deleteDoc(F.doc(db, "households", casaId, "bills", id));
     },
 
-    // Dados de cada mês (households/{casa}/months/{AAAA-MM}):
-    //   { valores: { [idDaConta]: centavos }, teto: centavos }
+    // Dados de cada período (households/{casa}/months/{id}):
+    //   { inicio: "AAAA-MM-DD", fim: "AAAA-MM-DD", valores: { [idDaConta]: centavos }, teto: centavos }
+    // Documentos antigos "AAAA-MM" (sem inicio/fim) valem como o mês inteiro.
     // "valores" guarda o valor real de um mês (energia, água...) ou um reajuste só daquele mês.
     observarMeses(casaId, aoReceber, aoFalhar) {
       return F.onSnapshot(
@@ -194,8 +195,17 @@ export async function criarBackendFirebase() {
       );
     },
 
-    salvarTeto(casaId, ym, centavos) {
-      return F.setDoc(docMes(casaId, ym), { teto: centavos }, { merge: true });
+    salvarTeto(casaId, id, centavos) {
+      return F.setDoc(docMes(casaId, id), { teto: centavos }, { merge: true });
+    },
+
+    // Período criado na mão: { inicio: "AAAA-MM-DD", fim: "AAAA-MM-DD" }. O id é livre (começa com a data de início).
+    salvarPeriodo(casaId, id, dados) {
+      return F.setDoc(docMes(casaId, id), dados, { merge: true });
+    },
+
+    excluirPeriodo(casaId, id) {
+      return F.deleteDoc(docMes(casaId, id));
     }
   };
 }

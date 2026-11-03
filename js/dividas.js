@@ -1,7 +1,9 @@
 // Módulo de Dívidas: cadastro, cronograma por mês, visão por dívida e checks de parcela paga.
 //
-// Cada dívida: { id, nome, valorCentavos, totalParcelas, mesInicio: "AAAA-MM", pagas: [1, 2, ...] }
+// Cada compra/parcelamento: { id, nome, grupo?, valorCentavos, totalParcelas, mesInicio: "AAAA-MM", pagas: [1, 2, ...] }
 // A parcela k cai no mês (mesInicio + k - 1).
+// Uma "dívida" (ex.: Cartão Carrefour) é o conjunto de compras com o mesmo grupo: o mês dela se paga de uma vez.
+// Compra sem grupo é uma dívida de uma compra só.
 
 import {
   $, h, reais, paraCampo, parseReais,
@@ -20,6 +22,7 @@ let evoAnimar = false;   // anima o gráfico só ao abrir a aba ou trocar o filt
 let mesSel = null;       // mês escolhido na visão "Por mês" ("AAAA-MM")
 let editando = null;     // dívida aberta no formulário (null = nova)
 let confirmandoExclusao = false;
+const expandidos = new Set(); // dívidas abertas na lista do mês ("AAAA-MM|chave")
 
 // ---------- Cálculos (funções puras, fáceis de testar) ----------
 // Dia em que a parcela vence naquele mês (null se a dívida não tem dia). Dia 31 em fevereiro vira o último dia.
@@ -56,7 +59,26 @@ export function calcularResumo(lista) {
   return { quantidade: lista.length, restanteCentavos, totalCentavos, parcelasRestantes, fim, quitadoPct };
 }
 
+export const nomeGrupo = (d) => ((d.grupo || "").trim() || d.nome);
+export const rotuloDivida = (d) => ((d.grupo || "").trim() ? `${d.grupo.trim()} · ${d.nome}` : d.nome);
+const chaveGrupo = (d) => nomeGrupo(d).toLocaleLowerCase("pt-BR");
+const porNome = (a, b) => a.nome.localeCompare(b.nome, "pt-BR");
+
+// Junta as compras de mesmo grupo: [{ chave, nome, composta, itens: [compra, ...] }]
+export function agruparDividas(lista) {
+  const mapa = new Map();
+  for (const d of lista) {
+    const k = chaveGrupo(d);
+    if (!mapa.has(k)) mapa.set(k, { chave: k, nome: nomeGrupo(d), itens: [] });
+    mapa.get(k).itens.push(d);
+  }
+  return [...mapa.values()]
+    .map((g) => ({ ...g, itens: g.itens.sort(porNome), composta: g.itens.some((d) => (d.grupo || "").trim()) }))
+    .sort(porNome);
+}
+
 // Um item por mês, do primeiro ao último mês com parcela, já com o que foi pago.
+// Cada mês tem as dívidas (grupos) com parcela nele; a dívida está paga quando todas as parcelas do mês estão.
 export function montarMeses(lista) {
   if (!lista.length) return [];
   let min = lista[0].mesInicio;
@@ -67,18 +89,33 @@ export function montarMeses(lista) {
     if (diffMeses(max, fim) > 0) max = fim;
   }
   const calculos = new Map(lista.map((d) => [d.id, calcularDivida(d)]));
+  const todos = agruparDividas(lista);
   const meses = [];
   for (let m = min; diffMeses(m, max) >= 0; m = somarMeses(m, 1)) {
-    const itens = [];
-    for (const d of [...lista].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))) {
-      const k = diffMeses(d.mesInicio, m) + 1;
-      if (k >= 1 && k <= d.totalParcelas) itens.push({ d, k, paga: calculos.get(d.id).pagas.has(k) });
+    const grupos = [];
+    for (const g of todos) {
+      const itens = [];
+      for (const d of g.itens) {
+        const k = diffMeses(d.mesInicio, m) + 1;
+        if (k >= 1 && k <= d.totalParcelas) itens.push({ d, k, paga: calculos.get(d.id).pagas.has(k), dia: diaDaParcela(d, m) });
+      }
+      if (!itens.length) continue;
+      const dias = itens.map((i) => i.dia).filter((x) => x !== null);
+      const feitas = itens.filter((i) => i.paga).length;
+      grupos.push({
+        chave: g.chave, nome: g.nome, composta: g.composta, itens,
+        total: itens.reduce((s, i) => s + i.d.valorCentavos, 0),
+        quitado: feitas === itens.length, parcial: feitas > 0 && feitas < itens.length,
+        dia: dias.length ? Math.min(...dias) : null
+      });
     }
-    for (const it of itens) it.dia = diaDaParcela(it.d, m);
-    itens.sort((a, b) => (a.dia ?? 99) - (b.dia ?? 99) || a.d.nome.localeCompare(b.d.nome, "pt-BR"));
-    const total = itens.reduce((s, i) => s + i.d.valorCentavos, 0);
-    const abertos = itens.filter((i) => !i.paga).length;
-    meses.push({ m, itens, total, abertos });
+    grupos.sort((a, b) => (a.dia ?? 99) - (b.dia ?? 99) || porNome(a, b));
+    const itens = grupos.flatMap((g) => g.itens);
+    meses.push({
+      m, grupos, itens,
+      total: itens.reduce((s, i) => s + i.d.valorCentavos, 0),
+      abertos: grupos.filter((g) => !g.quitado).length
+    });
   }
   return meses;
 }
@@ -137,8 +174,8 @@ export function configurar(contexto) {
 // ----- Seletor de dívidas do gráfico (folha com busca e caixas de seleção) -----
 function desenharListaEvo() {
   const termo = $("evo-busca").value.trim().toLowerCase();
-  const ordenadas = [...dividas].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
-  const visiveis = ordenadas.filter((d) => d.nome.toLowerCase().includes(termo));
+  const ordenadas = [...dividas].sort((a, b) => rotuloDivida(a).localeCompare(rotuloDivida(b), "pt-BR"));
+  const visiveis = ordenadas.filter((d) => rotuloDivida(d).toLowerCase().includes(termo));
   $("evo-lista").replaceChildren(...(visiveis.length ? visiveis.map((d) => {
     const c = calcularDivida(d);
     return h("li", {}, h("label", { class: "evo-opcao" },
@@ -147,7 +184,7 @@ function desenharListaEvo() {
         onchange: (e) => { if (e.target.checked) evoTemp.add(d.id); else evoTemp.delete(d.id); atualizarContagemEvo(); }
       }),
       h("span", { class: "evo-opcao-txt" },
-        h("strong", {}, d.nome),
+        h("strong", {}, rotuloDivida(d)),
         h("small", {}, `${reais(d.valorCentavos)} × ${d.totalParcelas} · ${c.restantes ? `termina em ${mesCurto(c.fim)}` : "quitada"}`))));
   }) : [h("li", { class: "evo-vazio" }, "Nenhuma dívida com esse nome.")]));
 }
@@ -170,6 +207,7 @@ function fecharSeletorEvo() { $("folha-evo").hidden = true; }
 
 export function receber(lista) {
   dividas = lista;
+  $("div-grupos").replaceChildren(...agruparDividas(lista).filter((g) => g.composta).map((g) => h("option", { value: g.nome })));
   renderizar();
   ctx.aoResumo(calcularResumo(dividas));
 }
@@ -213,7 +251,7 @@ function renderizar() {
         filtrado: evoSel.size > 0 && evoSel.size < dividas.length,
         texto: evoSel.size === 0 || evoSel.size === dividas.length
           ? `Todas as dívidas (${dividas.length})`
-          : evoSel.size === 1 ? filtradas[0].nome : `${evoSel.size} de ${dividas.length} dívidas`,
+          : evoSel.size === 1 ? rotuloDivida(filtradas[0]) : `${evoSel.size} de ${dividas.length} dívidas`,
         aoAbrir: abrirSeletorEvo
       } : null,
       animar
@@ -221,9 +259,7 @@ function renderizar() {
   } else if (visao === "mes") {
     lista.replaceChildren(...listaMeses());
   } else {
-    lista.replaceChildren(...[...dividas]
-      .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))
-      .map(cartaoDivida));
+    lista.replaceChildren(...agruparDividas(dividas).map((g) => (g.composta ? cartaoGrupo(g) : cartaoDivida(g.itens[0]))));
   }
 }
 
@@ -307,24 +343,74 @@ function listaMeses() {
 }
 
 function cartaoMes(m, hoje) {
+  const n = m.grupos.length;
   let chip = null;
-  if (m.itens.length && m.abertos === 0) chip = h("span", { class: "chip ok" }, "Quitado");
-  else if (m.itens.length && m.m === hoje) chip = h("span", { class: "chip atual" }, "Este mês");
-  else if (m.itens.length && diffMeses(m.m, hoje) > 0) chip = h("span", { class: "chip atraso" }, "Em aberto");
+  if (n && m.abertos === 0) chip = h("span", { class: "chip ok" }, "Quitado");
+  else if (n && m.m === hoje) chip = h("span", { class: "chip atual" }, "Este mês");
+  else if (n && diffMeses(m.m, hoje) > 0) chip = h("span", { class: "chip atraso" }, "Em aberto");
 
-  const faltam = m.itens.filter((i) => !i.paga).reduce((s, i) => s + i.d.valorCentavos, 0);
-  const quitado = m.itens.length > 0 && m.abertos === 0;
+  const faltam = m.grupos.filter((g) => !g.quitado).reduce((s, g) => s + g.itens.filter((i) => !i.paga).reduce((x, i) => x + i.d.valorCentavos, 0), 0);
+  const quitado = n > 0 && m.abertos === 0;
 
   return h("article", { class: "mes" + (m.m === hoje ? " atual" : "") + (quitado ? " quitado" : "") },
     h("header", { class: "mes-topo" },
-      h("div", {}, h("h3", {}, "Parcelas do mês"), chip),
+      h("div", {}, h("h3", {}, "Dívidas do mês"), chip),
       h("div", { class: "mes-total" }, reais(m.total),
-        h("small", {}, `${m.itens.length - m.abertos} de ${m.itens.length} ${m.itens.length === 1 ? "paga" : "pagas"}`))),
-    m.itens.length
-      ? h("ul", { class: "parcelas" }, m.itens.map((it) => linhaParcela(it, m.m)))
+        h("small", {}, `${n - m.abertos} de ${n} ${n === 1 ? "paga" : "pagas"}`))),
+    n
+      ? h("ul", { class: "parcelas" }, m.grupos.map((g) => linhaGrupo(g, m.m)))
       : h("p", { class: "sub mes-vazio" }, "Nenhuma parcela neste mês."),
     m.abertos > 0
       ? h("p", { class: "mes-falta" }, "Falta pagar neste mês: ", h("strong", {}, reais(faltam)))
+      : null
+  );
+}
+
+// Paga (ou desmarca) o mês inteiro de uma dívida: todas as compras dela naquele mês.
+function marcarGrupoMes(g, pago) {
+  for (const it of g.itens) if (it.paga !== pago) alternar(it.d, it.k, pago);
+}
+
+function linhaGrupo(g, ym) {
+  if (!g.composta) return linhaParcela(g.itens[0], ym);
+  const chave = `${ym}|${g.chave}`;
+  const aberto = expandidos.has(chave);
+  const sit = situacaoParcela(ym, g.dia, g.quitado);
+  const nCompras = g.itens.length;
+  return h("li", { class: "parcela grupo" + (g.quitado ? " paga" : "") },
+    h("button", {
+      type: "button",
+      class: "chk" + (g.quitado ? " on" : "") + (g.parcial ? " parcial" : ""),
+      role: "checkbox",
+      "aria-checked": g.quitado ? "true" : g.parcial ? "mixed" : "false",
+      "aria-label": `${g.nome}: marcar o mês inteiro como pago`,
+      html: icone("check", 16),
+      onclick: () => marcarGrupoMes(g, !g.quitado)
+    }),
+    h("div", { class: "p-info" },
+      h("span", { class: "p-nome" }, g.nome),
+      h("span", { class: "p-sub" },
+        `${nCompras} ${nCompras === 1 ? "compra" : "compras"} · `,
+        h("button", {
+          type: "button", class: "p-venc" + (g.dia ? "" : " vazio"),
+          "aria-label": `Vencimento de ${g.nome} em ${nomeMes(ym)}`,
+          onclick: () => abrirVencimento(g.itens.map((i) => i.d), ym, g.dia ?? null, g.nome)
+        }, g.dia ? `vence dia ${g.dia}` : "definir vencimento"),
+        g.parcial ? h("span", { class: "chip atraso p-chip" }, "pago em parte") : null,
+        sit ? h("span", { class: `chip ${sit.tom} p-chip` }, sit.texto) : null)),
+    h("span", { class: "p-valor" }, reais(g.total)),
+    h("button", {
+      type: "button", class: "p-exp" + (aberto ? " aberto" : ""),
+      "aria-expanded": String(aberto),
+      "aria-label": `${aberto ? "Esconder" : "Ver"} as compras de ${g.nome}`,
+      html: icone("dir", 16),
+      onclick: () => { if (aberto) expandidos.delete(chave); else expandidos.add(chave); renderizar(); }
+    }),
+    aberto
+      ? h("ul", { class: "p-itens" }, g.itens.map((i) => h("li", {},
+          h("span", { class: "pi-nome" }, i.d.nome),
+          h("span", { class: "pi-sub" }, `parcela ${i.k} de ${i.d.totalParcelas}`),
+          h("span", { class: "pi-valor" }, reais(i.d.valorCentavos)))))
       : null
   );
 }
@@ -361,7 +447,7 @@ function linhaParcela({ d, k, paga, dia }, ym) {
         h("button", {
           type: "button", class: "p-venc" + (dia ? "" : " vazio"),
           "aria-label": `Vencimento de ${d.nome} em ${nomeMes(ym)}`,
-          onclick: () => abrirVencimento(d, k, ym, dia ?? null)
+          onclick: () => abrirVencimento([d], ym, dia ?? null, d.nome)
         }, dia ? `vence dia ${dia}` : "definir vencimento"),
         sit ? h("span", { class: `chip ${sit.tom} p-chip` }, sit.texto) : null)),
     h("span", { class: "p-valor" }, reais(d.valorCentavos))
@@ -388,19 +474,45 @@ function cartaoDivida(d) {
   );
 }
 
-// ---------- Vencimento de uma parcela (pode variar de um mês para o outro) ----------
-let vencAlvo = null; // { d, k, ym }
+// Dívida com várias compras (ex.: Cartão Carrefour): total que falta, andamento e cada compra dentro.
+function cartaoGrupo(g) {
+  const cs = g.itens.map((d) => ({ d, c: calcularDivida(d) }));
+  const restante = cs.reduce((s, x) => s + x.c.restanteCentavos, 0);
+  const total = cs.reduce((s, x) => s + x.d.totalParcelas * x.d.valorCentavos, 0);
+  const pct = total ? Math.round((1 - restante / total) * 100) : 0;
+  const ativas = cs.filter((x) => x.c.restantes > 0);
+  const fim = ativas.reduce((mx, x) => (mx === null || diffMeses(mx, x.c.fim) > 0 ? x.c.fim : mx), null);
+  const n = g.itens.length;
+  return h("article", { class: "divida grupo", style: "cursor:default" },
+    h("div", { class: "dv-topo" },
+      h("h3", {}, g.nome),
+      h("span", { class: "chip atual" }, `${n} ${n === 1 ? "compra" : "compras"}`)),
+    h("div", { class: "dv-valor" }, reais(restante), h("small", {}, restante > 0 ? " falta pagar" : " quitada")),
+    h("div", { class: "barra" }, h("span", { style: `width:${pct}%` })),
+    h("div", { class: "dv-meta" },
+      h("span", {}, `${pct}% quitado`),
+      h("span", {}, fim ? `termina em ${mesCurto(fim)}` : "Quitada")),
+    h("ul", { class: "dv-itens" }, cs.map(({ d, c }) => h("li", {},
+      h("button", { type: "button", class: "dv-item", "aria-label": `Editar ${d.nome}`, onclick: () => abrirFolha(d) },
+        h("span", { class: "pi-nome" }, d.nome),
+        h("span", { class: "pi-sub" }, `${reais(d.valorCentavos)} × ${d.totalParcelas} · ${c.pagasN} ${c.pagasN === 1 ? "paga" : "pagas"}` + (c.restantes ? ` · até ${mesCurto(c.fim)}` : " · quitada")),
+        h("span", { class: "dv-editar", html: icone("editar", 16) }))))),
+    h("button", { type: "button", class: "btn-sutil dv-add", onclick: () => abrirFolha(null, g.nome) }, "+ Adicionar compra a esta dívida"));
+}
 
-function abrirVencimento(d, k, ym, dia) {
-  vencAlvo = { d, k, ym };
+// ---------- Vencimento de uma dívida (pode variar de um mês para o outro) ----------
+let vencAlvo = null; // { ds: [compras], ym }
+
+function abrirVencimento(ds, ym, dia, titulo) {
+  vencAlvo = { ds, ym };
   $("erro-venc").hidden = true;
   $("venc-titulo").textContent = `Vencimento · ${nomeMes(ym)}`;
-  $("venc-quem").textContent = `${d.nome} · parcela ${k} de ${d.totalParcelas}`;
+  $("venc-quem").textContent = ds.length > 1 ? `${titulo} · vale para as ${ds.length} compras` : `${ds[0].nome} · parcela ${diffMeses(ds[0].mesInicio, ym) + 1} de ${ds[0].totalParcelas}`;
   $("venc-dia").value = dia ? String(dia) : "";
   $("venc-repetir").checked = false;
-  const tem = !!(d.vencimentos && d.vencimentos[ym]);
+  const tem = ds.some((d) => d.vencimentos && d.vencimentos[ym]);
   $("btn-venc-padrao").hidden = !tem;
-  $("btn-venc-padrao").textContent = d.diaVencimento ? `Voltar ao dia padrão (${d.diaVencimento})` : "Remover o dia deste mês";
+  $("btn-venc-padrao").textContent = ds.length === 1 && ds[0].diaVencimento ? `Voltar ao dia padrão (${ds[0].diaVencimento})` : "Voltar ao dia padrão";
   $("folha-venc").hidden = false;
   requestAnimationFrame(() => $("venc-dia").select());
 }
@@ -409,7 +521,7 @@ function fecharVencimento() { $("folha-venc").hidden = true; vencAlvo = null; }
 
 function salvarVencimento(voltarPadrao) {
   if (!vencAlvo) return;
-  const { d, k, ym } = vencAlvo;
+  const { ds, ym } = vencAlvo;
   const texto = $("venc-dia").value.trim();
   const dia = voltarPadrao || texto === "" ? null : parseInt(texto, 10);
   if (dia !== null && !(dia >= 1 && dia <= 31)) {
@@ -417,16 +529,18 @@ function salvarVencimento(voltarPadrao) {
     $("erro-venc").hidden = false;
     return;
   }
-  const mapa = { ...(d.vencimentos || {}) };
   const repetir = $("venc-repetir").checked && !voltarPadrao;
-  const ultimo = somarMeses(d.mesInicio, d.totalParcelas - 1);
-  for (let m = ym; diffMeses(m, ultimo) >= 0; m = somarMeses(m, 1)) {
-    if (dia === null) delete mapa[m]; else mapa[m] = dia;
-    if (!repetir) break;
-  }
   fecharVencimento();
   ctx.aviso(dia === null ? "Voltou ao dia padrão" : repetir ? "Vencimento salvo para este e os próximos meses" : "Vencimento salvo");
-  Promise.resolve(ctx.obterBackend().salvarDivida(ctx.obterCasaId(), d.id, { vencimentos: mapa })).catch(falha);
+  for (const d of ds) {
+    const mapa = { ...(d.vencimentos || {}) };
+    const ultimo = somarMeses(d.mesInicio, d.totalParcelas - 1);
+    for (let m = ym; diffMeses(m, ultimo) >= 0; m = somarMeses(m, 1)) {
+      if (dia === null) delete mapa[m]; else mapa[m] = dia;
+      if (!repetir) break;
+    }
+    Promise.resolve(ctx.obterBackend().salvarDivida(ctx.obterCasaId(), d.id, { vencimentos: mapa })).catch(falha);
+  }
 }
 
 // ---------- Formulário (folha que sobe de baixo) ----------
@@ -436,11 +550,12 @@ function mostrarErroForm(msg) {
   el.hidden = !msg;
 }
 
-function abrirFolha(d) {
+function abrirFolha(d, grupoPre = "") {
   editando = d;
   confirmandoExclusao = false;
   mostrarErroForm("");
-  $("folha-titulo").textContent = d ? "Editar dívida" : "Nova dívida";
+  $("folha-titulo").textContent = d ? "Editar compra" : grupoPre ? "Nova compra" : "Nova dívida";
+  $("div-grupo").value = d ? (d.grupo || "") : grupoPre;
   $("div-nome").value = d ? d.nome : "";
   $("div-valor").value = d ? paraCampo(d.valorCentavos) : "";
   $("div-total").value = d ? String(d.totalParcelas) : "";
@@ -468,6 +583,7 @@ function fecharFolha() {
 
 function salvar() {
   const nome = $("div-nome").value.trim();
+  const grupo = $("div-grupo").value.trim() || null;
   const valorCentavos = parseReais($("div-valor").value);
   const totalParcelas = parseInt($("div-total").value, 10);
   const mesInicio = `${$("div-ano").value}-${String($("div-mes").value).padStart(2, "0")}`;
@@ -475,14 +591,14 @@ function salvar() {
   const diaTexto = $("div-dia").value.trim();
   const diaVencimento = diaTexto === "" ? null : parseInt(diaTexto, 10);
 
-  if (!nome) return mostrarErroForm("Dê um nome para a dívida.");
+  if (!nome) return mostrarErroForm("Diga o que é, por exemplo Celular ou Empréstimo.");
   if (!(valorCentavos > 0)) return mostrarErroForm("Informe o valor da parcela, por exemplo 289,90.");
   if (!(totalParcelas >= 1 && totalParcelas <= 600)) return mostrarErroForm("Informe o número de parcelas (de 1 a 600).");
   if (!(jaPagas >= 0 && jaPagas <= totalParcelas)) return mostrarErroForm("As parcelas já pagas não podem passar do total.");
 
   if (diaVencimento !== null && !(diaVencimento >= 1 && diaVencimento <= 31)) return mostrarErroForm("O dia do vencimento deve ficar entre 1 e 31, ou em branco.");
 
-  const dados = { nome, valorCentavos, totalParcelas, mesInicio, diaVencimento };
+  const dados = { nome, grupo, valorCentavos, totalParcelas, mesInicio, diaVencimento };
   if (editando) {
     const atuais = (editando.pagas || []).filter((n) => n <= totalParcelas);
     if (jaPagas !== calcularDivida(editando).pagasN) {
@@ -499,7 +615,7 @@ function salvar() {
   const id = editando ? editando.id : null;
   Promise.resolve(ctx.obterBackend().salvarDivida(ctx.obterCasaId(), id, dados)).catch(falha);
   fecharFolha();
-  ctx.aviso(id ? "Dívida atualizada" : "Dívida cadastrada");
+  ctx.aviso(id ? "Atualizado" : "Dívida cadastrada");
 }
 
 function excluir() {

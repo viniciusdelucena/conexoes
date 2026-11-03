@@ -56,3 +56,11 @@
 .resumo-div .barra span { transition: width .9s cubic-bezier(.22, 1, .36, 1); }
 
 .gt-excesso { display: block; margin: 0 auto 14px; }
+
+/* ===== Períodos ===== */
+.per-acoes { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+.per-acoes .btn-sutil { flex: 1 1 auto; width: auto; margin: 0; }
+.cal-mes + .cal-mes { margin-top: 12px; }
+.cal-mes-nome { margin: 4px 0 6px; font-size: .8rem; font-weight: 700; color: var(--suave); }
+.cal-dia.fora { opacity: .22; pointer-events: none; box-shadow: none; background: none; }
+.duas-colunas > div { min-width: 0; }

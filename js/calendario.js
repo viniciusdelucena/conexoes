@@ -26,6 +26,17 @@ export function diasUteisDoMes(ym, datasFeriado = []) {
   return n;
 }
 
+// Dias úteis de um intervalo de datas (inclusive nas duas pontas).
+export function diasUteisEntre(inicio, fim, datasFeriado = []) {
+  const folgas = new Set(datasFeriado);
+  let n = 0;
+  for (const d = dataLocal(inicio); iso(d) <= fim; d.setDate(d.getDate() + 1)) {
+    if (d.getDay() === 0 || folgas.has(iso(d))) continue;
+    n++;
+  }
+  return n;
+}
+
 // ---------- Feriados nacionais ----------
 function pascoa(ano) {
   const a = ano % 19, b = Math.floor(ano / 100), c = ano % 100;

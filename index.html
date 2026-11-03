@@ -136,7 +136,7 @@
           <p class="sub">Três passos e o app já mostra o que falta pagar e quanto sobra para gastar.</p>
           <ol class="ini-passos">
             <li><button type="button" data-ir="dividas"><span class="ini-n">1</span><span><strong>Cadastre suas dívidas</strong><small>Parcelas de cartão, financiamento, empréstimo</small></span><span class="ini-seta" data-ico="dir" data-tam="18"></span></button></li>
-            <li><button type="button" data-ir="contas"><span class="ini-n">2</span><span><strong>Adicione as contas do mês</strong><small>Aluguel, internet, energia, água</small></span><span class="ini-seta" data-ico="dir" data-tam="18"></span></button></li>
+            <li><button type="button" data-ir="contas"><span class="ini-n">2</span><span><strong>Crie o período e adicione as contas</strong><small>Aluguel, internet, energia, água</small></span><span class="ini-seta" data-ico="dir" data-tam="18"></span></button></li>
             <li><button type="button" data-ir="teto"><span class="ini-n">3</span><span><strong>Lance os gastos do dia a dia</strong><small>Eles saem do teto de gastos</small></span><span class="ini-seta" data-ico="dir" data-tam="18"></span></button></li>
           </ol>
         </div>
@@ -145,7 +145,7 @@
           <button type="button" class="ini-hero" data-ir="contas">
             <span class="ini-rotulo" id="ini-mes">Contas do mês</span>
             <strong class="ini-valor" id="stat-contas-num">R$ —</strong>
-            <span class="ini-sub" id="stat-contas-leg">Dívidas, contas e teto</span>
+            <span class="ini-sub" id="stat-contas-leg">Contas e teto do período</span>
             <span class="ini-dia" id="stat-dia" hidden></span>
             <span class="ini-ver">Ver detalhes <span data-ico="dir" data-tam="16"></span></span>
           </button>
@@ -241,8 +241,13 @@
       <div class="folha-alca" aria-hidden="true"></div>
       <h2 id="folha-titulo">Nova dívida</h2>
 
-      <label for="div-nome">Nome</label>
-      <input id="div-nome" type="text" maxlength="40" placeholder="Ex.: Cartão, financiamento do carro" autocomplete="off">
+      <label for="div-grupo">Dívida <em>(opcional)</em></label>
+      <input id="div-grupo" type="text" maxlength="40" placeholder="Ex.: Cartão Carrefour" autocomplete="off" list="div-grupos">
+      <datalist id="div-grupos"></datalist>
+      <p class="sub pequeno dica">Use para juntar várias compras ou empréstimos que você paga de uma vez, como as parcelas de um cartão. Sem nome, a compra fica sozinha.</p>
+
+      <label for="div-nome">O que é</label>
+      <input id="div-nome" type="text" maxlength="40" placeholder="Ex.: Celular, empréstimo, financiamento" autocomplete="off">
 
       <div class="duas-colunas">
         <div>
@@ -297,6 +302,9 @@
       <p id="cc-tipo-dica" class="sub pequeno dica"></p>
       <label for="cc-valor" id="cc-valor-rotulo">Valor (R$)</label>
       <input id="cc-valor" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off">
+      <label for="cc-dia">Dia do vencimento (opcional)</label>
+      <input id="cc-dia" type="text" inputmode="numeric" maxlength="2" placeholder="Ex.: 20" autocomplete="off">
+      <p class="sub pequeno dica">A conta aparece no período em que esse dia cai. Sem dia, ela entra no começo de cada período.</p>
       <label>Começa em</label>
       <div class="duas-colunas"><select id="cc-inicio-mes" aria-label="Mês de início"></select><select id="cc-inicio-ano" aria-label="Ano de início"></select></div>
       <label>Termina em (opcional)</label>
@@ -310,7 +318,7 @@
     </form>
   </div>
 
-  <!-- Contas do mês: valor neste mês -->
+  <!-- Contas: valor neste período -->
   <div id="folha-valor" class="folha" hidden>
     <div class="folha-fundo" data-fechar></div>
     <form id="form-valor" class="folha-painel" novalidate aria-labelledby="valor-titulo">
@@ -329,7 +337,27 @@
     </form>
   </div>
 
-  <!-- Contas do mês: teto -->
+  <!-- Contas: período (datas de início e fim) -->
+  <div id="folha-periodo" class="folha" hidden>
+    <div class="folha-fundo" data-fechar></div>
+    <form id="form-periodo" class="folha-painel" novalidate aria-labelledby="periodo-titulo">
+      <div class="folha-alca" aria-hidden="true"></div>
+      <h2 id="periodo-titulo">Novo período</h2>
+      <p id="periodo-dica" class="sub pequeno dica"></p>
+      <div class="duas-colunas">
+        <div><label for="pr-inicio">Primeiro dia</label><input id="pr-inicio" type="date"></div>
+        <div><label for="pr-fim">Último dia</label><input id="pr-fim" type="date"></div>
+      </div>
+      <p id="erro-periodo" class="erro" role="alert" hidden></p>
+      <div class="folha-acoes">
+        <button type="button" id="btn-excluir-periodo" class="btn perigo" hidden>Excluir</button>
+        <button type="button" class="btn" data-fechar>Cancelar</button>
+        <button type="submit" class="btn primario">Salvar</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Contas: teto -->
   <div id="folha-teto" class="folha" hidden>
     <div class="folha-fundo" data-fechar></div>
     <form id="form-teto" class="folha-painel" novalidate aria-labelledby="teto-titulo">
@@ -337,7 +365,7 @@
       <h2 id="teto-titulo">Teto de gastos</h2>
       <label for="ctt-valor" id="teto-rotulo">Teto (R$)</label>
       <input id="ctt-valor" type="text" inputmode="decimal" placeholder="500,00" autocomplete="off">
-      <p class="sub pequeno dica">Vale a partir deste mês e continua nos seguintes até você mudar de novo.</p>
+      <p class="sub pequeno dica">Vale a partir deste período e continua nos seguintes até você mudar de novo.</p>
       <p id="erro-teto" class="erro" role="alert" hidden></p>
       <div class="folha-acoes">
         <button type="button" class="btn" data-fechar>Cancelar</button>
@@ -396,7 +424,7 @@
       <input id="gt-data" type="date">
       <button type="button" id="btn-gasto-proximo" class="acao-linha" hidden>
         <span class="acao-ico" data-ico="calendario" data-tam="20"></span>
-        <span class="acao-txt"><strong>Mover para o próximo mês</strong><small id="gt-prox-txt"></small></span>
+        <span class="acao-txt"><strong>Mover para o próximo período</strong><small id="gt-prox-txt"></small></span>
         <span class="acao-seta" data-ico="dir" data-tam="18"></span>
       </button>
       <p id="erro-gasto" class="erro" role="alert" hidden></p>

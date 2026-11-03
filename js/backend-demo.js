@@ -17,10 +17,11 @@ export function criarBackendDemo() {
   const dividas = new Map();
   let seq = 0;
   const semear = (d) => dividas.set(`d${++seq}`, { id: `d${seq}`, ...d });
-  semear({ nome: "Cartão de crédito", valorCentavos: 28900, totalParcelas: 12, mesInicio: somarMeses(hoje, -4), diaVencimento: 5, pagas: faixa(4) });
+  semear({ nome: "Celular", grupo: "Cartão Carrefour", valorCentavos: 28900, totalParcelas: 12, mesInicio: somarMeses(hoje, -4), diaVencimento: 5, pagas: faixa(4) });
+  semear({ nome: "Geladeira", grupo: "Cartão Carrefour", valorCentavos: 14990, totalParcelas: 10, mesInicio: somarMeses(hoje, -2), diaVencimento: 5, pagas: faixa(2) });
+  semear({ nome: "Notebook", grupo: "Cartão Carrefour", valorCentavos: 24990, totalParcelas: 10, mesInicio: somarMeses(hoje, 1), diaVencimento: 5, pagas: [] });
   semear({ nome: "Financiamento da moto", valorCentavos: 41250, totalParcelas: 36, mesInicio: somarMeses(hoje, -10), diaVencimento: 15, pagas: faixa(10) });
   semear({ nome: "Empréstimo pessoal", valorCentavos: 18500, totalParcelas: 18, mesInicio: somarMeses(hoje, -2), diaVencimento: 28, pagas: [1] });
-  semear({ nome: "Notebook", valorCentavos: 24990, totalParcelas: 10, mesInicio: somarMeses(hoje, 1), pagas: [] });
   const ouvintesDividas = new Set();
   const copia = () => [...dividas.values()].map((d) => ({ ...d, pagas: [...(d.pagas || [])] }));
   const notificar = () => ouvintesDividas.forEach((f) => f(copia()));
@@ -30,20 +31,25 @@ export function criarBackendDemo() {
   const meses = new Map();
   let seqConta = 0;
   const novaConta = (c) => contas.set(`c${++seqConta}`, { id: `c${seqConta}`, fim: null, ...c });
-  novaConta({ nome: "Aluguel", tipo: "fixa", valorCentavos: 120000, inicio: somarMeses(hoje, -8) });
-  novaConta({ nome: "Internet", tipo: "fixa", valorCentavos: 9990, inicio: somarMeses(hoje, -8) });
-  novaConta({ nome: "Energia", tipo: "variavel", valorCentavos: 18000, inicio: somarMeses(hoje, -8) });
-  novaConta({ nome: "Água", tipo: "variavel", valorCentavos: 7500, inicio: somarMeses(hoje, -8) });
-  novaConta({ nome: "Alimentação", tipo: "variavel", valorCentavos: 90000, inicio: somarMeses(hoje, -8) });
-  meses.set(somarMeses(hoje, -1), { valores: { c3: 19245, c4: 7120 } });
-  meses.set(hoje, { valores: { c5: 96000 } });
+  novaConta({ nome: "Aluguel", tipo: "fixa", valorCentavos: 120000, inicio: somarMeses(hoje, -8), dia: 5 });
+  novaConta({ nome: "Internet", tipo: "fixa", valorCentavos: 9990, inicio: somarMeses(hoje, -8), dia: 25 });
+  novaConta({ nome: "Energia", tipo: "variavel", valorCentavos: 18000, inicio: somarMeses(hoje, -8), dia: 10 });
+  novaConta({ nome: "Água", tipo: "variavel", valorCentavos: 7500, inicio: somarMeses(hoje, -8), dia: 12 });
+  novaConta({ nome: "Alimentação", tipo: "variavel", valorCentavos: 90000, inicio: somarMeses(hoje, -8), dia: 20 });
+  // Períodos de exemplo: do dia 20 de um mês até o dia 19 do seguinte.
+  const hojeData = new Date();
+  const iniAtual = hojeData.getDate() >= 20 ? `${hoje}-20` : `${somarMeses(hoje, -1)}-20`;
+  const iniAnterior = `${somarMeses(iniAtual.slice(0, 7), -1)}-20`;
+  const fim19 = (ini) => `${somarMeses(ini.slice(0, 7), 1)}-19`;
+  meses.set(iniAnterior, { inicio: iniAnterior, fim: fim19(iniAnterior), valores: { c3: 19245, c4: 7120 } });
+  meses.set(iniAtual, { inicio: iniAtual, fim: fim19(iniAtual), valores: { c5: 96000 } });
   const gastos = new Map();
   let seqGasto = 0;
   const dia2 = (n) => String(n).padStart(2, "0");
-  const hojeDia = new Date().getDate();
-  [["Farmácia", 4250, 2], ["Lanche", 2890, 5], ["Conserto da bike", 12000, hojeDia]].forEach(([descricao, valorCentavos, d]) => {
+  const somarDiaDemo = (ini, n) => { const d = new Date(Number(ini.slice(0, 4)), Number(ini.slice(5, 7)) - 1, Number(ini.slice(8)) + n); return `${d.getFullYear()}-${dia2(d.getMonth() + 1)}-${dia2(d.getDate())}`; };
+  [["Farmácia", 4250, 3], ["Lanche", 2890, 8], ["Conserto da bike", 12000, 12]].forEach(([descricao, valorCentavos, d]) => {
     const id = `g${++seqGasto}`;
-    gastos.set(id, { id, descricao, valorCentavos, data: `${hoje}-${dia2(d)}` });
+    gastos.set(id, { id, descricao, valorCentavos, data: somarDiaDemo(iniAtual, d) });
   });
   const ouvintesGastos = new Set();
   const notificarGastos = () => ouvintesGastos.forEach((f) => f([...gastos.values()].map((g) => ({ ...g }))));
@@ -154,11 +160,17 @@ export function criarBackendDemo() {
       meses.set(ym, m);
       notificarMeses();
     },
-    async salvarTeto(id, ym, centavos) {
-      const m = meses.get(ym) || { valores: {} };
+    async salvarTeto(id, perId, centavos) {
+      const m = meses.get(perId) || { valores: {} };
       m.teto = centavos;
-      meses.set(ym, m);
+      meses.set(perId, m);
       notificarMeses();
-    }
+    },
+    async salvarPeriodo(id, perId, dados) {
+      const m = meses.get(perId) || { valores: {} };
+      meses.set(perId, { ...m, ...dados });
+      notificarMeses();
+    },
+    async excluirPeriodo(id, perId) { meses.delete(perId); notificarMeses(); }
   };
 }

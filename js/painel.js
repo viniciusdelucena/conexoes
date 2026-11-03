@@ -1,10 +1,9 @@
-// Painel da tela Início: composição do mês atual e evolução das contas mês a mês.
-// Recebe a série de meses já calculada por Contas: [{ ym, parcelas, fixas, variaveis, teto, total, ... }]
+// Painel da tela Início: evolução das contas período a período.
+// Recebe a série já calculada por Contas: [{ rotulo, curto, atual, previsto, fixas, variaveis, teto, total, ... }]
 
-import { h, reais, mesAtual, mesCurto, nomeMes, NOMES_MESES } from "./util.js";
+import { h, reais } from "./util.js";
 
 const CATEGORIAS = [
-  { id: "parcelas", nome: "Dívidas", cor: "var(--cat-1)", valor: (r) => r.parcelas.total },
   { id: "fixas", nome: "Contas fixas", cor: "var(--cat-2)", valor: (r) => r.fixas },
   { id: "variaveis", nome: "Contas variáveis", cor: "var(--cat-3)", valor: (r) => r.variaveis },
   { id: "teto", nome: "Teto de gastos", cor: "var(--cat-4)", valor: (r) => r.teto }
@@ -15,14 +14,13 @@ function compactoPn(centavos) {
   if (v >= 1000) return `R$ ${(v / 1000).toFixed(v % 1000 ? 1 : 0).replace(".", ",")} mil`;
   return `R$ ${Math.round(v)}`;
 }
-const abrev = (ym) => NOMES_MESES[Number(ym.slice(5)) - 1].slice(0, 3).toLowerCase();
 
-// Maior queda do total entre dois meses seguidos (explica "por que o mês melhora").
+// Maior queda do total entre dois períodos seguidos (explica "por que o período melhora").
 export function maiorQueda(serie) {
   let melhor = null;
   for (let i = 1; i < serie.length; i++) {
     const queda = serie[i - 1].total - serie[i].total;
-    if (queda > 0 && (!melhor || queda > melhor.queda)) melhor = { ym: serie[i].ym, queda };
+    if (queda > 0 && (!melhor || queda > melhor.queda)) melhor = { rotulo: serie[i].rotulo, queda };
   }
   return melhor;
 }
@@ -53,13 +51,13 @@ export function configurarPainel() {
     const tabela = h("details", { class: "evo-tabela" },
       h("summary", {}, "Ver em tabela"),
       h("table", {},
-        h("thead", {}, h("tr", {}, h("th", {}, "Mês"), CATEGORIAS.map((c) => h("th", {}, c.nome)), h("th", {}, "Total"))),
-        h("tbody", {}, serie.map((r) => h("tr", {}, h("td", {}, mesCurto(r.ym)), CATEGORIAS.map((c) => h("td", {}, reais(c.valor(r)))), h("td", {}, reais(r.total)))))));
+        h("thead", {}, h("tr", {}, h("th", {}, "Período"), CATEGORIAS.map((c) => h("th", {}, c.nome)), h("th", {}, "Total"))),
+        h("tbody", {}, serie.map((r) => h("tr", {}, h("td", {}, r.rotulo), CATEGORIAS.map((c) => h("td", {}, reais(c.valor(r)))), h("td", {}, reais(r.total)))))));
     const cartao = h("article", { class: "cartao pn-cartao" },
-      h("header", { class: "pn-topo" }, h("h3", {}, "Próximos meses"), h("span", { class: "sub pequeno" }, "total de cada mês")),
+      h("header", { class: "pn-topo" }, h("h3", {}, "Próximos períodos"), h("span", { class: "sub pequeno" }, "total de cada período")),
       legenda,
       h("div", { class: "pn-area" }, caixa, dica),
-      queda ? h("p", { class: "pn-insight" }, `Em ${nomeMes(queda.ym)} o total cai ${reais(queda.queda)} em relação ao mês anterior.`) : null,
+      queda ? h("p", { class: "pn-insight" }, `No período de ${queda.rotulo} o total cai ${reais(queda.queda)} em relação ao anterior.`) : null,
       tabela);
 
     function desenhar(comAnimacao) {
@@ -71,7 +69,6 @@ export function configurarPainel() {
       const topo = maxTotal * 1.08;
       const Y = (v) => mt + ih - (v / topo) * ih;
       const banda = iw / n, larg = Math.min(38, banda * 0.62);
-      const hoje = mesAtual();
 
       const grades = [0, 0.5, 1].map((f) => {
         const y = mt + ih - f * ih;
@@ -94,14 +91,14 @@ export function configurarPainel() {
             : `M${x},${y}H${x + larg}V${y + alt}H${x}Z`;
           return `<path d="${d}" fill="${s.c.cor}"/>`;
         }).join("");
-        const atual = r.ym === hoje;
+        const atual = r.atual;
         return `<g class="col${comAnimacao ? " anima" : ""}" data-i="${i}" style="--i:${i}">${rects}</g>
-<text class="eixo${atual ? " atual" : ""}" x="${cx}" y="${H - 8}" text-anchor="middle">${abrev(r.ym)}</text>
+<text class="eixo${atual ? " atual" : ""}" x="${cx}" y="${H - 8}" text-anchor="middle">${r.curto}</text>
 <rect class="captura" data-i="${i}" x="${cx - banda / 2}" y="${mt}" width="${banda}" height="${ih + 8}" fill="transparent"/>`;
       }).join("");
 
       caixa.innerHTML = `<svg class="pn-svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" tabindex="0"
-  aria-label="Total das contas de ${mesCurto(serie[0].ym)} a ${mesCurto(serie[n - 1].ym)}, empilhado por dívidas, contas fixas, variáveis e teto. Use as setas para ver cada mês.">${grades}${colunas}</svg>`;
+  aria-label="Total das contas por período, de ${serie[0].curto} em diante, empilhado por contas fixas, variáveis e teto. Use as setas para ver cada período.">${grades}${colunas}</svg>`;
 
       const svg = caixa.firstElementChild;
       let ativo = null;
@@ -111,7 +108,7 @@ export function configurarPainel() {
         cols.forEach((g, k) => g.classList.toggle("apagada", k !== i));
         const r = serie[i];
         dica.replaceChildren(...[
-          h("strong", {}, nomeMes(r.ym) + (r.ym === hoje ? " (este mês)" : "")),
+          h("strong", {}, r.rotulo + (r.atual ? " (este período)" : r.previsto ? " (previsto)" : "")),
           ...CATEGORIAS.map((c) => c.valor(r) > 0 ? h("span", { class: "pn-linha" }, h("i", { class: "pn-cor", style: `background:${c.cor}` }), c.nome, h("b", {}, reais(c.valor(r)))) : null),
           h("span", { class: "pn-linha total" }, "Total", h("b", {}, reais(r.total)))
         ].filter(Boolean));

@@ -267,3 +267,30 @@ select:focus { outline: 2px solid var(--primaria); outline-offset: 1px; }
 .acao-txt strong { font-size: .95rem; }
 .acao-txt small { color: var(--suave); font-size: .8rem; }
 .acao-seta { color: var(--suave); display: grid; }
+
+/* ===== Dívida com várias compras ===== */
+.parcela.grupo { grid-template-columns: auto minmax(0, 1fr) auto auto; }
+.chk.parcial { border-color: var(--primaria); background: var(--realce); }
+.chk.parcial .svg-ico { opacity: 0; }
+.p-exp {
+  display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 50%;
+  background: none; color: var(--suave); cursor: pointer; transition: transform .2s;
+}
+.p-exp.aberto { transform: rotate(90deg); }
+.p-exp:focus-visible { outline: 2px solid var(--primaria); outline-offset: 2px; }
+.p-itens, .dv-itens { grid-column: 1 / -1; list-style: none; margin: 0; padding: 0; }
+.p-itens { margin: -2px 0 2px 42px; display: grid; gap: 6px; }
+.p-itens li { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; padding: 8px 12px; border-radius: 12px; background: var(--fundo); }
+.p-itens .pi-sub { grid-column: 1; }
+.p-itens .pi-valor { grid-column: 2; grid-row: 1 / span 2; align-self: center; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pi-nome { font-weight: 600; font-size: .92rem; overflow-wrap: anywhere; }
+.pi-sub { font-size: .76rem; color: var(--suave); }
+.dv-itens { margin-top: 12px; display: grid; gap: 6px; }
+.dv-item {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 10px; align-items: center; width: 100%;
+  padding: 9px 12px; border: 0; border-radius: 12px; background: var(--fundo); color: var(--texto); font: inherit; text-align: left; cursor: pointer;
+}
+.dv-item .pi-sub { grid-column: 1; }
+.dv-item .dv-editar { grid-column: 2; grid-row: 1 / span 2; }
+.dv-item:focus-visible { outline: 2px solid var(--primaria); outline-offset: 2px; }
+.dv-add { margin: 12px 0 0; }

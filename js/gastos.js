@@ -1,72 +1,59 @@
-// Módulo Teto de gastos: lançamentos de gastos imprevistos e saldo do teto do mês.
+// Módulo Teto de gastos: lançamentos de gastos imprevistos e saldo do teto do período.
 //
 // Gasto: { id, valorCentavos, descricao, data: "AAAA-MM-DD" }
-// O teto do mês vem de Contas (tetoDoMes). O gasto do mês é a soma dos lançamentos com data no mês.
+// O período (por exemplo 20/10 a 19/11) é o mesmo de Contas. O teto vem do período (periodos.js);
+// o gasto do período é a soma dos lançamentos com data dentro dele.
 
-import { $, h, reais, paraCampo, parseReais, mesAtual, somarMeses, nomeMes } from "./util.js";
+import { $, h, reais, paraCampo, parseReais } from "./util.js";
 import { icone } from "./icones.js";
-import { tetoDoMes, totalGastosDoMes } from "./contas.js";
-import { diasNoMes, diaDaSemana, DIAS_SEMANA } from "./calendario.js";
+import { diaDaSemana, DIAS_SEMANA } from "./calendario.js";
+import {
+  hojeIso, somarDias, somarMesesData, dataCurta, rotuloPeriodo, listaPeriodos, periodoContem,
+  periodoSeguinte, selecao, resolverSelecionado, resumoTetoPeriodo, gastosDoPeriodo,
+  totalGastosDoPeriodo, navegacaoPeriodos
+} from "./periodos.js";
 
-export function resumoTeto(ym, meses, gastos, hoje = mesAtual(), diaHoje = new Date().getDate()) {
-  const teto = tetoDoMes(ym, meses);
-  const gasto = totalGastosDoMes(ym, gastos);
-  const restante = teto - gasto;
-  const pct = teto > 0 ? Math.min(100, Math.round((gasto / teto) * 100)) : (gasto > 0 ? 100 : 0);
-  let porDia = null;
-  if (ym === hoje && restante > 0) {
-    const diasRestantes = diasNoMes(ym) - diaHoje + 1;
-    porDia = Math.floor(restante / diasRestantes);
-  }
-  return { ym, teto, gasto, restante, pct, estourou: restante < 0, porDia };
-}
+export const resumoTeto = resumoTetoPeriodo;
 
-// contexto: { obterBackend, obterCasaId, aviso, editarTeto(ym), aoResumo(resumo | null) }
+// contexto: { obterBackend, obterCasaId, aviso, editarTeto(), novoPeriodo(), editarPeriodo(p), aoPeriodo(), aoResumo(resumo | null) }
 export function configurarGastos(contexto) {
   let meses = {};
   let gastos = [];
   const pronto = { meses: false, gastos: false };
-  let mesSel = mesAtual();
   let alvo = null; // gasto aberto na folha (null = novo)
 
   const backend = () => contexto.obterBackend();
   const casa = () => contexto.obterCasaId();
-  const dois = (n) => String(n).padStart(2, "0");
-  const hojeIso = () => { const d = new Date(); return `${d.getFullYear()}-${dois(d.getMonth() + 1)}-${dois(d.getDate())}`; };
+  const periodos = () => listaPeriodos(meses);
 
   const falha = (e) => { console.error(e); contexto.aviso("Não foi possível salvar. Confira a conexão e as regras do Firestore."); };
   const executar = (fn) => Promise.resolve().then(fn).catch(falha);
+
+  function escolher(id) {
+    selecao.id = id;
+    renderizar();
+    if (contexto.aoPeriodo) contexto.aoPeriodo();
+  }
 
   function renderizar() {
     const caixa = $("gt-conteudo");
     if (!caixa) return;
     if (!pronto.meses || !pronto.gastos) {
-      caixa.replaceChildren(navegacao(), h("div", { class: "cartao ct-carregando" }, h("div", { class: "spinner", "aria-label": "Carregando" })));
+      caixa.replaceChildren(h("div", { class: "cartao ct-carregando" }, h("div", { class: "spinner", "aria-label": "Carregando" })));
       contexto.aoResumo(null);
       return;
     }
-    const r = resumoTeto(mesSel, meses, gastos);
-    caixa.replaceChildren(navegacao(), resumo(r), acoes(), ...excesso(r), lista());
-    contexto.aoResumo(resumoTeto(mesAtual(), meses, gastos));
-  }
-
-  function navegacao() {
-    const hoje = mesAtual();
-    const ir = (n) => () => { mesSel = somarMeses(mesSel, n); renderizar(); };
-    const opcoes = [];
-    for (let n = -12; n <= 12; n++) {
-      const ym = somarMeses(mesSel, n);
-      opcoes.push(h("option", { value: ym, selected: n === 0 }, nomeMes(ym)));
-    }
-    return h("div", { class: "ct-nav" },
-      h("div", { class: "mes-nav" },
-        h("button", { class: "mes-seta", type: "button", "aria-label": "Mês anterior", onclick: ir(-1), html: icone("esq", 20) }),
-        h("label", { class: "mes-escolha" },
-          h("span", { class: "mes-nome" }, nomeMes(mesSel)),
-          h("span", { class: "mes-dica" }, mesSel === hoje ? "Este mês" : "Toque para escolher o mês"),
-          h("select", { class: "mes-select", "aria-label": "Escolher o mês", onchange: (e) => { mesSel = e.target.value; renderizar(); } }, opcoes)),
-        h("button", { class: "mes-seta", type: "button", "aria-label": "Próximo mês", onclick: ir(1), html: icone("dir", 20) })),
-      mesSel !== hoje ? h("button", { class: "btn-sutil", type: "button", onclick: () => { mesSel = hoje; renderizar(); } }, "Voltar para este mês") : null);
+    const lista = periodos();
+    const p = resolverSelecionado(lista);
+    const hoje = lista.find((x) => periodoContem(x, hojeIso()));
+    contexto.aoResumo(hoje ? resumoTetoPeriodo(hoje, lista, gastos) : { semPeriodo: true });
+    const nav = navegacaoPeriodos({
+      periodos: lista, sel: p, aoEscolher: escolher,
+      aoNovo: () => contexto.novoPeriodo(), aoEditar: (x) => contexto.editarPeriodo(x)
+    });
+    if (!p) { caixa.replaceChildren(nav); return; }
+    const r = resumoTetoPeriodo(p, lista, gastos);
+    caixa.replaceChildren(nav, resumo(r), acoes(), ...excesso(r, lista), lista_(p));
   }
 
   function resumo(r) {
@@ -79,23 +66,29 @@ export function configurarGastos(contexto) {
       h("div", { class: "rd-meta" },
         meta("Teto", reais(r.teto)),
         meta("Gasto", `${reais(r.gasto)} (${r.teto > 0 ? Math.round((r.gasto / r.teto) * 100) : 0}%)`),
-        r.porDia !== null ? meta("Por dia até o fim do mês", reais(r.porDia)) : null));
+        r.porDia !== null ? meta("Por dia até o fim do período", reais(r.porDia)) : null));
   }
 
   function acoes() {
     return h("div", { class: "gt-acoes" },
       h("button", { class: "btn primario", type: "button", onclick: () => abrirGasto(null) }, "+ Lançar gasto"),
-      h("button", { class: "btn", type: "button", onclick: () => contexto.editarTeto(mesSel) }, "Alterar teto"));
+      h("button", { class: "btn", type: "button", onclick: () => contexto.editarTeto() }, "Alterar teto"));
   }
 
-  // Excesso do teto: leva o que passou do teto para o mês seguinte (vira um gasto lá, dia 1).
-  function excesso(r) {
-    const prox = somarMeses(mesSel, 1);
-    const nomeProx = nomeMes(prox);
-    const levado = gastos.find((g) => g.excessoDe === mesSel);
+  // Período logo depois do atual: o que já existe ou, se não existir, o que seria criado.
+  function proximoDe(p, lista) {
+    const real = lista.find((q) => q.inicio > p.fim);
+    return real || { id: null, ...periodoSeguinte(p) };
+  }
+
+  // Excesso do teto: leva o que passou do teto para o período seguinte (vira um gasto lá, no primeiro dia).
+  function excesso(r, lista) {
+    const p = r.p;
+    const prox = proximoDe(p, lista);
+    const nomeProx = rotuloPeriodo(prox);
+    const levado = gastos.find((g) => g.excessoDe === p.id);
     if (r.estourou) {
-      // Não conta o próprio excesso levado deste mês (ele está no mês seguinte, não aqui).
-      return [h("button", { class: "btn-sutil gt-excesso", type: "button", onclick: () => levarExcesso(r.gasto - r.teto, levado) },
+      return [h("button", { class: "btn-sutil gt-excesso", type: "button", onclick: () => levarExcesso(p, prox, r.gasto - r.teto, levado) },
         levado ? `Atualizar o excesso levado para ${nomeProx} (${reais(r.gasto - r.teto)})` : `Levar o excesso de ${reais(r.gasto - r.teto)} para ${nomeProx}`)];
     }
     if (levado) {
@@ -105,10 +98,9 @@ export function configurarGastos(contexto) {
     return [];
   }
 
-  function levarExcesso(valor, levado) {
-    const prox = somarMeses(mesSel, 1);
-    const dados = { valorCentavos: valor, descricao: `Excesso de ${nomeMes(mesSel)}`, data: `${prox}-01`, excessoDe: mesSel };
-    contexto.aviso(`Excesso levado para ${nomeMes(prox)}`);
+  function levarExcesso(p, prox, valor, levado) {
+    const dados = { valorCentavos: valor, descricao: `Excesso de ${rotuloPeriodo(p)}`, data: prox.inicio, excessoDe: p.id };
+    contexto.aviso(`Excesso levado para ${rotuloPeriodo(prox)}`);
     executar(() => backend().salvarGasto(casa(), levado ? levado.id : null, dados));
   }
 
@@ -117,36 +109,42 @@ export function configurarGastos(contexto) {
     executar(() => backend().excluirGasto(casa(), levado.id));
   }
 
-  // Move um gasto para o mesmo dia do mês seguinte (ou o último dia, se o mês for mais curto).
-  function moverParaProximoMes() {
+  // Move um gasto para o período seguinte, no mesmo dia do mês seguinte (ou no primeiro dia do período, se não couber).
+  function destinoDoGasto(g) {
+    const lista = periodos();
+    const atual = lista.find((q) => periodoContem(q, g.data));
+    const prox = atual ? proximoDe(atual, lista) : null;
+    let data = somarMesesData(g.data, 1);
+    if (prox && !periodoContem(prox, data)) data = data < prox.inicio ? prox.inicio : prox.fim;
+    return { data, prox };
+  }
+
+  function moverParaProximoPeriodo() {
     if (!alvo) return;
     const g = alvo;
-    const ym = g.data.slice(0, 7);
-    const prox = somarMeses(ym, 1);
-    const dia = Math.min(Number(g.data.slice(8)), diasNoMes(prox));
-    const data = `${prox}-${dois(dia)}`;
+    const { data, prox } = destinoDoGasto(g);
     fechar();
-    contexto.aviso(`Gasto movido para ${nomeMes(prox)}`);
+    contexto.aviso(prox ? `Gasto movido para ${rotuloPeriodo(prox)}` : `Gasto movido para ${dataCurta(data)}`);
     executar(() => backend().salvarGasto(casa(), g.id, { data }));
   }
 
-  function lista() {
-    const doMes = gastos.filter((g) => g.data.startsWith(mesSel + "-"))
+  function lista_(p) {
+    const doPeriodo = gastosDoPeriodo(p, gastos)
       .sort((a, b) => (a.data === b.data ? 0 : a.data < b.data ? 1 : -1));
-    if (!doMes.length) {
+    if (!doPeriodo.length) {
       return h("div", { class: "cartao vazio" },
         h("div", { class: "vazio-ico", html: icone("teto", 30) }),
-        h("h3", {}, "Nenhum gasto neste mês"),
+        h("h3", {}, "Nenhum gasto neste período"),
         h("p", { class: "sub" }, "Lance os gastos imprevistos, como farmácia, lanche e conserto. Eles saem do teto."));
     }
     return h("article", { class: "cartao ct-secao" },
-      h("header", { class: "ct-topo" }, h("h3", {}, "Gastos do mês"), h("span", { class: "ct-subtotal" }, reais(totalGastosDoMes(mesSel, gastos)))),
-      h("ul", { class: "ct-lista" }, doMes.map((g) => h("li", {},
+      h("header", { class: "ct-topo" }, h("h3", {}, "Gastos do período"), h("span", { class: "ct-subtotal" }, reais(totalGastosDoPeriodo(p, gastos)))),
+      h("ul", { class: "ct-lista" }, doPeriodo.map((g) => h("li", {},
         h("button", { class: "ct-linha", type: "button", onclick: () => abrirGasto(g) },
           h("span", { class: "ct-ico", html: icone("teto", 20) }),
           h("span", { class: "ct-info" },
             h("span", { class: "ct-nome" }, g.descricao || "Gasto"),
-            h("span", { class: "ct-sub" }, `${DIAS_SEMANA[diaDaSemana(g.data)]}, ${Number(g.data.slice(8))}` + (g.excessoDe ? " · levado do mês anterior" : ""))),
+            h("span", { class: "ct-sub" }, `${DIAS_SEMANA[diaDaSemana(g.data)]}, ${dataCurta(g.data)}` + (g.excessoDe ? " · levado do período anterior" : ""))),
           h("span", { class: "ct-valor" }, reais(g.valorCentavos)),
           h("span", { class: "ct-seta", html: icone("dir", 16) }))))));
   }
@@ -161,11 +159,12 @@ export function configurarGastos(contexto) {
     $("gasto-titulo").textContent = g ? "Editar gasto" : "Novo gasto";
     $("gt-valor").value = g ? paraCampo(g.valorCentavos) : "";
     $("gt-desc").value = g ? g.descricao || "" : "";
-    $("gt-data").value = g ? g.data : (mesSel === mesAtual() ? hojeIso() : `${mesSel}-01`);
+    const p = resolverSelecionado(periodos());
+    $("gt-data").value = g ? g.data : (p && periodoContem(p, hojeIso()) ? hojeIso() : p ? p.inicio : hojeIso());
     const botao = $("btn-excluir-gasto");
     botao.hidden = !g;
     $("btn-gasto-proximo").hidden = !g;
-    if (g) $("gt-prox-txt").textContent = `Passa para ${nomeMes(somarMeses(g.data.slice(0, 7), 1))}`;
+    if (g) { const { data, prox } = destinoDoGasto(g); $("gt-prox-txt").textContent = prox ? `Vai para ${dataCurta(data)}, no período de ${rotuloPeriodo(prox)}` : `Vai para ${dataCurta(data)}`; }
     $("folha-gasto").hidden = false;
     requestAnimationFrame(() => $("gt-valor").focus());
   }
@@ -176,6 +175,8 @@ export function configurarGastos(contexto) {
     const descricao = $("gt-desc").value.trim();
     if (!(valorCentavos > 0)) return erro("Informe o valor, por exemplo 25,90.");
     if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) return erro("Escolha a data do gasto.");
+    const per = resolverSelecionado(periodos());
+    if (per && !periodoContem(per, data) && !alvo) return erro(`A data precisa ficar dentro do período (${rotuloPeriodo(per)}).`);
     const id = alvo ? alvo.id : null;
     fechar();
     contexto.aviso(id ? "Gasto atualizado" : "Gasto lançado");
@@ -194,13 +195,14 @@ export function configurarGastos(contexto) {
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("folha-gasto").hidden) fechar(); });
   $("form-gasto").addEventListener("submit", (e) => { e.preventDefault(); salvar(); });
   $("btn-excluir-gasto").addEventListener("click", excluir);
-  $("btn-gasto-proximo").addEventListener("click", moverParaProximoMes);
+  $("btn-gasto-proximo").addEventListener("click", moverParaProximoPeriodo);
 
   renderizar();
 
   return {
     receberMeses(m) { meses = m; pronto.meses = true; renderizar(); },
     receberGastos(l) { gastos = l; pronto.gastos = true; renderizar(); },
-    limpar() { meses = {}; gastos = []; pronto.meses = pronto.gastos = false; mesSel = mesAtual(); fechar(); renderizar(); }
+    atualizar() { renderizar(); },
+    limpar() { meses = {}; gastos = []; pronto.meses = pronto.gastos = false; selecao.id = null; fechar(); renderizar(); }
   };
 }
