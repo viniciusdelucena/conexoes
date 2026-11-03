@@ -165,6 +165,7 @@ export function configurarGastos(contexto) {
     const botao = $("btn-excluir-gasto");
     botao.hidden = !g;
     $("btn-gasto-proximo").hidden = !g;
+    if (g) $("gt-prox-txt").textContent = `Passa para ${nomeMes(somarMeses(g.data.slice(0, 7), 1))}`;
     $("folha-gasto").hidden = false;
     requestAnimationFrame(() => $("gt-valor").focus());
   }

@@ -425,6 +425,13 @@ window.addEventListener("offline", atualizarRede);
 atualizarRede();
 
 // ---------- Início ----------
+// Todo formulário em folha ganha o botão de fechar (×) no canto.
+document.querySelectorAll(".folha-painel").forEach((p) => {
+  const x = document.createElement("button");
+  x.type = "button"; x.className = "folha-x"; x.setAttribute("data-fechar", ""); x.setAttribute("aria-label", "Fechar");
+  x.innerHTML = '<span data-ico="x" data-tam="18"></span>';
+  p.prepend(x);
+});
 aplicarIcones();
 
 (async function iniciar() {

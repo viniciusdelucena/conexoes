@@ -388,13 +388,17 @@
     <form id="form-gasto" class="folha-painel" novalidate aria-labelledby="gasto-titulo">
       <div class="folha-alca" aria-hidden="true"></div>
       <h2 id="gasto-titulo">Novo gasto</h2>
-      <label for="gt-valor">Valor (R$)</label>
-      <input id="gt-valor" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off">
-      <label for="gt-desc">Com o quê? (opcional)</label>
+      <label for="gt-valor">Valor</label>
+      <div class="campo-valor"><span aria-hidden="true">R$</span><input id="gt-valor" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off"></div>
+      <label for="gt-desc">Com o quê? <em>(opcional)</em></label>
       <input id="gt-desc" type="text" maxlength="40" placeholder="Ex.: Farmácia, lanche, conserto" autocomplete="off">
       <label for="gt-data">Data</label>
       <input id="gt-data" type="date">
-      <button type="button" id="btn-gasto-proximo" class="btn-sutil" hidden>Jogar este gasto para o próximo mês</button>
+      <button type="button" id="btn-gasto-proximo" class="acao-linha" hidden>
+        <span class="acao-ico" data-ico="calendario" data-tam="20"></span>
+        <span class="acao-txt"><strong>Mover para o próximo mês</strong><small id="gt-prox-txt"></small></span>
+        <span class="acao-seta" data-ico="dir" data-tam="18"></span>
+      </button>
       <p id="erro-gasto" class="erro" role="alert" hidden></p>
       <div class="folha-acoes">
         <button type="button" id="btn-excluir-gasto" class="btn perigo" hidden>Excluir</button>
