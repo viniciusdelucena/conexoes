@@ -159,13 +159,16 @@ export function calcularPeriodo(p, { contas, periodos, gastos = [], feriados = [
   const gastoTeto = totalGastosDoPeriodo(p, gastos);
   const total = fixas + variaveis + parceladas + teto;
   const dias = diasUteisEntre(p.inicio, p.fim, feriados);
-  const contasTotal = fixas + variaveis + parceladas;
-  const pago = itens.filter((i) => i.paga).reduce((s, i) => s + i.valor, 0);
+  // Imprevistos entra no checklist como uma linha a mais (chave "imprevistos" em pagas), pelo valor do limite.
+  const tetoPago = (p.pagas || {}).imprevistos === true;
+  const temTeto = teto > 0;
+  const contasTotal = fixas + variaveis + parceladas + (temTeto ? teto : 0);
+  const pago = itens.filter((i) => i.paga).reduce((s, i) => s + i.valor, 0) + (temTeto && tetoPago ? teto : 0);
   return {
-    p, itens, fixas, variaveis, parceladas, teto, gastoTeto, total,
+    tetoPago, p, itens, fixas, variaveis, parceladas, teto, gastoTeto, total,
     totalReal: total - teto + gastoTeto,
     contasTotal, pago, faltaPagar: contasTotal - pago,
-    qtdContas: itens.length, qtdPagas: itens.filter((i) => i.paga).length,
+    qtdContas: itens.length + (temTeto ? 1 : 0), qtdPagas: itens.filter((i) => i.paga).length + (temTeto && tetoPago ? 1 : 0),
     pagoPct: contasTotal > 0 ? Math.round((pago / contasTotal) * 100) : 0,
     dias,
     feriados: feriados.filter((d) => diaDaSemana(d) !== 0).length,

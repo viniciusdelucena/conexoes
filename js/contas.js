@@ -258,14 +258,27 @@ export function configurarContas(contexto) {
     executar(() => backend().salvarPaga(casa(), p.id, item.conta.id, !item.paga));
   }
 
+  function marcarTetoPago(r) {
+    const p = periodoAtual();
+    if (!p) return;
+    contexto.aviso(r.tetoPago ? "Pagamento desmarcado" : "Imprevistos marcado como pago");
+    executar(() => backend().salvarPaga(casa(), p.id, "imprevistos", !r.tetoPago));
+  }
+
   function linhaTeto(r) {
-    return linha({
-      icone: "teto",
-      nome: "Limite de imprevistos",
-      sub: `Gasto até agora: ${reais(r.gastoTeto)} · toque para ver os gastos`,
-      valor: r.teto,
-      aoClicar: () => contexto.abrirTetoPagina()
-    });
+    const pago = r.tetoPago;
+    return h("div", { class: "ct-item" + (pago ? " paga" : "") },
+      h("button", {
+        type: "button", class: "chk" + (pago ? " on" : ""), role: "checkbox",
+        "aria-checked": String(pago), "aria-label": "Imprevistos: marcar como pago",
+        html: icone("check", 16), onclick: () => marcarTetoPago(r)
+      }),
+      h("button", { class: "ct-linha", type: "button", onclick: () => contexto.abrirTetoPagina() },
+        h("span", { class: "ct-info" },
+          h("span", { class: "ct-nome" }, "Limite do período"),
+          h("span", { class: "ct-sub" }, `Gasto: ${reais(r.gastoTeto)} · ver gastos`)),
+        h("span", { class: "ct-valor" }, reais(r.teto)),
+        h("span", { class: "ct-seta", html: icone("dir", 16) })));
   }
 
   // ----- Dívidas do modelo antigo -> contas parceladas -----
