@@ -156,27 +156,29 @@ input[type="text"]:focus, input[type="search"]:focus, input[type="date"]:focus {
 /* Cabeçalho: marca + título da página + nome da casa. Fica na cor do fundo, sem faixa. */
 .topo {
   position: sticky; top: 0; z-index: 5;
-  display: flex; align-items: center; gap: 12px;
-  padding: calc(12px + env(safe-area-inset-top)) max(16px, calc((100% - 720px) / 2 + 16px)) 10px;
+  display: flex; align-items: flex-end; gap: 12px;
+  padding: calc(14px + env(safe-area-inset-top)) max(16px, calc((100% - 720px) / 2 + 16px)) 12px;
   background: var(--fundo);
+  border-bottom: 1px solid var(--borda);
 }
-.topo-marca {
-  flex: none; width: 40px; height: 40px;
-  display: grid; place-items: center;
-  border-radius: 13px;
-  background: radial-gradient(circle at 22% 12%, rgba(255, 255, 255, .38), transparent 62%), linear-gradient(135deg, #ff7a6e, #e63b48 50%, #a8142a);
-  box-shadow: 0 6px 14px rgba(168, 20, 42, .34), inset 0 1px 0 rgba(255, 255, 255, .35);
+.topo-textos { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.topo-linha { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.topo-marca { flex: none; display: grid; place-items: center; cursor: default; padding: 8px; margin: -8px -1px -8px -8px; -webkit-tap-highlight-color: transparent; }
+.topo-marca svg { width: 22px; height: auto; overflow: visible; }
+.topo-marca .anel.e { stroke: var(--primaria); }
+.topo-marca .anel.d { stroke: var(--primaria); opacity: .4; }
+.topo-sub {
+  margin: 0; font-size: .7rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--suave); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.topo-marca svg { width: 25px; height: auto; overflow: visible; filter: drop-shadow(0 2px 2px rgba(90, 0, 16, .3)); }
-.topo-textos { flex: 1; min-width: 0; }
-.topo-titulo { margin: 0; font-size: 1.35rem; font-weight: 800; line-height: 1.15; }
-.topo-sub { margin: 0; font-size: .8rem; color: var(--suave); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.topo-titulo { margin: 0; font-size: 1.7rem; font-weight: 700; letter-spacing: -.02em; line-height: 1.15; }
 
 .selo {
   flex: none;
   font-size: .74rem; font-weight: 700;
-  padding: 4px 10px; border-radius: 999px;
-  background: var(--realce); color: var(--primaria);
+  padding: 4px 10px; margin-bottom: 4px; border-radius: 999px;
+  background: transparent; color: var(--suave); border: 1px solid var(--borda);
+  font-weight: 600; letter-spacing: .02em;
 }
 .selo.offline { background: var(--alerta-fundo); color: var(--alerta); }
 
