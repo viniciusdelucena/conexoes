@@ -1,9 +1,10 @@
-// Módulo Contas: contas fixas e variáveis de cada período (sem dívidas) e o teto de gastos do período.
+// Módulo Contas: contas do período (fixas, variáveis e parceladas), o checklist de pagamento e o teto de gastos.
 //
 // Os períodos e os cálculos ficam em periodos.js. Conta recorrente:
-//   { id, nome, tipo: "fixa" | "variavel", valorCentavos, inicio: "AAAA-MM", fim: "AAAA-MM" | null, dia: 1..31 | null }
+//   { id, nome, tipo: "fixa" | "variavel" | "parcelada", valorCentavos, inicio, fim, dia, parcelas? }
+// É aqui que se marca o que foi pago. A aba Dívidas só lê as parcelas das contas parceladas.
 
-import { $, h, reais, paraCampo, parseReais, mesAtual, nomeMes, NOMES_MESES } from "./util.js";
+import { $, h, reais, paraCampo, parseReais, nomeMes, NOMES_MESES, somarMeses } from "./util.js";
 import { icone } from "./icones.js";
 import {
   feriadosNacionaisCalculados, buscarFeriadosApi, feriadosDoMes,
@@ -12,7 +13,7 @@ import {
 import {
   hojeIso, somarDias, somarMesesData, diasEntre, mesesEntre, dataCurta, rotuloPeriodo,
   listaPeriodos, periodoDeHoje, periodoSeguinte, periodoContem, selecao, resolverSelecionado,
-  tetoDoPeriodo, calcularPeriodo, serieDePeriodos, navegacaoPeriodos
+  tetoDoPeriodo, calcularPeriodo, serieDePeriodos, navegacaoPeriodos, dataDaConta, derivarDividas
 } from "./periodos.js";
 
 // ---------- Interface ----------
@@ -29,6 +30,8 @@ export function configurarContas(contexto) {
   let periodoAlvo = null;    // período aberto na folha (null = novo)
   let confirmandoExclusao = false;
   let confirmandoPeriodo = false;
+  let linhasParcela = [];    // editor de parcelas da conta parcelada
+  let dividasAntigas = [];   // dívidas do modelo antigo, ainda por converter em contas
   let fimMexido = false;
   let usarDias = false;      // preferência da casa: mostrar valor por dia útil
   let manuais = {};          // feriados da casa: { "AAAA-MM-DD": { nome, tipo } }
@@ -117,11 +120,13 @@ export function configurarContas(contexto) {
 
   function corpo(r, p) {
     return [
+      ...(dividasAntigas.length ? [cartaoMigracao()] : []),
       resumo(r, p),
       ...(usarDias ? [calendario(p)] : []),
       secao("Contas fixas", r.fixas, linhasContas(r, "fixa"), "Nenhuma conta fixa neste período."),
       secao("Contas variáveis", r.variaveis, linhasContas(r, "variavel"), "Nenhuma conta variável neste período."),
-      secao("Teto de gastos", r.teto, [linhaTeto(r)]),
+      secao("Cartões e empréstimos", r.parceladas, linhasContas(r, "parcelada"), "Nenhuma parcela vence neste período. Crie uma conta do tipo Parcelada."),
+      secao("Imprevistos", r.teto, [linhaTeto(r)]),
       h("button", { class: "btn-sutil", type: "button", onclick: () => abrirConta(null) }, "+ Adicionar conta")
     ];
   }
@@ -131,12 +136,20 @@ export function configurarContas(contexto) {
     return h("div", { class: "cartao resumo-div" },
       h("div", { class: "rd-rotulo" }, `Total de ${rotuloPeriodo(p)}`),
       h("div", { class: "rd-valor" }, reais(r.total)),
+      h("div", { class: "rd-pago" },
+        h("div", { class: "rd-pago-txt" },
+          h("span", {}, r.qtdContas ? `${r.qtdPagas} de ${r.qtdContas} ${r.qtdContas === 1 ? "conta paga" : "contas pagas"}` : "Nenhuma conta neste período"),
+          h("strong", {}, `${r.pagoPct}%`)),
+        h("div", { class: "barra", role: "progressbar", "aria-valuemin": "0", "aria-valuemax": "100", "aria-valuenow": String(r.pagoPct), "aria-label": "Quanto das contas já foi pago" },
+          h("span", { style: `width:${r.pagoPct}%` }))),
       h("div", { class: "rd-meta" },
+        meta("Já pago", reais(r.pago)),
+        meta("Falta pagar", reais(r.faltaPagar)),
         usarDias ? meta("Por dia útil", reais(r.porDia)) : null,
         usarDias ? meta("Dias úteis no período", String(r.dias)) : null,
         meta("Com o gasto real", reais(r.totalReal))),
       h("div", { class: "rd-nota" },
-        "Soma as contas fixas, as variáveis e o teto cheio. As dívidas ficam na aba Dívidas. \"Com o gasto real\" troca o teto pelo que já foi gasto dele." +
+        "O total soma as contas e o limite de imprevistos cheio. Marque cada conta como paga na lista. \"Com o gasto real\" troca o limite pelo que já foi gasto dele." +
         (usarDias ? ` O valor por dia útil é o total dividido pelos ${r.dias} dias úteis do período (segunda a sábado, sem os feriados).` : ""))
     );
   }
@@ -214,25 +227,79 @@ export function configurarContas(contexto) {
       h("span", { class: "ct-seta", html: icone("dir", 16) }));
   }
 
+  // Linha com o círculo de "paga" à esquerda e o resto abrindo o detalhe da conta.
   function linhasContas(r, tipo) {
     return r.itens.filter((i) => i.conta.tipo === tipo).map((i) => {
       const venc = i.conta.dia ? `vence ${dataCurta(i.data)}` : null;
-      let estado;
-      if (i.estimada) estado = [h("span", { class: "chip atraso" }, "Estimada"), " toque para informar"];
-      else if (tipo === "fixa") estado = i.alterada ? "valor ajustado só neste período" : "todo mês";
-      else estado = "valor informado";
-      const sub = venc ? [`${venc} · `, ...[].concat(estado)] : [].concat(estado);
-      return linha({ icone: "contas", nome: i.conta.nome, sub, valor: i.valor, aoClicar: () => abrirValor(i) });
+      let resto;
+      if (tipo === "parcelada") resto = i.parcelas.map((x) => `${x.it.nome} ${x.k}/${x.it.total}`).join(" · ");
+      else if (i.estimada) resto = [h("span", { class: "chip atraso" }, "Estimada"), " toque para informar"];
+      else if (tipo === "fixa") resto = i.alterada ? "valor ajustado só neste período" : "todo mês";
+      else resto = "valor informado";
+      const sub = venc ? [`${venc} · `, ...[].concat(resto)] : [].concat(resto);
+      return h("div", { class: "ct-item" + (i.paga ? " paga" : "") },
+        h("button", {
+          type: "button", class: "chk" + (i.paga ? " on" : ""), role: "checkbox",
+          "aria-checked": String(i.paga), "aria-label": `${i.conta.nome}: marcar como paga`,
+          disabled: !!i.automatica, title: i.automatica ? "Parcelas já pagas antes do cadastro" : null,
+          html: icone("check", 16), onclick: () => marcarPaga(i)
+        }),
+        h("button", { class: "ct-linha", type: "button", onclick: () => (tipo === "parcelada" ? abrirConta(i.conta) : abrirValor(i)) },
+          h("span", { class: "ct-info" }, h("span", { class: "ct-nome" }, i.conta.nome), h("span", { class: "ct-sub" }, sub)),
+          h("span", { class: "ct-valor" }, reais(i.valor)),
+          h("span", { class: "ct-seta", html: icone("dir", 16) })));
     });
+  }
+
+  function marcarPaga(item) {
+    const p = periodoAtual();
+    if (!p) return;
+    contexto.aviso(item.paga ? "Pagamento desmarcado" : "Conta marcada como paga");
+    executar(() => backend().salvarPaga(casa(), p.id, item.conta.id, !item.paga));
   }
 
   function linhaTeto(r) {
     return linha({
       icone: "teto",
-      nome: "Reserva para imprevistos",
+      nome: "Limite de imprevistos",
       sub: `Gasto até agora: ${reais(r.gastoTeto)} · toque para ver os gastos`,
       valor: r.teto,
       aoClicar: () => contexto.abrirTetoPagina()
+    });
+  }
+
+  // ----- Dívidas do modelo antigo -> contas parceladas -----
+  const pagasSeguidas = (pagas) => { let n = 0; const set = new Set(pagas || []); while (set.has(n + 1)) n++; return n; };
+
+  function cartaoMigracao() {
+    return h("article", { class: "cartao ct-migrar" },
+      h("h3", {}, "Suas dívidas antigas"),
+      h("p", { class: "sub" }, `Encontramos ${dividasAntigas.length} ${dividasAntigas.length === 1 ? "dívida cadastrada" : "dívidas cadastradas"} do jeito antigo. Converta em contas parceladas: o checklist passa a ser aqui e a aba Dívidas continua mostrando o andamento.`),
+      h("button", { class: "btn primario", type: "button", onclick: converterDividas }, "Converter em contas"));
+  }
+
+  function converterDividas() {
+    const grupos = new Map();
+    for (const d of dividasAntigas) {
+      const nome = ((d.grupo || "").trim() || d.nome);
+      const chave = nome.toLocaleLowerCase("pt-BR");
+      if (!grupos.has(chave)) grupos.set(chave, { nome, itens: [] });
+      grupos.get(chave).itens.push(d);
+    }
+    const antigas = [...dividasAntigas];
+    contexto.aviso("Convertendo as dívidas em contas…");
+    executar(async () => {
+      for (const g of grupos.values()) {
+        const dia = g.itens.map((d) => Number(d.diaVencimento)).find((n) => n >= 1 && n <= 31) || null;
+        const parcelas = g.itens.map((d) => ({
+          id: idCurto(), nome: d.nome, valorCentavos: d.valorCentavos, total: d.totalParcelas,
+          mesInicio: d.mesInicio, pagasAntes: Math.min(d.totalParcelas, pagasSeguidas(d.pagas))
+        }));
+        const inicio = parcelas.map((x) => x.mesInicio).sort()[0];
+        await backend().salvarConta(casa(), null, { nome: g.nome, tipo: "parcelada", valorCentavos: 0, inicio, fim: null, dia, parcelas });
+      }
+      for (const d of antigas) await backend().excluirDivida(casa(), d.id);
+      contexto.aviso("Dívidas convertidas em contas");
     });
   }
 
@@ -310,7 +377,7 @@ export function configurarContas(contexto) {
       confirmandoPeriodo = true;
       botao.textContent = "Confirmar exclusão";
       botao.classList.add("confirmar");
-      mostrarErro("erro-periodo", "Excluir apaga os valores informados e o teto deste período. As contas e os gastos continuam existindo.");
+      mostrarErro("erro-periodo", "Excluir apaga os valores informados e o limite de imprevistos deste período. As contas e os gastos continuam existindo.");
       return;
     }
     const id = alvo.p.id;
@@ -322,6 +389,12 @@ export function configurarContas(contexto) {
   }
 
   // Cadastro da conta
+  const DICAS_TIPO = {
+    fixa: "Fixa: o valor é o mesmo todo mês, como aluguel e internet.",
+    variavel: "Variável: o valor muda a cada mês, como energia e água. Você informa o valor real quando a conta chegar.",
+    parcelada: "Parcelada: cartão, empréstimo ou financiamento. Coloque as parcelas dentro da conta e marque a conta como paga todo mês. As parcelas aparecem sozinhas na aba Dívidas."
+  };
+
   function definirTipo(tipo) {
     tipoForm = tipo;
     document.querySelectorAll("#cc-tipo [data-tipo]").forEach((b) => {
@@ -330,9 +403,51 @@ export function configurarContas(contexto) {
       b.setAttribute("aria-pressed", String(ativo));
     });
     $("cc-valor-rotulo").textContent = tipo === "fixa" ? "Valor (R$)" : "Valor estimado (R$)";
-    $("cc-tipo-dica").textContent = tipo === "fixa"
-      ? "Fixa: o valor é o mesmo todo mês, como aluguel e internet."
-      : "Variável: o valor muda a cada mês, como energia e água. Você informa o valor real quando a conta chegar.";
+    $("cc-tipo-dica").textContent = DICAS_TIPO[tipo];
+    $("cc-bloco-valor").hidden = tipo === "parcelada";
+    $("cc-bloco-vigencia").hidden = tipo === "parcelada";
+    $("cc-bloco-parcelas").hidden = tipo !== "parcelada";
+    if (tipo === "parcelada" && !linhasParcela.length) adicionarLinhaParcela(null);
+  }
+
+  // ----- Editor de parcelas (conta parcelada) -----
+  // Em cada linha: nome, valor, nº de parcelas e quantas já foram pagas. "Já pagas" conta a partir do mês em que a conta cai
+  // no período aberto: se faltam 4 parcelas e uma vence neste período, já pagas = total - 4.
+  function adicionarLinhaParcela(pc, pagasAtuais, proximaMes) {
+    const campo = (rotulo, atributos) => {
+      const el = h("input", { type: "text", autocomplete: "off", ...atributos });
+      return { el, no: h("label", { class: "pc-campo" }, h("span", {}, rotulo), el) };
+    };
+    const nome = campo("O que é", { maxlength: "40", placeholder: "Ex.: Celular, empréstimo", value: pc ? pc.nome : "" });
+    const valor = campo("Valor da parcela (R$)", { inputmode: "decimal", placeholder: "0,00", value: pc ? paraCampo(pc.valorCentavos) : "" });
+    const total = campo("Nº de parcelas", { inputmode: "numeric", maxlength: "3", placeholder: "7", value: pc ? String(pc.total) : "" });
+    const pagas = campo("Já pagas", { inputmode: "numeric", maxlength: "3", placeholder: "0", value: pc ? String(pagasAtuais) : "" });
+    const linhaObj = { pc, pagasAtuais: pc ? pagasAtuais : null, proximaMes: proximaMes || null, nome: nome.el, valor: valor.el, total: total.el, pagas: pagas.el };
+    const no = h("div", { class: "pc-linha" },
+      nome.no,
+      h("div", { class: "pc-trio" }, valor.no, total.no, pagas.no),
+      h("button", {
+        type: "button", class: "pc-remover", "aria-label": "Remover esta parcela",
+        onclick: () => { linhasParcela = linhasParcela.filter((x) => x !== linhaObj); no.remove(); }
+      }, "Remover parcela"));
+    linhaObj.no = no;
+    linhasParcela.push(linhaObj);
+    $("cc-parcelas").append(no);
+    return linhaObj;
+  }
+
+  function carregarParcelas(c) {
+    linhasParcela = [];
+    $("cc-parcelas").replaceChildren();
+    if (!c || c.tipo !== "parcelada") return;
+    const derivadas = derivarDividas([c], periodos());
+    for (const pc of c.parcelas || []) {
+      const d = derivadas.find((x) => x.id === `${c.id}:${pc.id}`);
+      const pagas = d ? d.pagas.length : (pc.pagasAntes || 0);
+      let primeira = 1;
+      while (d && d.pagas.includes(primeira)) primeira++;
+      adicionarLinhaParcela(pc, pagas, somarMeses(pc.mesInicio, primeira - 1));
+    }
   }
 
   function abrirConta(c) {
@@ -342,11 +457,14 @@ export function configurarContas(contexto) {
     mostrarErro("erro-conta", "");
     $("conta-titulo").textContent = c ? "Editar conta" : "Nova conta";
     $("cc-nome").value = c ? c.nome : "";
+    linhasParcela = [];
+    $("cc-parcelas").replaceChildren();
+    carregarParcelas(c);
     definirTipo(c ? c.tipo : "fixa");
-    $("cc-valor").value = c ? paraCampo(c.valorCentavos) : "";
+    $("cc-valor").value = c && c.tipo !== "parcelada" ? paraCampo(c.valorCentavos) : "";
     $("cc-dia").value = c && c.dia ? String(c.dia) : "";
     const p = periodoAtual();
-    const [ai, mi] = (c ? c.inicio : (p ? p.inicio : hojeIso()).slice(0, 7)).split("-").map(Number);
+    const [ai, mi] = (c && c.tipo !== "parcelada" ? c.inicio : (p ? p.inicio : hojeIso()).slice(0, 7)).split("-").map(Number);
     definirSelect("cc-inicio-ano", ai);
     $("cc-inicio-mes").value = String(mi);
     if (c && c.fim) {
@@ -366,21 +484,58 @@ export function configurarContas(contexto) {
     if (!c) requestAnimationFrame(() => $("cc-nome").focus());
   }
 
+  const idCurto = () => "p" + Math.random().toString(36).slice(2, 8);
+
+  // Lê e confere as linhas do editor. Devolve a lista de parcelas ou uma mensagem de erro.
+  function lerParcelas(dia) {
+    if (!linhasParcela.length) return { erro: "Adicione pelo menos uma parcela." };
+    const p = periodoAtual();
+    const base = ((p && dataDaConta({ tipo: "parcelada", dia }, p)) || (p ? p.inicio : hojeIso())).slice(0, 7);
+    const lista = [];
+    for (const L of linhasParcela) {
+      const nome = L.nome.value.trim();
+      const valorCentavos = parseReais(L.valor.value);
+      const total = parseInt(L.total.value, 10);
+      const pagasTexto = L.pagas.value.trim();
+      const pagas = pagasTexto === "" ? 0 : parseInt(pagasTexto, 10);
+      if (!nome) return { erro: "Diga o que é cada parcela, por exemplo Celular." };
+      if (!(valorCentavos > 0)) return { erro: `Informe o valor da parcela de ${nome}.` };
+      if (!(total >= 1 && total <= 120)) return { erro: `O número de parcelas de ${nome} deve ficar entre 1 e 120.` };
+      if (!(pagas >= 0 && pagas <= total)) return { erro: `Em ${nome}, as parcelas já pagas devem ficar entre 0 e ${total}.` };
+      if (L.pc && pagas === L.pagasAtuais) {
+        // Não mexeu nas pagas: mantém o histórico exatamente como está.
+        lista.push({ ...L.pc, nome, valorCentavos, total });
+      } else {
+        // Novo, ou corrigiu as pagas: a próxima parcela em aberto cai no mês de referência.
+        const referencia = L.pc ? L.proximaMes : base;
+        lista.push({ id: L.pc ? L.pc.id : idCurto(), nome, valorCentavos, total, mesInicio: somarMeses(referencia, -pagas), pagasAntes: pagas });
+      }
+    }
+    return { lista };
+  }
+
   function salvarConta() {
     const nome = $("cc-nome").value.trim();
-    const valorCentavos = parseReais($("cc-valor").value);
-    const inicio = `${$("cc-inicio-ano").value}-${dois($("cc-inicio-mes").value)}`;
-    const fim = $("cc-fim-ano").value ? `${$("cc-fim-ano").value}-${dois($("cc-fim-mes").value)}` : null;
     const diaTexto = $("cc-dia").value.trim();
     const dia = diaTexto === "" ? null : parseInt(diaTexto, 10);
-
     if (!nome) return mostrarErro("erro-conta", "Dê um nome para a conta.");
-    if (!(valorCentavos > 0)) return mostrarErro("erro-conta", "Informe o valor, por exemplo 120,00.");
     if (dia !== null && !(dia >= 1 && dia <= 31)) return mostrarErro("erro-conta", "O dia do vencimento deve ficar entre 1 e 31, ou em branco.");
-    if (fim && fim < inicio) return mostrarErro("erro-conta", "A conta não pode terminar antes de começar.");
 
+    let dadosConta;
+    if (tipoForm === "parcelada") {
+      const r = lerParcelas(dia);
+      if (r.erro) return mostrarErro("erro-conta", r.erro);
+      const inicio = r.lista.map((x) => x.mesInicio).sort()[0];
+      dadosConta = { nome, tipo: "parcelada", valorCentavos: 0, inicio, fim: null, dia, parcelas: r.lista };
+    } else {
+      const valorCentavos = parseReais($("cc-valor").value);
+      const inicio = `${$("cc-inicio-ano").value}-${dois($("cc-inicio-mes").value)}`;
+      const fim = $("cc-fim-ano").value ? `${$("cc-fim-ano").value}-${dois($("cc-fim-mes").value)}` : null;
+      if (!(valorCentavos > 0)) return mostrarErro("erro-conta", "Informe o valor, por exemplo 120,00.");
+      if (fim && fim < inicio) return mostrarErro("erro-conta", "A conta não pode terminar antes de começar.");
+      dadosConta = { nome, tipo: tipoForm, valorCentavos, inicio, fim, dia, parcelas: [] };
+    }
     const id = contaForm ? contaForm.id : null;
-    const dadosConta = { nome, tipo: tipoForm, valorCentavos, inicio, fim, dia };
     fecharFolhas();
     contexto.aviso(id ? "Conta atualizada" : "Conta adicionada");
     executar(() => backend().salvarConta(casa(), id, dadosConta));
@@ -445,10 +600,10 @@ export function configurarContas(contexto) {
   // Teto de gastos
   function abrirTeto() {
     const p = periodoAtual();
-    if (!p) { contexto.aviso("Crie um período antes de alterar o teto"); return; }
+    if (!p) { contexto.aviso("Crie um período antes de alterar o limite"); return; }
     fecharFolhas();
     mostrarErro("erro-teto", "");
-    $("teto-rotulo").textContent = `Teto a partir de ${rotuloPeriodo(p)} (R$)`;
+    $("teto-rotulo").textContent = `Limite a partir de ${rotuloPeriodo(p)} (R$)`;
     $("ctt-valor").value = paraCampo(tetoDoPeriodo(p, periodos()));
     $("folha-teto").hidden = false;
     requestAnimationFrame(() => $("ctt-valor").select());
@@ -456,11 +611,11 @@ export function configurarContas(contexto) {
 
   function salvarTeto() {
     const centavos = parseReais($("ctt-valor").value);
-    if (!(centavos >= 0)) return mostrarErro("erro-teto", "Informe o valor do teto, por exemplo 500,00.");
+    if (!(centavos >= 0)) return mostrarErro("erro-teto", "Informe o valor do limite, por exemplo 500,00.");
     const p = periodoAtual();
     if (!p) return;
     fecharFolhas();
-    contexto.aviso("Teto atualizado");
+    contexto.aviso("Limite atualizado");
     executar(() => backend().salvarTeto(casa(), p.id, centavos));
   }
 
@@ -539,6 +694,7 @@ export function configurarContas(contexto) {
     if (!fimMexido && /^\d{4}-\d{2}-\d{2}$/.test(ini)) $("pr-fim").value = somarDias(somarMesesData(ini, 1), -1);
   });
 
+  $("btn-add-parcela").addEventListener("click", () => { const L = adicionarLinhaParcela(null); L.nome.focus(); });
   $("cc-tipo").addEventListener("click", (e) => {
     const b = e.target.closest("[data-tipo]");
     if (b) definirTipo(b.dataset.tipo);
@@ -569,13 +725,16 @@ export function configurarContas(contexto) {
     definirDiasUteis(ativo) { if (usarDias !== ativo) { usarDias = ativo; renderizar(); } },
     receberGastos(lista) { gastos = lista; renderizar(); },
     editarTeto() { abrirTeto(); },
+    receberDividasAntigas(lista) { dividasAntigas = lista || []; renderizar(); },
+    contas() { return contas; },
+    abrirContaPorId(id) { const c = contas.find((x) => x.id === id); if (c) abrirConta(c); },
     novoPeriodo() { abrirPeriodo(null); },
     editarPeriodo(p) { abrirPeriodo(p); },
     atualizar() { renderizar(); },
     receberFeriados(mapa) { manuais = mapa || {}; renderizar(); },
     receberMeses(mapa) { meses = mapa; pronto.meses = true; renderizar(); },
     limpar() {
-      contas = []; meses = {}; manuais = {}; gastos = [];
+      contas = []; meses = {}; manuais = {}; gastos = []; dividasAntigas = [];
       pronto.contas = pronto.meses = false;
       selecao.id = null;
       fecharFolhas();

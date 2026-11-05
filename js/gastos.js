@@ -59,12 +59,12 @@ export function configurarGastos(contexto) {
   function resumo(r) {
     const meta = (rotulo, valor) => h("div", { class: "rd-item" }, h("small", {}, rotulo), h("strong", {}, valor));
     return h("div", { class: "cartao resumo-div" + (r.estourou ? " estourou" : "") },
-      h("div", { class: "rd-rotulo" }, r.estourou ? "Passou do teto em" : "Ainda dá para gastar"),
+      h("div", { class: "rd-rotulo" }, r.estourou ? "Passou do limite em" : "Ainda dá para gastar"),
       h("div", { class: "rd-valor" }, reais(Math.abs(r.restante))),
-      h("div", { class: "barra", role: "progressbar", "aria-valuemin": "0", "aria-valuemax": "100", "aria-valuenow": String(r.pct), "aria-label": "Quanto do teto já foi usado" },
+      h("div", { class: "barra", role: "progressbar", "aria-valuemin": "0", "aria-valuemax": "100", "aria-valuenow": String(r.pct), "aria-label": "Quanto do limite já foi usado" },
         h("span", { style: `width:${r.pct}%` })),
       h("div", { class: "rd-meta" },
-        meta("Teto", reais(r.teto)),
+        meta("Limite", reais(r.teto)),
         meta("Gasto", `${reais(r.gasto)} (${r.teto > 0 ? Math.round((r.gasto / r.teto) * 100) : 0}%)`),
         r.porDia !== null ? meta("Por dia até o fim do período", reais(r.porDia)) : null));
   }
@@ -72,7 +72,7 @@ export function configurarGastos(contexto) {
   function acoes() {
     return h("div", { class: "gt-acoes" },
       h("button", { class: "btn primario", type: "button", onclick: () => abrirGasto(null) }, "+ Lançar gasto"),
-      h("button", { class: "btn", type: "button", onclick: () => contexto.editarTeto() }, "Alterar teto"));
+      h("button", { class: "btn", type: "button", onclick: () => contexto.editarTeto() }, "Alterar limite"));
   }
 
   // Período logo depois do atual: o que já existe ou, se não existir, o que seria criado.
@@ -135,7 +135,7 @@ export function configurarGastos(contexto) {
       return h("div", { class: "cartao vazio" },
         h("div", { class: "vazio-ico", html: icone("teto", 30) }),
         h("h3", {}, "Nenhum gasto neste período"),
-        h("p", { class: "sub" }, "Lance os gastos imprevistos, como farmácia, lanche e conserto. Eles saem do teto."));
+        h("p", { class: "sub" }, "Lance os gastos imprevistos, como farmácia, lanche e conserto. Eles saem do limite de imprevistos."));
     }
     return h("article", { class: "cartao ct-secao" },
       h("header", { class: "ct-topo" }, h("h3", {}, "Gastos do período"), h("span", { class: "ct-subtotal" }, reais(totalGastosDoPeriodo(p, gastos)))),

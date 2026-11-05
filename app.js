@@ -235,17 +235,17 @@ function entrarNoApp(id) {
   );
   cancelarDividas = backend.observarDividas(
     id,
-    (lista) => dividasUI.receber(lista),
+    (lista) => contasUI.receberDividasAntigas(lista),
     (e) => {
       console.error(e);
       aviso(traduzirErro(e));
     }
   );
   const falhou = (e) => { console.error(e); aviso(traduzirErro(e)); };
-  cancelarContas = backend.observarContas(id, (l) => contasUI.receberContas(l), falhou);
+  cancelarContas = backend.observarContas(id, (l) => { contasUI.receberContas(l); dividasUI.receberContas(l); }, falhou);
   cancelarFeriados = backend.observarFeriados(id, (m) => contasUI.receberFeriados(m), falhou);
   cancelarGastos = backend.observarGastos(id, (l) => { contasUI.receberGastos(l); gastosUI.receberGastos(l); }, falhou);
-  cancelarMeses = backend.observarMeses(id, (m) => { contasUI.receberMeses(m); gastosUI.receberMeses(m); }, falhou);
+  cancelarMeses = backend.observarMeses(id, (m) => { contasUI.receberMeses(m); gastosUI.receberMeses(m); dividasUI.receberMeses(m); }, falhou);
   abrirPagina(paginaAtual);
 }
 
@@ -279,10 +279,9 @@ function mostrarResumoDividas(r) {
   atualizarVazio();
 }
 dividasUI.configurar({
-  obterBackend: () => backend,
-  obterCasaId: () => casaId,
-  aviso,
-  aoResumo: mostrarResumoDividas
+  aoResumo: mostrarResumoDividas,
+  abrirConta: (id) => { abrirPagina("contas"); contasUI.abrirContaPorId(id); },
+  irParaContas: () => abrirPagina("contas")
 });
 
 // Preferência da casa: mostrar o valor por dia útil (desligada por padrão).
@@ -326,7 +325,7 @@ function mostrarResumoContas(r) {
   $("stat-dia").hidden = !diasUteisAtivo;
   $("ini-mes").textContent = `Contas de ${rotuloPeriodo(r.p)}`;
   $("stat-contas-num").textContent = reais(r.total);
-  $("stat-contas-leg").textContent = "contas fixas, variáveis e o teto do período";
+  $("stat-contas-leg").textContent = r.qtdContas ? `${r.qtdPagas} de ${r.qtdContas} contas pagas · mais os imprevistos` : "contas fixas, variáveis e imprevistos do período";
   $("stat-dia").textContent = `${reais(r.porDia)} por dia útil · ${r.dias} dias úteis` + (r.feriados ? ` · ${r.feriados} feriado${r.feriados > 1 ? "s" : ""}` : "");
   atualizarVazio();
 }
@@ -354,7 +353,7 @@ function mostrarResumoTeto(r) {
   }
   tile.classList.toggle("estourou", r.estourou);
   $("stat-teto-num").textContent = reais(Math.abs(r.restante));
-  $("stat-teto-rot").textContent = r.estourou ? "passou do teto" : "ainda dá para gastar";
+  $("stat-teto-rot").textContent = r.estourou ? "passou do limite" : "ainda dá para gastar";
   $("stat-teto-leg").textContent = `${reais(r.gasto)} gastos de ${reais(r.teto)}`;
   barra("ini-teto-barra", r.teto > 0 ? (r.gasto / r.teto) * 100 : (r.gasto > 0 ? 100 : 0));
 }
@@ -374,7 +373,7 @@ const TITULOS = {
   inicio: "Início",
   dividas: "Dívidas",
   contas: "Contas",
-  teto: "Teto de gastos",
+  teto: "Imprevistos",
   config: "Casa e conta"
 };
 let paginaAtual = "inicio";

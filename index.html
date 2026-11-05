@@ -10,7 +10,7 @@
     try { var t = localStorage.getItem("conexoes-tema"); if (t !== "auto") { document.documentElement.setAttribute("data-theme", t === "escuro" ? "dark" : "light"); document.documentElement.setAttribute("data-tema-app", "1"); } } catch (e) { document.documentElement.setAttribute("data-theme", "light"); document.documentElement.setAttribute("data-tema-app", "1"); }
   </script>
   <meta name="theme-color" id="meta-cor" content="#f6f3f2">
-  <meta name="description" content="Dívidas, contas do mês e teto de gastos da casa.">
+  <meta name="description" content="Dívidas, contas do mês e imprevistos da casa.">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/svg+xml" href="icons/icone.svg">
   <link rel="icon" type="image/png" href="icons/icon-192.png">
@@ -54,7 +54,7 @@
       <ul class="destaques">
         <li><span class="d-ico" data-ico="dividas" data-tam="22"></span><b>Dívidas</b><small>Cada parcela marcada até o fim</small></li>
         <li><span class="d-ico" data-ico="contas" data-tam="22"></span><b>Contas do mês</b><small>Total e valor por dia útil</small></li>
-        <li><span class="d-ico" data-ico="teto" data-tam="22"></span><b>Teto de gastos</b><small>Imprevistos sob controle</small></li>
+        <li><span class="d-ico" data-ico="teto" data-tam="22"></span><b>Imprevistos</b><small>Gastos fora do planejado sob controle</small></li>
         <li><span class="d-ico" data-ico="link" data-tam="22"></span><b>Em sincronia</b><small>Vocês dois veem os mesmos números</small></li>
       </ul>
 
@@ -133,11 +133,11 @@
         <!-- Primeiro acesso: nada cadastrado ainda -->
         <div id="ini-vazio" class="cartao ini-comeco" hidden>
           <h3>Vamos começar?</h3>
-          <p class="sub">Três passos e o app já mostra o que falta pagar e quanto sobra para gastar.</p>
+          <p class="sub">Três passos e o app já mostra o que falta pagar e quanto sobra para gastar. As dívidas aparecem sozinhas a partir das contas parceladas.</p>
           <ol class="ini-passos">
-            <li><button type="button" data-ir="dividas"><span class="ini-n">1</span><span><strong>Cadastre suas dívidas</strong><small>Parcelas de cartão, financiamento, empréstimo</small></span><span class="ini-seta" data-ico="dir" data-tam="18"></span></button></li>
-            <li><button type="button" data-ir="contas"><span class="ini-n">2</span><span><strong>Crie o período e adicione as contas</strong><small>Aluguel, internet, energia, água</small></span><span class="ini-seta" data-ico="dir" data-tam="18"></span></button></li>
-            <li><button type="button" data-ir="teto"><span class="ini-n">3</span><span><strong>Lance os gastos do dia a dia</strong><small>Eles saem do teto de gastos</small></span><span class="ini-seta" data-ico="dir" data-tam="18"></span></button></li>
+            <li><button type="button" data-ir="contas"><span class="ini-n">1</span><span><strong>Crie o período do mês</strong><small>Por exemplo, de 20/10 a 19/11</small></span><span class="ini-seta" data-ico="dir" data-tam="18"></span></button></li>
+            <li><button type="button" data-ir="contas"><span class="ini-n">2</span><span><strong>Adicione as contas</strong><small>Aluguel, internet, cartão, empréstimo</small></span><span class="ini-seta" data-ico="dir" data-tam="18"></span></button></li>
+            <li><button type="button" data-ir="teto"><span class="ini-n">3</span><span><strong>Lance os gastos do dia a dia</strong><small>Eles saem do limite de imprevistos</small></span><span class="ini-seta" data-ico="dir" data-tam="18"></span></button></li>
           </ol>
         </div>
 
@@ -145,7 +145,7 @@
           <button type="button" class="ini-hero" data-ir="contas">
             <span class="ini-rotulo" id="ini-mes">Contas do mês</span>
             <strong class="ini-valor" id="stat-contas-num">R$ —</strong>
-            <span class="ini-sub" id="stat-contas-leg">Contas e teto do período</span>
+            <span class="ini-sub" id="stat-contas-leg">Contas e imprevistos do período</span>
             <span class="ini-dia" id="stat-dia" hidden></span>
             <span class="ini-ver">Ver detalhes <span data-ico="dir" data-tam="16"></span></span>
           </button>
@@ -159,7 +159,7 @@
               <span class="ini-leg" id="stat-divida-leg">cadastre em Dívidas</span>
             </button>
             <button type="button" class="ini-tile" id="ini-tile-teto" data-ir="teto">
-              <span class="ini-tile-topo"><span class="ini-ic" data-ico="teto" data-tam="20"></span>Teto de gastos</span>
+              <span class="ini-tile-topo"><span class="ini-ic" data-ico="teto" data-tam="20"></span>Imprevistos</span>
               <strong class="ini-num" id="stat-teto-num">R$ —</strong>
               <span class="ini-leg" id="stat-teto-rot">ainda dá para gastar</span>
               <span class="ini-trilho"><span id="ini-teto-barra"></span></span>
@@ -179,7 +179,6 @@
             <button type="button" role="tab" data-visao="divida">Por dívida</button>
             <button type="button" role="tab" data-visao="evolucao">Evolução</button>
           </div>
-          <button type="button" id="btn-nova-divida" class="btn-add" aria-label="Nova dívida"><span data-ico="plus" data-tam="22"></span></button>
         </div>
         <div id="div-lista"></div>
       </section>
@@ -229,61 +228,9 @@
       <button class="aba ativa" data-pagina="inicio"><span class="ico" data-ico="home" data-tam="22"></span><span class="rot">Início</span></button>
       <button class="aba" data-pagina="dividas"><span class="ico" data-ico="dividas" data-tam="22"></span><span class="rot">Dívidas</span></button>
       <button class="aba" data-pagina="contas"><span class="ico" data-ico="contas" data-tam="22"></span><span class="rot">Contas</span></button>
-      <button class="aba" data-pagina="teto"><span class="ico" data-ico="teto" data-tam="22"></span><span class="rot">Teto</span></button>
+      <button class="aba" data-pagina="teto"><span class="ico" data-ico="teto" data-tam="22"></span><span class="rot">Imprevistos</span></button>
       <button class="aba" data-pagina="config"><span class="ico" data-ico="casa" data-tam="22"></span><span class="rot">Casa</span></button>
     </nav>
-  </div>
-
-  <!-- Formulário de dívida (folha que sobe de baixo) -->
-  <div id="folha" class="folha" hidden>
-    <div class="folha-fundo" data-fechar></div>
-    <form id="form-divida" class="folha-painel" novalidate aria-labelledby="folha-titulo">
-      <div class="folha-alca" aria-hidden="true"></div>
-      <h2 id="folha-titulo">Nova dívida</h2>
-
-      <label for="div-grupo">Dívida <em>(opcional)</em></label>
-      <input id="div-grupo" type="text" maxlength="40" placeholder="Ex.: Cartão Carrefour" autocomplete="off" list="div-grupos">
-      <datalist id="div-grupos"></datalist>
-      <p class="sub pequeno dica">Use para juntar várias compras ou empréstimos que você paga de uma vez, como as parcelas de um cartão. Sem nome, a compra fica sozinha.</p>
-
-      <label for="div-nome">O que é</label>
-      <input id="div-nome" type="text" maxlength="40" placeholder="Ex.: Celular, empréstimo, financiamento" autocomplete="off">
-
-      <div class="duas-colunas">
-        <div>
-          <label for="div-valor">Valor da parcela (R$)</label>
-          <input id="div-valor" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off">
-        </div>
-        <div>
-          <label for="div-total">Nº de parcelas</label>
-          <input id="div-total" type="text" inputmode="numeric" maxlength="3" placeholder="24" autocomplete="off">
-        </div>
-      </div>
-
-      <label for="div-mes">Mês da primeira parcela</label>
-      <div class="duas-colunas">
-        <select id="div-mes"></select>
-        <select id="div-ano" aria-label="Ano da primeira parcela"></select>
-      </div>
-
-      <label for="div-dia">Dia do vencimento (opcional)</label>
-      <input id="div-dia" type="text" inputmode="numeric" maxlength="2" placeholder="Ex.: 10" autocomplete="off">
-      <p class="sub pequeno dica">Aparece em cada parcela para você saber em que dia marcar como paga. Se o mês não tiver esse dia, vale o último dia dele.</p>
-
-      <div id="bloco-ja-pagas">
-        <label for="div-pagas">Parcelas já pagas</label>
-        <input id="div-pagas" type="text" inputmode="numeric" maxlength="3" placeholder="0" autocomplete="off">
-        <p id="dica-pagas" class="sub pequeno dica"></p>
-      </div>
-
-      <p id="erro-divida" class="erro" role="alert" hidden></p>
-
-      <div class="folha-acoes">
-        <button type="button" id="btn-excluir-divida" class="btn perigo" hidden>Excluir</button>
-        <button type="button" class="btn" data-fechar>Cancelar</button>
-        <button type="submit" class="btn primario">Salvar</button>
-      </div>
-    </form>
   </div>
 
   <!-- Contas do mês: cadastro de conta -->
@@ -298,17 +245,27 @@
       <div id="cc-tipo" class="segmentado">
         <button type="button" data-tipo="fixa" class="ativo" aria-pressed="true">Fixa</button>
         <button type="button" data-tipo="variavel" aria-pressed="false">Variável</button>
+        <button type="button" data-tipo="parcelada" aria-pressed="false">Parcelada</button>
       </div>
       <p id="cc-tipo-dica" class="sub pequeno dica"></p>
-      <label for="cc-valor" id="cc-valor-rotulo">Valor (R$)</label>
-      <input id="cc-valor" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off">
+      <div id="cc-bloco-valor">
+        <label for="cc-valor" id="cc-valor-rotulo">Valor (R$)</label>
+        <input id="cc-valor" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off">
+      </div>
+      <div id="cc-bloco-parcelas" hidden>
+        <label>Parcelas dentro desta conta</label>
+        <div id="cc-parcelas" class="pc-lista"></div>
+        <button type="button" id="btn-add-parcela" class="btn-sutil">+ Adicionar parcela</button>
+      </div>
       <label for="cc-dia">Dia do vencimento (opcional)</label>
       <input id="cc-dia" type="text" inputmode="numeric" maxlength="2" placeholder="Ex.: 20" autocomplete="off">
       <p class="sub pequeno dica">A conta aparece no período em que esse dia cai. Sem dia, ela entra no começo de cada período.</p>
-      <label>Começa em</label>
-      <div class="duas-colunas"><select id="cc-inicio-mes" aria-label="Mês de início"></select><select id="cc-inicio-ano" aria-label="Ano de início"></select></div>
-      <label>Termina em (opcional)</label>
-      <div class="duas-colunas"><select id="cc-fim-ano" aria-label="Ano final"></select><select id="cc-fim-mes" aria-label="Mês final" hidden></select></div>
+      <div id="cc-bloco-vigencia">
+        <label>Começa em</label>
+        <div class="duas-colunas"><select id="cc-inicio-mes" aria-label="Mês de início"></select><select id="cc-inicio-ano" aria-label="Ano de início"></select></div>
+        <label>Termina em (opcional)</label>
+        <div class="duas-colunas"><select id="cc-fim-ano" aria-label="Ano final"></select><select id="cc-fim-mes" aria-label="Mês final" hidden></select></div>
+      </div>
       <p id="erro-conta" class="erro" role="alert" hidden></p>
       <div class="folha-acoes">
         <button type="button" id="btn-excluir-conta" class="btn perigo" hidden>Excluir</button>
@@ -362,31 +319,11 @@
     <div class="folha-fundo" data-fechar></div>
     <form id="form-teto" class="folha-painel" novalidate aria-labelledby="teto-titulo">
       <div class="folha-alca" aria-hidden="true"></div>
-      <h2 id="teto-titulo">Teto de gastos</h2>
-      <label for="ctt-valor" id="teto-rotulo">Teto (R$)</label>
+      <h2 id="teto-titulo">Limite de imprevistos</h2>
+      <label for="ctt-valor" id="teto-rotulo">Limite (R$)</label>
       <input id="ctt-valor" type="text" inputmode="decimal" placeholder="500,00" autocomplete="off">
       <p class="sub pequeno dica">Vale a partir deste período e continua nos seguintes até você mudar de novo.</p>
       <p id="erro-teto" class="erro" role="alert" hidden></p>
-      <div class="folha-acoes">
-        <button type="button" class="btn" data-fechar>Cancelar</button>
-        <button type="submit" class="btn primario">Salvar</button>
-      </div>
-    </form>
-  </div>
-
-  <!-- Dívidas: vencimento de uma parcela -->
-  <div id="folha-venc" class="folha" hidden>
-    <div class="folha-fundo" data-fechar></div>
-    <form id="form-venc" class="folha-painel" novalidate aria-labelledby="venc-titulo">
-      <div class="folha-alca" aria-hidden="true"></div>
-      <h2 id="venc-titulo">Vencimento</h2>
-      <p id="venc-quem" class="sub"></p>
-      <label for="venc-dia">Dia do vencimento neste mês</label>
-      <input id="venc-dia" type="text" inputmode="numeric" maxlength="2" placeholder="Ex.: 12" autocomplete="off">
-      <label class="venc-check"><input id="venc-repetir" type="checkbox"> Repetir nos meses seguintes</label>
-      <p class="sub pequeno dica">Sem marcar, o dia vale só para este mês. Marcando, ele passa a valer daqui até a última parcela.</p>
-      <button type="button" id="btn-venc-padrao" class="btn-sutil" hidden>Voltar ao dia padrão</button>
-      <p id="erro-venc" class="erro" role="alert" hidden></p>
       <div class="folha-acoes">
         <button type="button" class="btn" data-fechar>Cancelar</button>
         <button type="submit" class="btn primario">Salvar</button>

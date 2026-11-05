@@ -294,3 +294,23 @@ select:focus { outline: 2px solid var(--primaria); outline-offset: 1px; }
 .dv-item .dv-editar { grid-column: 2; grid-row: 1 / span 2; }
 .dv-item:focus-visible { outline: 2px solid var(--primaria); outline-offset: 2px; }
 .dv-add { margin: 12px 0 0; }
+
+/* Dívidas é só leitura: marca simples, sem botão */
+.parcela.somente { grid-template-columns: auto minmax(0, 1fr) auto; }
+.parcela.somente.grupo { grid-template-columns: auto minmax(0, 1fr) auto auto; }
+.p-marca {
+  width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--borda);
+  display: grid; place-items: center; color: #fff;
+}
+.p-marca.on { background: var(--grad-marca); border-color: transparent; }
+.parcela.somente.paga .p-nome { text-decoration: line-through; color: var(--suave); }
+.p-chip { margin-left: 6px; }
+.mes-falta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin: 10px 0 0; font-size: .85rem; color: var(--suave); }
+.link-ir { border: 0; background: none; color: var(--primaria); font: inherit; font-weight: 600; cursor: pointer; padding: 4px 0; }
+.rd-tend { position: relative; z-index: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-top: 1rem; padding: 10px 12px; border-radius: 12px; background: rgba(255, 255, 255, .16); font-size: .88rem; font-weight: 600; }
+.rd-tend small { flex-basis: 100%; font-weight: 400; opacity: .85; }
+.rd-tend-seta { font-size: 1.1rem; }
+.dv-uma { margin: 6px 0 0; }
+.dv-add { margin-top: 10px; }
+.rd-tend { flex-wrap: nowrap; flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px 14px; }
+.rd-tend-seta { display: none; }

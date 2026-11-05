@@ -199,6 +199,11 @@ export async function criarBackendFirebase() {
       return F.setDoc(docMes(casaId, id), { teto: centavos }, { merge: true });
     },
 
+    // Marca a conta como paga (ou desmarca) no período. Fica em pagas: { [idDaConta]: true }.
+    salvarPaga(casaId, id, contaId, paga) {
+      return F.setDoc(docMes(casaId, id), { pagas: { [contaId]: paga ? true : F.deleteField() } }, { merge: true });
+    },
+
     // Período criado na mão: { inicio: "AAAA-MM-DD", fim: "AAAA-MM-DD" }. O id é livre (começa com a data de início).
     salvarPeriodo(casaId, id, dados) {
       return F.setDoc(docMes(casaId, id), dados, { merge: true });

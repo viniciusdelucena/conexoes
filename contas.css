@@ -64,3 +64,40 @@
 .cal-mes-nome { margin: 4px 0 6px; font-size: .8rem; font-weight: 700; color: var(--suave); }
 .cal-dia.fora { opacity: .22; pointer-events: none; box-shadow: none; background: none; }
 .duas-colunas > div { min-width: 0; }
+
+/* Checklist de pagamento nas contas */
+.ct-item { display: flex; align-items: center; gap: 10px; }
+.ct-item .chk { flex: none; }
+.ct-item .ct-linha { flex: 1; min-width: 0; }
+.ct-item.paga .ct-nome { text-decoration: line-through; color: var(--suave); }
+.ct-item.paga .ct-valor { color: var(--suave); font-weight: 600; }
+.chk:disabled { opacity: .55; cursor: default; }
+
+/* Progresso de pagamento no resumo */
+.rd-pago { position: relative; z-index: 1; margin-top: .9rem; }
+.rd-pago-txt { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 6px; font-size: .85rem; }
+.rd-pago-txt strong { font-variant-numeric: tabular-nums; }
+
+/* Cartão de conversão das dívidas antigas */
+.ct-migrar { border-left: 4px solid var(--primaria); }
+.ct-migrar h3 { margin: 0 0 4px; }
+.ct-migrar .btn { margin-top: 10px; }
+
+/* Editor de parcelas na folha */
+.pc-lista { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+.pc-linha {
+  display: flex; flex-direction: column; gap: 8px; padding: 12px;
+  border: 1px solid var(--borda); border-radius: 14px; background: var(--fundo);
+}
+.pc-campo { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.pc-campo span { font-size: .75rem; color: var(--suave); }
+.pc-campo input { width: 100%; min-width: 0; }
+.pc-trio { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 8px; }
+.pc-remover { align-self: flex-start; border: 0; background: none; color: var(--alerta); font: inherit; font-size: .82rem; font-weight: 600; padding: 4px 0; cursor: pointer; }
+.pc-campo input { padding: 10px 12px; height: auto; min-height: 0; font-size: .95rem; margin: 0; }
+.pc-campo { justify-content: flex-end; }
+.pc-linha { gap: 10px; }
+.pc-trio .pc-campo span { min-height: 2.1em; display: flex; align-items: flex-end; }
+.folha-painel .pc-campo { margin: 0; gap: 4px; }
+.folha-painel .pc-campo span { margin: 0; }
+.folha-painel .pc-campo input[type="text"] { margin: 0; padding: 10px 12px; font-size: .95rem; }

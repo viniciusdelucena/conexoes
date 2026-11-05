@@ -6,7 +6,8 @@ import { h, reais } from "./util.js";
 const CATEGORIAS = [
   { id: "fixas", nome: "Contas fixas", cor: "var(--cat-2)", valor: (r) => r.fixas },
   { id: "variaveis", nome: "Contas variáveis", cor: "var(--cat-3)", valor: (r) => r.variaveis },
-  { id: "teto", nome: "Teto de gastos", cor: "var(--cat-4)", valor: (r) => r.teto }
+  { id: "parcelas", nome: "Parcelas", cor: "var(--cat-1)", valor: (r) => r.parceladas },
+  { id: "teto", nome: "Imprevistos", cor: "var(--cat-4)", valor: (r) => r.teto }
 ];
 
 function compactoPn(centavos) {
@@ -98,7 +99,7 @@ export function configurarPainel() {
       }).join("");
 
       caixa.innerHTML = `<svg class="pn-svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" tabindex="0"
-  aria-label="Total das contas por período, de ${serie[0].curto} em diante, empilhado por contas fixas, variáveis e teto. Use as setas para ver cada período.">${grades}${colunas}</svg>`;
+  aria-label="Total das contas por período, de ${serie[0].curto} em diante, empilhado por contas fixas, variáveis e imprevistos. Use as setas para ver cada período.">${grades}${colunas}</svg>`;
 
       const svg = caixa.firstElementChild;
       let ativo = null;
