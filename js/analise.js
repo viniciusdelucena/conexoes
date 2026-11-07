@@ -1,8 +1,10 @@
 // Motor do Assistente: responde perguntas sobre as finanças usando só os dados do app, no próprio aparelho.
 // Nada sai daqui: são cálculos, não uma IA externa. Cada análise devolve { titulo, blocos, sugestoes }.
 //
-// Tipos de bloco: { t: "p", txt } | { t: "destaque", rotulo, valor, nota } | { t: "lista", itens: [txt] }
-//                | { t: "linhas", linhas: [{ rotulo, valor, extra, pct }] }  (pct 0-100 desenha uma barrinha)
+// Blocos visuais (a tela os desenha em assistente.js):
+//   kpis (números em destaque) · colunas (gráfico de colunas tocável) · anel (progresso) · pilha (divisão em partes)
+//   ranking (barras horizontais) · tempo (linha do tempo) · simulador (controle deslizante) · dica (aviso colorido)
+//   chips (etiquetas) · detalhes (conteúdo que abre ao tocar) · p (texto curto)
 
 import { reais, mesCurto, somarMeses, diffMeses, mesAtual } from "./util.js";
 import { listaPeriodos, periodoDeHoje, calcularPeriodo, derivarDividas, hojeIso, resumoTetoPeriodo, rotuloPeriodo } from "./periodos.js";
@@ -32,7 +34,7 @@ export function dividasAtivas(dados) {
   return derivarDividas(dados.contas, lista)
     .map((d) => {
       const c = calcularDivida(d);
-      return { id: d.id, nome: rotuloDivida(d), parcela: d.valorCentavos, restantes: c.restantes, restanteCentavos: c.restanteCentavos, fim: c.fim, conta: d.grupo || d.nome };
+      return { id: d.id, nome: rotuloDivida(d), parcela: d.valorCentavos, restantes: c.restantes, restanteCentavos: c.restanteCentavos, fim: c.fim, conta: d.grupo || d.nome, total: d.totalParcelas, pagas: c.pagasN };
     })
     .filter((d) => d.restantes > 0);
 }
@@ -72,13 +74,17 @@ export function extrairValor(txt) {
 }
 
 // ---------- Análises ----------
+const kpi = (rotulo, valor, nota, tom) => ({ rotulo, valor, nota, tom });
+const dica = (tom, txt) => ({ t: "dica", tom, txt });
+const mesesTxt = (n) => `${n} ${n === 1 ? "mês" : "meses"}`;
+
 function semDados(dados) {
   return !(dados.contas || []).length;
 }
 
 const VAZIO = {
   titulo: "Ainda não tenho o que analisar",
-  blocos: [p("Cadastre suas contas e crie um período em Contas. Assim que houver dados, eu calculo tudo por aqui.")],
+  blocos: [dica("info", "Cadastre suas contas e crie um período em Contas. Quando houver dados, eu calculo tudo por aqui.")],
   sugestoes: []
 };
 
@@ -88,76 +94,70 @@ const SUG = {
   fim: "Quando fico livre das dívidas?",
   resumo: "Como está este período?",
   imprev: "Como estão os imprevistos?",
-  gasta: "Onde vai meu dinheiro?",
-  extra: "E se eu pagar R$ 200 a mais por mês?"
+  gasta: "Onde vai meu dinheiro?"
 };
 
 export function analisarMesAMes(dados, hoje) {
   if (semDados(dados)) return VAZIO;
   const hist = historicoPeriodos(dados, 6, hoje);
   if (hist.length < 2) {
-    return { titulo: "Mês a mês", blocos: [p("Só existe um período cadastrado, então ainda não dá para comparar. Crie o próximo período em Contas e eu mostro a evolução.")], sugestoes: [SUG.resumo, SUG.quitar] };
+    return { titulo: "Mês a mês", blocos: [dica("info", "Só existe um período cadastrado, então ainda não dá para comparar. Crie o próximo em Contas.")], sugestoes: [SUG.resumo, SUG.quitar] };
   }
-  const maior = Math.max(...hist.map((x) => x.totalReal), 1);
-  const linhas = hist.map((x, i) => {
-    const ant = i ? hist[i - 1].totalReal : null;
-    const dif = ant === null ? null : x.totalReal - ant;
-    return { rotulo: x.rotulo + (x.atual ? " (atual)" : ""), valor: reais(x.totalReal), extra: dif === null ? "" : difTxt(dif), pct: Math.round((x.totalReal / maior) * 100), sobe: dif > 0 };
-  });
   const ultimo = hist[hist.length - 1], penultimo = hist[hist.length - 2];
   const dif = ultimo.totalReal - penultimo.totalReal;
   const pct = penultimo.totalReal ? Math.round((Math.abs(dif) / penultimo.totalReal) * 100) : 0;
-  const blocos = [
-    { t: "destaque", rotulo: dif <= 0 ? "Gasto do período atual caiu" : "Gasto do período atual subiu", valor: `${reais(Math.abs(dif))} (${pct}%)`, nota: `em relação a ${penultimo.rotulo}` },
-    { t: "linhas", linhas }
-  ];
-  // O que mais mexeu entre os dois últimos períodos
-  const partes = [["Contas fixas", "fixas"], ["Contas variáveis", "variaveis"], ["Parcelas", "parceladas"], ["Imprevistos (gasto real)", "gastoTeto"]]
-    .map(([nome, k]) => ({ nome, d: ultimo[k] - penultimo[k] })).filter((x) => x.d !== 0).sort((a, b) => Math.abs(b.d) - Math.abs(a.d));
-  if (partes.length) blocos.push({ t: "lista", itens: partes.slice(0, 3).map((x) => `${x.nome}: ${difTxt(x.d)}`) });
   const media = Math.round(hist.reduce((s, x) => s + x.totalReal, 0) / hist.length);
-  blocos.push(p(`A média dos últimos ${hist.length} períodos é ${reais(media)}.`));
+  const partes = [["Contas fixas", "fixas"], ["Contas variáveis", "variaveis"], ["Parcelas", "parceladas"], ["Imprevistos", "gastoTeto"]]
+    .map(([nome, k]) => ({ nome, d: ultimo[k] - penultimo[k] })).filter((x) => x.d !== 0).sort((a, b) => Math.abs(b.d) - Math.abs(a.d));
+  const blocos = [
+    { t: "kpis", itens: [
+      kpi("Este período", reais(ultimo.totalReal), ultimo.rotulo, "neutro"),
+      kpi(dif <= 0 ? "Caiu" : "Subiu", `${dif <= 0 ? "↓" : "↑"} ${reais(Math.abs(dif))}`, `${pct}% vs período anterior`, dif <= 0 ? "ok" : "alerta"),
+      kpi("Média", reais(media), `últimos ${hist.length} períodos`, "neutro")] },
+    { t: "colunas", titulo: "Total de cada período (toque numa coluna)", itens: hist.map((x, i) => ({
+      rotulo: x.rotulo.split(" a ")[0], valor: x.totalReal, texto: reais(x.totalReal),
+      detalhe: x.rotulo, extra: i ? `${difTxt(x.totalReal - hist[i - 1].totalReal)} vs anterior` : "", atual: x.atual })) }
+  ];
+  if (partes.length) {
+    const top = partes[0];
+    blocos.push(dica(top.d > 0 ? "alerta" : "ok", `O que mais mexeu: ${top.nome} (${difTxt(top.d)}).`));
+    if (partes.length > 1) blocos.push({ t: "detalhes", titulo: "Ver todas as variações", blocos: [{ t: "ranking", itens: partes.map((x) => ({ rotulo: x.nome, texto: difTxt(x.d), pct: Math.min(100, Math.round((Math.abs(x.d) / Math.abs(top.d)) * 100)), tom: x.d > 0 ? "alerta" : "ok" })) }] });
+  }
   return { titulo: "Mês a mês", blocos, sugestoes: [SUG.gasta, SUG.imprev, SUG.quitar] };
 }
 
 export function analisarQuitar(dados, extra = 0) {
   const ativas = dividasAtivas(dados);
   if (!ativas.length) {
-    return { titulo: "Quitar mais rápido", blocos: [p("Não há parcelas em aberto. Quando você cadastrar uma conta parcelada (cartão, empréstimo), eu sugiro a melhor ordem para quitar.")], sugestoes: [SUG.mes, SUG.resumo] };
+    return { titulo: "Quitar mais rápido", blocos: [dica("info", "Não há parcelas em aberto. Quando você cadastrar uma conta parcelada (cartão, empréstimo), eu sugiro a melhor ordem para quitar.")], sugestoes: [SUG.mes, SUG.resumo] };
   }
   const porSaldo = [...ativas].sort((a, b) => a.restanteCentavos - b.restanteCentavos);
-  const blocos = [];
   const primeira = porSaldo[0];
-  blocos.push(p(`Sem juros cadastrados, a ordem mais eficiente é terminar primeiro o que tem menor saldo: cada dívida que acaba libera a parcela dela para a próxima.`));
-  blocos.push({ t: "linhas", linhas: porSaldo.map((d, i) => ({ rotulo: `${i + 1}º ${d.nome}`, valor: reais(d.restanteCentavos), extra: `${d.restantes}× ${reais(d.parcela)}` })) });
-  blocos.push(p(`Foque em ${primeira.nome}: faltam ${primeira.restantes} parcelas e, quando acabar, libera ${reais(primeira.parcela)} por mês.`));
-  const rolando = simularQuitacao(ativas, 0); // mesmo valor por mês, redirecionando as parcelas que vão acabando
-  const mesesTxt = (n) => `${n} ${n === 1 ? "mês" : "meses"}`;
-  blocos.push(p(`No calendário atual você fica livre em ${mesesTxt(rolando.base)}. Se continuar pagando o mesmo valor total por mês e passar a parcela de cada dívida que acaba para a próxima, fica livre em ${mesesTxt(rolando.meses)}.`));
-  if (extra > 0) {
-    const com = simularQuitacao(ativas, extra);
-    const ganho = com.base - com.meses;
-    blocos.push({ t: "destaque", rotulo: `Com ${reais(extra)} a mais por mês`, valor: ganho > 0 ? `${mesesTxt(ganho)} antes` : "sem ganho", nota: `livre em ${mesesTxt(com.meses)} em vez de ${mesesTxt(com.base)} (até ${mesCurto(somarMeses(mesAtual(), com.meses - 1))})` });
-    blocos.push(p("O total pago continua igual porque não há juros cadastrados. Se o banco der desconto na antecipação, o ganho é maior."));
-  } else {
-    blocos.push(p("Quer ver quanto adiantaria pagando um valor a mais por mês?"));
-  }
-  return { titulo: "Quitar mais rápido", blocos, sugestoes: extra > 0 ? [SUG.fim, SUG.mes] : ["E se eu pagar R$ 100 a mais por mês?", SUG.extra, SUG.fim] };
+  const blocos = [
+    dica("ok", `Comece por ${primeira.nome}: faltam só ${primeira.restantes} ${primeira.restantes === 1 ? "parcela" : "parcelas"}. Ao acabar, libera ${reais(primeira.parcela)} por mês.`),
+    { t: "tempo", titulo: "Ordem sugerida (menor saldo primeiro)", itens: porSaldo.map((d, i) => ({
+      quando: `${i + 1}º`, titulo: d.nome, nota: `falta ${reais(d.restanteCentavos)} · ${d.restantes}× ${reais(d.parcela)}`,
+      pct: d.total ? Math.round((d.pagas / d.total) * 100) : 0, rotuloPct: `${d.pagas} de ${d.total} pagas` })) },
+    { t: "simulador", titulo: "E se sobrar um valor a mais por mês?", ativas: ativas.map((d) => ({ nome: d.nome, parcela: d.parcela, restantes: d.restantes })), extra: extra > 0 ? extra : 10000, max: 100000, passo: 5000, hoje: mesAtual() }
+  ];
+  return { titulo: "Quitar mais rápido", blocos, sugestoes: [SUG.fim, SUG.mes] };
 }
 
 export function analisarFim(dados) {
   const ativas = dividasAtivas(dados);
-  if (!ativas.length) return { titulo: "Fim das dívidas", blocos: [p("Nenhuma parcela em aberto no momento. 🎉")], sugestoes: [SUG.mes, SUG.resumo] };
+  if (!ativas.length) return { titulo: "Fim das dívidas", blocos: [dica("ok", "Nenhuma parcela em aberto no momento. 🎉")], sugestoes: [SUG.mes, SUG.resumo] };
   const resumo = calcularResumo(derivarDividas(dados.contas, listaPeriodos(dados.meses)));
   const porFim = [...ativas].sort((a, b) => diffMeses(b.fim, a.fim));
   const blocos = [
-    { t: "destaque", rotulo: "Livre das parcelas em", valor: resumo.fim ? mesCurto(resumo.fim) : "—", nota: `faltam ${reais(resumo.restanteCentavos)} (${resumo.quitadoPct}% já quitado)` },
-    { t: "linhas", linhas: porFim.map((d) => ({ rotulo: d.nome, valor: mesCurto(d.fim), extra: `${d.restantes} restantes` })) }
+    { t: "kpis", itens: [
+      kpi("Livre em", resumo.fim ? mesCurto(resumo.fim) : "—", `${mesesTxt(Math.max(...ativas.map((d) => d.restantes)))} restantes`, "neutro"),
+      kpi("Falta pagar", reais(resumo.restanteCentavos), `${ativas.length} ${ativas.length === 1 ? "dívida" : "dívidas"}`, "alerta"),
+      kpi("Já quitado", `${resumo.quitadoPct}%`, "do total parcelado", "ok")] },
+    { t: "anel", pct: resumo.quitadoPct, centro: `${resumo.quitadoPct}%`, sub: "quitado" },
+    { t: "tempo", titulo: "Quando cada uma termina", itens: porFim.map((d) => ({
+      quando: mesCurto(d.fim), titulo: d.nome, nota: `${d.restantes} restantes · libera ${reais(d.parcela)}/mês depois`,
+      pct: d.total ? Math.round((d.pagas / d.total) * 100) : 0, rotuloPct: `${d.pagas} de ${d.total} pagas` })) }
   ];
-  // Quando o total das parcelas cai
-  const quedas = [];
-  for (const d of porFim) { quedas.push(`${mesCurto(somarMeses(d.fim, 1))}: libera ${reais(d.parcela)} por mês (${d.nome})`); }
-  blocos.push({ t: "lista", itens: quedas.slice(0, 4) });
   return { titulo: "Fim das dívidas", blocos, sugestoes: [SUG.quitar, SUG.mes] };
 }
 
@@ -165,19 +165,21 @@ export function analisarResumo(dados, hoje) {
   if (semDados(dados)) return VAZIO;
   const lista = listaPeriodos(dados.meses);
   const per = periodoDeHoje(lista, hoje);
-  if (!per) return { titulo: "Período atual", blocos: [p("Hoje não cai em nenhum período. Crie o período atual em Contas.")], sugestoes: [SUG.mes] };
+  if (!per) return { titulo: "Período atual", blocos: [dica("info", "Hoje não cai em nenhum período. Crie o período atual em Contas.")], sugestoes: [SUG.mes] };
   const r = calcularPeriodo(per, { contas: dados.contas, periodos: lista, gastos: dados.gastos });
   const t = resumoTetoPeriodo(per, lista, dados.gastos, hoje);
-  const blocos = [
-    { t: "destaque", rotulo: `${rotuloPeriodo(per)}: contas pagas`, valor: `${r.qtdPagas} de ${r.qtdContas}`, nota: `${r.pagoPct}% pago · falta pagar ${reais(r.faltaPagar)}` },
-    { t: "linhas", linhas: [
-      { rotulo: "Contas fixas", valor: reais(r.fixas) }, { rotulo: "Contas variáveis", valor: reais(r.variaveis) }, { rotulo: "Parcelas", valor: reais(r.parceladas) },
-      { rotulo: "Imprevistos", valor: `${reais(t.gasto)} de ${reais(t.teto)}`, pct: t.teto ? Math.min(100, Math.round((t.gasto / t.teto) * 100)) : 0 }] }
-  ];
   const abertas = r.itens.filter((i) => !i.paga).map((i) => i.conta.nome);
-  if (abertas.length) blocos.push(p(`Ainda não marcadas como pagas: ${abertas.slice(0, 6).join(", ")}${abertas.length > 6 ? "…" : ""}.`));
-  if (t.estourou) blocos.push(p(`Atenção: os imprevistos passaram do limite em ${reais(-t.restante)}.`));
-  else if (t.porDia !== null) blocos.push(p(`Dá para gastar ${reais(t.porDia)} por dia em imprevistos até o fim do período.`));
+  const cats = [["Fixas", r.fixas], ["Variáveis", r.variaveis], ["Parcelas", r.parceladas], ["Imprevistos", r.gastoTeto]].filter((x) => x[1] > 0);
+  const blocos = [
+    { t: "anel", pct: r.pagoPct, centro: `${r.qtdPagas}/${r.qtdContas}`, sub: "contas pagas", titulo: rotuloPeriodo(per) },
+    { t: "kpis", itens: [
+      kpi("Falta pagar", reais(r.faltaPagar), `${r.qtdContas - r.qtdPagas} ${r.qtdContas - r.qtdPagas === 1 ? "conta" : "contas"}`, r.faltaPagar > 0 ? "alerta" : "ok"),
+      kpi("Imprevistos", reais(t.gasto), `de ${reais(t.teto)} · ${t.pct}%`, t.estourou ? "alerta" : "neutro")] },
+    { t: "pilha", titulo: "Para onde vai este período", itens: cats.map(([nome, valor]) => ({ nome, valor, texto: reais(valor) })) }
+  ];
+  if (abertas.length) blocos.push({ t: "chips", titulo: "Ainda sem marcar como paga", itens: abertas.slice(0, 8).map((n) => ({ txt: n, tom: "alerta" })) });
+  if (t.estourou) blocos.push(dica("alerta", `Os imprevistos passaram do limite em ${reais(-t.restante)}.`));
+  else if (t.porDia !== null) blocos.push(dica("info", `Dá para gastar ${reais(t.porDia)} por dia em imprevistos até o fim do período.`));
   return { titulo: "Período atual", blocos, sugestoes: [SUG.mes, SUG.imprev, SUG.quitar] };
 }
 
@@ -186,37 +188,44 @@ export function analisarImprevistos(dados, hoje) {
   if (!lista.length) return VAZIO;
   const hist = lista.filter((x) => x.inicio <= hoje).slice(-6).map((per) => resumoTetoPeriodo(per, lista, dados.gastos, hoje));
   const comGasto = hist.filter((x) => x.gasto > 0);
-  if (!comGasto.length) return { titulo: "Imprevistos", blocos: [p("Ainda não há gastos lançados em Imprevistos.")], sugestoes: [SUG.resumo, SUG.mes] };
+  if (!comGasto.length) return { titulo: "Imprevistos", blocos: [dica("info", "Ainda não há gastos lançados em Imprevistos.")], sugestoes: [SUG.resumo, SUG.mes] };
   const media = Math.round(comGasto.reduce((s, x) => s + x.gasto, 0) / comGasto.length);
   const estouros = hist.filter((x) => x.estourou).length;
   const ult = hist[hist.length - 1];
   const gastos = (dados.gastos || []).filter((g) => g.data >= lista[Math.max(0, lista.length - 6)].inicio);
   const maior = [...gastos].sort((a, b) => b.valorCentavos - a.valorCentavos)[0];
   const blocos = [
-    { t: "destaque", rotulo: "Média de imprevistos por período", valor: reais(media), nota: `limite atual: ${reais(ult.teto)}` },
-    { t: "linhas", linhas: hist.map((x) => ({ rotulo: rotuloPeriodo(x.p), valor: reais(x.gasto), extra: x.estourou ? "passou" : "", pct: x.teto ? Math.min(100, Math.round((x.gasto / x.teto) * 100)) : 0 })) }
+    { t: "kpis", itens: [
+      kpi("Média", reais(media), "por período", "neutro"),
+      kpi("Limite", reais(ult.teto), "atual", "neutro"),
+      kpi("Estouros", `${estouros}`, `em ${hist.length} períodos`, estouros ? "alerta" : "ok")] },
+    { t: "colunas", titulo: "Gasto em cada período (toque numa coluna)", limite: { valor: ult.teto, rotulo: "limite" },
+      itens: hist.map((x) => ({ rotulo: rotuloPeriodo(x.p).split(" a ")[0], valor: x.gasto, texto: reais(x.gasto), detalhe: `${rotuloPeriodo(x.p)} · ${x.teto ? Math.round((x.gasto / x.teto) * 100) : 0}% do limite`, tom: x.estourou ? "alerta" : "ok", atual: periodoContem2(x.p, hoje) })) }
   ];
-  blocos.push(p(estouros ? `O limite foi ultrapassado em ${estouros} dos últimos ${hist.length} períodos.` : `O limite foi respeitado em todos os últimos ${hist.length} períodos.`));
-  if (maior) blocos.push(p(`Maior gasto: ${maior.descricao || "Gasto"} (${reais(maior.valorCentavos)}).`));
-  if (media > ult.teto && ult.teto > 0) blocos.push(p(`A média está acima do limite. Vale considerar subir o limite para ${reais(Math.ceil(media / 5000) * 5000)} ou segurar os gastos.`));
+  blocos.push(dica(estouros ? "alerta" : "ok", estouros ? `O limite foi ultrapassado em ${estouros} dos últimos ${hist.length} períodos.` : `O limite foi respeitado em todos os últimos ${hist.length} períodos.`));
+  if (media > ult.teto && ult.teto > 0) blocos.push(dica("info", `A média está acima do limite. Considere subir para ${reais(Math.ceil(media / 5000) * 5000)} ou segurar os gastos.`));
+  if (maior) blocos.push({ t: "chips", titulo: "Maior gasto", itens: [{ txt: `${maior.descricao || "Gasto"} · ${reais(maior.valorCentavos)}`, tom: "info" }] });
   return { titulo: "Imprevistos", blocos, sugestoes: [SUG.gasta, SUG.mes] };
 }
+const periodoContem2 = (p, hoje) => hoje >= p.inicio && hoje <= p.fim;
 
 export function analisarOndeVai(dados, hoje) {
   if (semDados(dados)) return VAZIO;
   const lista = listaPeriodos(dados.meses);
   const per = periodoDeHoje(lista, hoje);
-  if (!per) return { titulo: "Onde vai o dinheiro", blocos: [p("Hoje não cai em nenhum período. Crie o período atual em Contas.")], sugestoes: [SUG.mes] };
+  if (!per) return { titulo: "Onde vai o dinheiro", blocos: [dica("info", "Hoje não cai em nenhum período. Crie o período atual em Contas.")], sugestoes: [SUG.mes] };
   const r = calcularPeriodo(per, { contas: dados.contas, periodos: lista, gastos: dados.gastos });
-  const cats = [["Contas fixas", r.fixas], ["Contas variáveis", r.variaveis], ["Parcelas", r.parceladas], ["Imprevistos", r.gastoTeto]].filter((x) => x[1] > 0);
+  const cats = [["Fixas", r.fixas], ["Variáveis", r.variaveis], ["Parcelas", r.parceladas], ["Imprevistos", r.gastoTeto]].filter((x) => x[1] > 0).sort((a, b) => b[1] - a[1]);
   const total = cats.reduce((s, x) => s + x[1], 0) || 1;
-  const maiores = [...r.itens].sort((a, b) => b.valor - a.valor).slice(0, 3);
+  const maiores = [...r.itens].sort((a, b) => b.valor - a.valor).slice(0, 5);
+  const topo = maiores[0] ? maiores[0].valor : 1;
   const blocos = [
-    { t: "linhas", linhas: cats.sort((a, b) => b[1] - a[1]).map(([n, v]) => ({ rotulo: n, valor: reais(v), extra: `${Math.round((v / total) * 100)}%`, pct: Math.round((v / total) * 100) })) },
-    { t: "lista", itens: maiores.map((i, k) => `${k + 1}º maior conta: ${i.conta.nome} (${reais(i.valor)})`) }
+    { t: "kpis", itens: [kpi("Total do período", reais(total), rotuloPeriodo(per), "neutro")] },
+    { t: "pilha", titulo: "Por categoria", itens: cats.map(([nome, valor]) => ({ nome, valor, texto: reais(valor) })) },
+    { t: "ranking", titulo: "Maiores contas", itens: maiores.map((i) => ({ rotulo: i.conta.nome, texto: reais(i.valor), pct: Math.round((i.valor / topo) * 100) })) }
   ];
   const par = r.parceladas / total;
-  if (par >= 0.3) blocos.push(p(`As parcelas pesam ${Math.round(par * 100)}% do período. Quitá-las é o caminho que mais alivia o orçamento.`));
+  if (par >= 0.3) blocos.push(dica("alerta", `As parcelas pesam ${Math.round(par * 100)}% do período. Quitá-las é o que mais alivia o orçamento.`));
   return { titulo: "Onde vai o dinheiro", blocos, sugestoes: [SUG.quitar, SUG.imprev, SUG.mes] };
 }
 
@@ -246,7 +255,7 @@ export function responder(pergunta, dados, hoje = hojeIso()) {
     case "resumo": return analisarResumo(dados, hoje);
     default: return {
       titulo: "Não entendi bem",
-      blocos: [p("Ainda sou um assistente simples e entendo estes assuntos. Toque em um deles ou escreva algo parecido:")],
+      blocos: [dica("info", "Ainda sou um assistente simples e entendo estes assuntos. Toque em um deles ou escreva algo parecido.")],
       sugestoes: [SUG.mes, SUG.quitar, SUG.fim, SUG.resumo, SUG.imprev, SUG.gasta]
     };
   }
