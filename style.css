@@ -164,7 +164,7 @@ input[type="text"]:focus, input[type="search"]:focus, input[type="date"]:focus {
 .topo-textos { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .topo-linha { display: flex; align-items: center; gap: 7px; min-width: 0; }
 .topo-marca { flex: none; display: grid; place-items: center; cursor: default; padding: 8px; margin: -8px -1px -8px -8px; -webkit-tap-highlight-color: transparent; }
-.topo-marca svg { width: 22px; height: auto; overflow: visible; }
+.topo-marca svg { width: 28px; height: auto; overflow: visible; }
 .topo-marca .anel.e { stroke: var(--primaria); }
 .topo-marca .anel.d { stroke: var(--primaria); opacity: .4; }
 .topo-sub {
@@ -277,21 +277,51 @@ input[type="text"]:focus, input[type="search"]:focus, input[type="date"]:focus {
 @keyframes flutuar-logo { 0%, 100% { translate: 0 0; } 50% { translate: 0 -8px; } }
 @keyframes entrar-logo { from { opacity: 0; scale: .6; } to { opacity: 1; scale: 1; } }
 
-.elos { width: 84px; height: auto; overflow: visible; filter: drop-shadow(0 4px 7px rgba(90, 0, 16, .38)); }
-.elos .anel { stroke-linecap: round; animation: desenhar 1.3s .25s cubic-bezier(.65, 0, .35, 1) both; }
-.elos .anel.d { animation-delay: .65s; }
-@keyframes desenhar {
-  from { stroke-dasharray: 100; stroke-dashoffset: 100; }
-  to { stroke-dasharray: 100; stroke-dashoffset: 0; }
+/* ----- Logo de abertura: dois pontos de luz se encontram e formam o infinito ----- */
+.palco { position: relative; width: min(300px, 78vw); display: grid; place-items: center; }
+.palco-halo {
+  position: absolute; inset: -18% -12%; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 190, 180, .55), rgba(255, 190, 180, 0));
+  opacity: 0; animation: halo 1.6s 2.5s ease-out both;
 }
+@keyframes halo { 0% { opacity: 0; scale: .6; } 35% { opacity: 1; } 100% { opacity: .45; scale: 1.08; } }
+.elos { position: relative; width: 100%; height: auto; overflow: visible; filter: drop-shadow(0 8px 16px rgba(70, 0, 14, .38)); }
+
+/* tempos: nós entram (0,1 a 0,95 s), desenham os laços (0,95 a 2,5 s) e se encontram em 2,5 s */
+.elos .anel { stroke-dasharray: 100; animation: tracar 1.55s .95s linear both; }
+.elos .halo-fio { opacity: .55; }
+@keyframes tracar { from { stroke-dashoffset: 100; opacity: 0; } 2% { opacity: 1; } to { stroke-dashoffset: 0; opacity: 1; } }
+.elos .halo-fio { animation-name: tracar-halo; }
+@keyframes tracar-halo { from { stroke-dashoffset: 100; opacity: 0; } 2% { opacity: .55; } to { stroke-dashoffset: 0; opacity: .55; } }
+
+.elos .trilho { opacity: 0; stroke-opacity: .12; animation: aparecer .8s 1s ease-out both; }
+@keyframes aparecer { to { opacity: 1; } }
+
+.elos .no { opacity: 0; animation: no-vida 2.9s .1s linear both; }
+@keyframes no-vida { 0% { opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { opacity: 0; } }
+
+.elos .miolo-centro { opacity: 0; transform-box: fill-box; transform-origin: center; animation: miolo .7s 2.5s cubic-bezier(.2, .9, .3, 1.4) both; }
+@keyframes miolo { 0% { opacity: 0; scale: 0; } 100% { opacity: 1; scale: 1; } }
+
+.elos .onda-centro { opacity: 0; transform-box: fill-box; transform-origin: center; animation: onda-conexao 1.3s 2.5s ease-out both; }
+.elos .onda-centro.o2 { animation-delay: 2.75s; }
+@keyframes onda-conexao { 0% { opacity: .95; scale: 1; } 100% { opacity: 0; scale: 16; } }
+
+.elos .ecos { opacity: 0; animation: aparecer 1.2s 2.6s ease-out both; }
+.elos .eco.e1 { stroke-opacity: .22; }
+.elos .eco.e2 { stroke-opacity: .12; }
+
+.elos .cometa { stroke-dasharray: 7 93; stroke-dashoffset: 0; opacity: 0; animation: cometa 5s 3.4s linear infinite; }
+.elos .cometa.c2 { animation-delay: 5.9s; }
+@keyframes cometa { 0% { stroke-dashoffset: 0; opacity: 0; } 6% { opacity: .9; } 94% { opacity: .9; } 100% { stroke-dashoffset: -100; opacity: 0; } }
 
 .marca {
-  margin: 2.7rem 0 .4rem;
+  margin: .6rem 0 .4rem;
   font-size: 2.5rem; font-weight: 800; letter-spacing: .01em;
   text-shadow: 0 2px 14px rgba(80, 0, 10, .35);
-  animation: sobe .7s .35s both;
+  animation: sobe .8s 2.3s both;
 }
-.lema { max-width: 32ch; margin: 0; font-size: 1.05rem; opacity: .95; animation: sobe .7s .5s both; }
+.lema { max-width: 32ch; margin: 0; font-size: 1.05rem; opacity: .95; animation: sobe .8s 2.5s both; }
 .lema strong { font-weight: 700; }
 
 .destaques {
@@ -359,8 +389,10 @@ input[type="text"]:focus, input[type="search"]:focus, input[type="date"]:focus {
 .stat .leg { font-size: .78rem; color: var(--suave); }
 
 @media (prefers-reduced-motion: reduce) {
-  .orb, .logo-tile, .logo-tile::before, .logo-tile::after, .elos, .elos .anel,
+  .orb, .palco-halo, .elos, .elos .anel, .elos .trilho, .elos .ecos, .elos .cometa, .elos .miolo-centro, .elos .onda-centro,
   .marca, .lema, .destaques li, .btn.google, .rodape-hero { animation: none !important; }
+  .elos .no, .elos .onda-centro, .elos .cometa, .palco-halo { display: none; }
+  .elos .trilho, .elos .ecos, .elos .miolo-centro { opacity: 1; }
 }
 
 /* Barra de navegação flutuante, com indicador que desliza até a aba ativa */

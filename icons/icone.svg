@@ -1,30 +1,38 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="fundo" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#ff7a6e"/>
-      <stop offset=".5" stop-color="#e63b48"/>
-      <stop offset="1" stop-color="#a8142a"/>
-    </linearGradient>
-    <radialGradient id="brilho" cx=".22" cy=".12" r=".75">
-      <stop offset="0" stop-color="#fff" stop-opacity=".42"/>
-      <stop offset=".6" stop-color="#fff" stop-opacity="0"/>
+    <radialGradient id="fundo" cx=".3" cy=".18" r="1.05">
+      <stop offset="0" stop-color="#f4594f"/>
+      <stop offset=".45" stop-color="#c8243a"/>
+      <stop offset="1" stop-color="#5c0719"/>
     </radialGradient>
-    <linearGradient id="aneL" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ffe3df"/>
+    <radialGradient id="aura" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#ffb4a8" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#ffb4a8" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="fio" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset=".5" stop-color="#fff1ee"/>
+      <stop offset="1" stop-color="#ffb9b0"/>
     </linearGradient>
-    <linearGradient id="aneR" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#ffd2cb"/><stop offset="1" stop-color="#ffb3ad"/>
+    <linearGradient id="vidro" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".28"/>
+      <stop offset=".5" stop-color="#fff" stop-opacity="0"/>
     </linearGradient>
-    <filter id="sombra" x="-20%" y="-20%" width="140%" height="150%">
-      <feDropShadow dx="0" dy="12" stdDeviation="13" flood-color="#5a0010" flood-opacity=".38"/>
+    <filter id="sombra" x="-20%" y="-30%" width="140%" height="170%">
+      <feDropShadow dx="0" dy="14" stdDeviation="14" flood-color="#40000c" flood-opacity=".5"/>
     </filter>
-    <clipPath id="cima"><rect x="212" y="120" width="88" height="136"/></clipPath>
+    <path id="inf" d="M256 256C284 214 332 190 366 204C404 220 412 292 366 308C332 322 284 298 256 256C228 214 180 190 146 204C108 220 100 292 146 308C180 322 228 298 256 256Z"/>
   </defs>
   <rect width="512" height="512" fill="url(#fundo)"/>
-  <rect width="512" height="512" fill="url(#brilho)"/>
-  <g fill="none" stroke-width="34" filter="url(#sombra)">
-    <circle cx="204" cy="256" r="74" stroke="url(#aneL)"/>
-    <circle cx="308" cy="256" r="74" stroke="url(#aneR)"/>
-    <circle cx="204" cy="256" r="74" stroke="url(#aneL)" clip-path="url(#cima)"/>
+  <ellipse cx="256" cy="256" rx="230" ry="150" fill="url(#aura)"/>
+  <rect width="512" height="512" fill="url(#vidro)"/>
+  <!-- ecos do símbolo, como órbitas -->
+  <use href="#inf" fill="none" stroke="#fff" stroke-opacity=".14" stroke-width="3" transform="translate(256 256) scale(1.2) translate(-256 -256)"/>
+  <use href="#inf" fill="none" stroke="#fff" stroke-opacity=".3" stroke-width="4" transform="translate(256 256) scale(1.1) translate(-256 -256)"/>
+  <!-- símbolo principal -->
+  <g filter="url(#sombra)">
+    <use href="#inf" fill="none" stroke="url(#fio)" stroke-width="32" stroke-linejoin="round" stroke-linecap="round"/>
   </g>
+  <!-- brilho de conexão no encontro dos laços -->
+  <circle cx="256" cy="256" r="22" fill="#fff" opacity=".25"/><circle cx="256" cy="256" r="9" fill="#c8243a"/><circle cx="256" cy="256" r="4.5" fill="#fff"/>
 </svg>

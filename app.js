@@ -9,6 +9,7 @@ import * as dividasUI from "./js/dividas.js";
 import { configurarContas } from "./js/contas.js";
 import { configurarGastos } from "./js/gastos.js";
 import { configurarPainel } from "./js/painel.js";
+import { configurarLogo } from "./js/logo.js";
 
 
 
@@ -28,6 +29,7 @@ document.querySelectorAll(".folha-painel").forEach((p) => {
 });
 
 // ---------- Utilidades de tela ----------
+configurarLogo();
 const TELAS = ["tela-carregando", "tela-login", "tela-casa"];
 
 let telaAtual = "tela-carregando";
