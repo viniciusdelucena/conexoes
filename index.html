@@ -23,6 +23,7 @@
   <link rel="stylesheet" href="evolucao.css">
   <link rel="stylesheet" href="painel.css">
   <link rel="stylesheet" href="inicio.css">
+  <link rel="stylesheet" href="assistente.css">
 </head>
 <body>
 
@@ -219,6 +220,16 @@
         <div id="gt-conteudo"></div>
       </section>
 
+      <section id="pagina-assistente" class="pagina" hidden>
+        <div class="chat">
+          <div id="chat-msgs" class="chat" aria-live="polite"></div>
+        </div>
+        <form id="chat-form" class="chat-form" autocomplete="off">
+          <input id="chat-texto" type="text" placeholder="Pergunte sobre suas contas…" aria-label="Sua pergunta" enterkeyhint="send">
+          <button id="chat-enviar" type="submit" aria-label="Enviar" data-ico="dir" data-tam="20"></button>
+        </form>
+      </section>
+
       <section id="pagina-config" class="pagina" hidden>
         <div class="cartao">
           <h2>Casa</h2>
@@ -257,6 +268,7 @@
       <button class="aba" data-pagina="dividas"><span class="ico" data-ico="dividas" data-tam="22"></span><span class="rot">Dívidas</span></button>
       <button class="aba" data-pagina="contas"><span class="ico" data-ico="contas" data-tam="22"></span><span class="rot">Contas</span></button>
       <button class="aba" data-pagina="teto"><span class="ico" data-ico="teto" data-tam="22"></span><span class="rot">Imprevistos</span></button>
+      <button class="aba" data-pagina="assistente"><span class="ico" data-ico="infinito" data-tam="22"></span><span class="rot">Assistente</span></button>
       <button class="aba" data-pagina="config"><span class="ico" data-ico="casa" data-tam="22"></span><span class="rot">Casa</span></button>
     </nav>
   </div>

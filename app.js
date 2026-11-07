@@ -10,6 +10,7 @@ import { configurarContas } from "./js/contas.js";
 import { configurarGastos } from "./js/gastos.js";
 import { configurarPainel } from "./js/painel.js";
 import { configurarLogo } from "./js/logo.js";
+import * as assistenteUI from "./js/assistente.js";
 
 
 
@@ -30,6 +31,7 @@ document.querySelectorAll(".folha-painel").forEach((p) => {
 
 // ---------- Utilidades de tela ----------
 configurarLogo();
+assistenteUI.configurar({});
 const TELAS = ["tela-carregando", "tela-login", "tela-casa"];
 
 let telaAtual = "tela-carregando";
@@ -126,6 +128,7 @@ async function sair() {
   contasUI.limpar();
   gastosUI.limpar();
   painelUI.limpar();
+  assistenteUI.limpar();
   casaId = null;
   if (backend) await backend.sair();
 }
@@ -244,10 +247,10 @@ function entrarNoApp(id) {
     }
   );
   const falhou = (e) => { console.error(e); aviso(traduzirErro(e)); };
-  cancelarContas = backend.observarContas(id, (l) => { contasUI.receberContas(l); dividasUI.receberContas(l); }, falhou);
+  cancelarContas = backend.observarContas(id, (l) => { contasUI.receberContas(l); dividasUI.receberContas(l); assistenteUI.receberContas(l); }, falhou);
   cancelarFeriados = backend.observarFeriados(id, (m) => contasUI.receberFeriados(m), falhou);
-  cancelarGastos = backend.observarGastos(id, (l) => { contasUI.receberGastos(l); gastosUI.receberGastos(l); }, falhou);
-  cancelarMeses = backend.observarMeses(id, (m) => { contasUI.receberMeses(m); gastosUI.receberMeses(m); dividasUI.receberMeses(m); }, falhou);
+  cancelarGastos = backend.observarGastos(id, (l) => { contasUI.receberGastos(l); gastosUI.receberGastos(l); assistenteUI.receberGastos(l); }, falhou);
+  cancelarMeses = backend.observarMeses(id, (m) => { contasUI.receberMeses(m); gastosUI.receberMeses(m); dividasUI.receberMeses(m); assistenteUI.receberMeses(m); }, falhou);
   abrirPagina(paginaAtual);
 }
 
@@ -370,12 +373,13 @@ const gastosUI = configurarGastos({
 });
 
 // ---------- Navegação ----------
-const ORDEM = ["inicio", "dividas", "contas", "teto", "config"];
+const ORDEM = ["inicio", "dividas", "contas", "teto", "assistente", "config"];
 const TITULOS = {
   inicio: "Início",
   dividas: "Dívidas",
   contas: "Contas",
   teto: "Imprevistos",
+  assistente: "Assistente",
   config: "Casa e conta"
 };
 let paginaAtual = "inicio";
@@ -396,6 +400,7 @@ document.querySelectorAll(".aba").forEach((a) => {
   if (nome === "inicio" && typeof painelUI !== "undefined") painelUI.animar();
   if (nome === "contas") contasUI.atualizar();
   if (nome === "teto") gastosUI.atualizar();
+  if (nome === "assistente") assistenteUI.aoAbrir();
   window.scrollTo(0, 0);
 }
 

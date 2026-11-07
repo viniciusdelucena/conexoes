@@ -404,7 +404,7 @@ input[type="text"]:focus, input[type="search"]:focus, input[type="date"]:focus {
   max-width: 520px; margin: 0 auto;
   height: var(--aba-altura);
   padding: 6px;
-  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+  display: grid; grid-template-columns: repeat(6, minmax(0, 1fr));
   background: var(--dock-solido);
   user-select: none; -webkit-user-select: none;
   -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4);
@@ -417,7 +417,7 @@ input[type="text"]:focus, input[type="search"]:focus, input[type="date"]:focus {
 }
 .dock-ind {
   position: absolute; top: 6px; bottom: 6px; left: 6px;
-  width: calc((100% - 12px) / 5);
+  width: calc((100% - 12px) / 6);
   border-radius: 22px;
   background: var(--grad-marca);
   box-shadow: 0 6px 14px var(--marca-sombra), inset 0 1px 0 rgba(255, 255, 255, .3);
@@ -455,3 +455,4 @@ input[type="text"]:focus, input[type="search"]:focus, input[type="date"]:focus {
   font-size: .9rem;
   z-index: 20;
 }
+.dock .aba .rot { font-size: .64rem; letter-spacing: 0; }

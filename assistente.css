@@ -1,0 +1,63 @@
+/* Assistente: conversa simples, sem nada flutuando sobre o conteúdo */
+.chat { display: flex; flex-direction: column; gap: 14px; }
+.ch-msg { display: flex; gap: 8px; align-items: flex-start; max-width: 100%; scroll-margin-top: 88px; }
+.ch-msg.eu { justify-content: flex-end; }
+.ch-avatar {
+  flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--grad-marca); color: #fff; box-shadow: 0 4px 10px var(--marca-sombra);
+}
+.ch-corpo { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.ch-balao {
+  background: var(--cartao); border: 1px solid var(--borda); border-radius: 18px 18px 18px 6px;
+  padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0;
+  box-shadow: 0 1px 2px rgba(60, 20, 20, .04);
+}
+.ch-msg.eu .ch-balao {
+  max-width: 82%; background: var(--grad-marca); color: #fff; border: 0; border-radius: 18px 18px 6px 18px;
+  box-shadow: 0 6px 14px var(--marca-sombra); display: block;
+}
+.ch-titulo { font-size: .98rem; letter-spacing: -.01em; }
+.ch-p { margin: 0; font-size: .92rem; line-height: 1.45; }
+.ch-nota { font-size: .8rem; color: var(--suave); }
+.ch-destaque { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border-radius: 14px; background: var(--realce); }
+.ch-destaque small { font-size: .78rem; color: var(--suave); }
+.ch-destaque strong { font-size: 1.45rem; letter-spacing: -.02em; color: var(--primaria); font-variant-numeric: tabular-nums; }
+.ch-destaque span { font-size: .8rem; color: var(--suave); }
+.ch-lista { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 6px; font-size: .88rem; line-height: 1.4; }
+.ch-linhas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.ch-l-topo { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: .88rem; }
+.ch-l-nome { min-width: 0; overflow-wrap: anywhere; }
+.ch-l-valor { flex: none; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+.ch-l-valor small { display: block; font-weight: 500; font-size: .74rem; color: var(--suave); }
+.ch-l-valor small.sobe { color: var(--alerta); }
+.ch-linhas .barra.fina { height: 5px; margin-top: 5px; }
+.ch-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.ch-chip {
+  font: inherit; font-size: .84rem; font-weight: 600; color: var(--primaria); background: var(--cartao);
+  border: 1px solid var(--borda); border-radius: 999px; padding: 8px 12px; cursor: pointer; text-align: left;
+  -webkit-appearance: none; appearance: none; touch-action: manipulation;
+  transition: background .2s, border-color .2s;
+}
+@media (hover: hover) { .ch-chip:not(:disabled):hover { background: var(--realce); border-color: var(--primaria); } }
+.ch-chip:disabled { opacity: .5; cursor: default; }
+.digitando { flex-direction: row; gap: 5px; padding: 14px 16px; width: fit-content; }
+.digitando i { width: 7px; height: 7px; border-radius: 50%; background: var(--suave); animation: digita 1s infinite ease-in-out; }
+.digitando i:nth-child(2) { animation-delay: .15s; }
+.digitando i:nth-child(3) { animation-delay: .3s; }
+@keyframes digita { 0%, 60%, 100% { opacity: .3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
+@media (prefers-reduced-motion: reduce) { .digitando i { animation: none; opacity: .6; } }
+
+.chat-form { display: flex; gap: 8px; margin-top: 16px; }
+.chat-form input {
+  flex: 1; min-width: 0; font: inherit; font-size: 1rem; padding: 12px 16px; border-radius: 999px;
+  border: 1px solid var(--borda); background: var(--cartao); color: var(--texto);
+}
+.chat-form input:focus { outline: 2px solid var(--primaria); outline-offset: 1px; }
+.chat-form button {
+  flex: none; width: 46px; height: 46px; border-radius: 50%; border: 0; display: grid; place-items: center;
+  background: var(--grad-marca); color: #fff; cursor: pointer; box-shadow: 0 6px 14px var(--marca-sombra);
+  -webkit-appearance: none; appearance: none;
+}
+.chat-form button:disabled { opacity: .5; cursor: default; }
+.ch-linhas .barra { background: var(--realce); border-radius: 999px; overflow: hidden; }
+.ch-linhas .barra span { display: block; height: 100%; border-radius: 999px; background: var(--grad-barra); }
