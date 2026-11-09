@@ -49,17 +49,11 @@ export function configurarPainel() {
     const dica = h("div", { class: "pn-dica", hidden: true, role: "status" });
     const queda = maiorQueda(serie);
     const legenda = h("div", { class: "pn-legenda" }, CATEGORIAS.map((c) => h("span", {}, h("i", { class: "pn-cor", style: `background:${c.cor}` }), c.nome)));
-    const tabela = h("details", { class: "evo-tabela" },
-      h("summary", {}, "Ver em tabela"),
-      h("table", {},
-        h("thead", {}, h("tr", {}, h("th", {}, "Período"), CATEGORIAS.map((c) => h("th", {}, c.nome)), h("th", {}, "Total"))),
-        h("tbody", {}, serie.map((r) => h("tr", {}, h("td", {}, r.rotulo), CATEGORIAS.map((c) => h("td", {}, reais(c.valor(r)))), h("td", {}, reais(r.total)))))));
     const cartao = h("article", { class: "cartao pn-cartao" },
       h("header", { class: "pn-topo" }, h("h3", {}, "Próximos períodos"), h("span", { class: "sub pequeno" }, "total de cada período")),
       legenda,
       h("div", { class: "pn-area" }, caixa, dica),
-      queda ? h("p", { class: "pn-insight" }, `No período de ${queda.rotulo} o total cai ${reais(queda.queda)} em relação ao anterior.`) : null,
-      tabela);
+      queda ? h("p", { class: "pn-insight" }, `No período de ${queda.rotulo} o total cai ${reais(queda.queda)} em relação ao anterior.`) : null);
 
     function desenhar(comAnimacao) {
       const W = Math.max(260, caixa.clientWidth || 340), H = 230;

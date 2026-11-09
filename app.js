@@ -287,7 +287,7 @@ function mostrarResumoDividas(r) {
   } else {
     $("stat-divida-num").textContent = reais(r.restanteCentavos);
     $("stat-divida-rot").textContent = "falta pagar";
-    $("stat-divida-leg").textContent = `${r.quitadoPct}% quitado · até ${mesCurto(r.fim)}`;
+    $("stat-divida-leg").textContent = `${r.quitadoPct}% quitado`;
     barra("ini-div-barra", r.quitadoPct);
   }
   atualizarVazio();
@@ -339,7 +339,7 @@ function mostrarResumoContas(r) {
   $("stat-dia").hidden = !diasUteisAtivo;
   $("ini-mes").textContent = `Contas de ${rotuloPeriodo(r.p)}`;
   $("stat-contas-num").textContent = reais(r.total);
-  $("stat-contas-leg").textContent = r.qtdContas ? `${r.qtdPagas} de ${r.qtdContas} contas pagas · mais os imprevistos` : "contas fixas, variáveis e imprevistos do período";
+  $("stat-contas-leg").textContent = r.qtdContas ? `${r.qtdPagas} de ${r.qtdContas} contas pagas` : "contas fixas, variáveis e imprevistos do período";
   $("stat-dia").textContent = `${reais(r.porDia)} por dia útil · ${r.dias} dias úteis` + (r.feriados ? ` · ${r.feriados} feriado${r.feriados > 1 ? "s" : ""}` : "");
   atualizarVazio();
 }
@@ -368,7 +368,7 @@ function mostrarResumoTeto(r) {
   tile.classList.toggle("estourou", r.estourou);
   $("stat-teto-num").textContent = reais(Math.abs(r.restante));
   $("stat-teto-rot").textContent = r.estourou ? "passou do limite" : "ainda dá para gastar";
-  $("stat-teto-leg").textContent = `${reais(r.gasto)} gastos de ${reais(r.teto)}`;
+  $("stat-teto-leg").textContent = `${reais(r.gasto)} gastos`;
   barra("ini-teto-barra", r.teto > 0 ? (r.gasto / r.teto) * 100 : (r.gasto > 0 ? 100 : 0));
 }
 const gastosUI = configurarGastos({
