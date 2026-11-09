@@ -231,22 +231,30 @@
       </section>
 
       <section id="pagina-config" class="pagina" hidden>
-        <div class="cartao">
-          <h2>Casa</h2>
-          <p class="rotulo">Nome</p>
-          <p id="cfg-nome" class="valor"></p>
-          <p class="rotulo">Membros</p>
-          <p id="cfg-membros" class="valor"></p>
-          <p class="rotulo">Código de convite</p>
+        <div class="cartao casa-topo">
+          <div class="casa-par" aria-hidden="true">
+            <span class="casa-pessoa on"></span><span class="casa-elo"></span><span id="casa-par2" class="casa-pessoa"></span>
+          </div>
+          <div class="casa-txt">
+            <h2 id="cfg-nome">Casa</h2>
+            <p id="cfg-membros" class="sub pequeno"></p>
+          </div>
+        </div>
+        <div id="cfg-convite" class="cartao">
+          <h2>Convide seu parceiro</h2>
           <div class="linha">
             <code id="cfg-codigo" class="codigo"></code>
             <button id="btn-copiar" class="btn">Copiar</button>
           </div>
-          <p class="sub pequeno">Envie este código para sua esposa. Ela entra com a conta Google dela e escolhe "Entrar com um código". A casa aceita no máximo 2 pessoas.</p>
+          <p class="sub pequeno">Seu parceiro entra com a conta Google dele e escolhe “Entrar com um código”.</p>
+        </div>
+        <div id="cfg-teste" class="cartao" hidden>
+          <h2>Teste da demonstração</h2>
+          <p class="sub pequeno">Só existe aqui na pré-visualização: simula o parceiro entrando na casa.</p>
+          <button id="btn-simular-conexao" class="btn" type="button">Simular conexão do parceiro</button>
         </div>
         <div class="cartao">
           <h2>Aparência</h2>
-          <p class="sub pequeno">Vale só neste aparelho.</p>
           <div id="seletor-tema" class="segmentado" role="group" aria-label="Tema do app">
             <button type="button" data-tema="auto" class="ativo" aria-pressed="true">Automático</button>
             <button type="button" data-tema="claro" aria-pressed="false">Claro</button>
@@ -255,7 +263,6 @@
         </div>
         <div class="cartao">
           <h2>Conta</h2>
-          <p class="rotulo">Conectado como</p>
           <p id="cfg-usuario" class="valor"></p>
           <button id="btn-sair" class="btn">Sair da conta</button>
         </div>
@@ -272,6 +279,9 @@
       <button class="aba" data-pagina="config"><span class="ico" data-ico="casa" data-tam="22"></span><span class="rot">Casa</span></button>
     </nav>
   </div>
+
+  <!-- Conexão feita: animação do infinito (preenchida por js/logo.js) -->
+  <div id="conexao" class="conexao" hidden role="dialog" aria-modal="true" aria-label="Conexão feita"></div>
 
   <!-- Contas do mês: cadastro de conta -->
   <div id="folha-conta" class="folha" hidden>

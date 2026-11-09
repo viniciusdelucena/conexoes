@@ -1,6 +1,6 @@
 // Conexões: ponto de entrada.
 // O app conversa com um "backend": o Firebase de verdade, ou uma demonstração em memória
-// usada só para pré-visualizar as telas (abra o endereço com ?demo=1).
+// usada só para pré-visualizar as telas (só na pré-visualização).
 
 import { $, reais, mesCurto } from "./js/util.js";
 import { rotuloPeriodo } from "./js/periodos.js";
@@ -9,15 +9,14 @@ import * as dividasUI from "./js/dividas.js";
 import { configurarContas } from "./js/contas.js";
 import { configurarGastos } from "./js/gastos.js";
 import { configurarPainel } from "./js/painel.js";
-import { configurarLogo } from "./js/logo.js";
+import { configurarLogo, mostrarConexao } from "./js/logo.js";
 import * as assistenteUI from "./js/assistente.js";
 
 
 
 
-const DEMO =
-  window.__CONEXOES_DEMO__ === true ||
-  new URLSearchParams(location.search).get("demo") === "1";
+// A demonstração só existe na pré-visualização (que define __CONEXOES_DEMO__). O app instalado usa sempre o Firebase.
+const DEMO = window.__CONEXOES_DEMO__ === true;
 
 const MAX_MEMBROS = 2;
 
@@ -31,6 +30,7 @@ document.querySelectorAll(".folha-painel").forEach((p) => {
 
 // ---------- Utilidades de tela ----------
 configurarLogo();
+$("btn-simular-conexao").addEventListener("click", () => backend.simularParceiro && backend.simularParceiro());
 assistenteUI.configurar({});
 const TELAS = ["tela-carregando", "tela-login", "tela-casa"];
 
@@ -194,7 +194,8 @@ $("btn-entrar-casa").addEventListener("click", async () => {
     } else if (r.erro === "cheia") {
       mostrarErro("erro-casa", "Essa casa já tem o número máximo de membros.");
     } else {
-      entrarNoApp(codigo);
+      entrarNoApp(codigo, true);
+      mostrarConexao(); // quem acabou de entrar também vê a conexão acontecendo
     }
   } catch (e) {
     console.error(e);
@@ -210,8 +211,10 @@ function saudacao() {
   return h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
 }
 
-function entrarNoApp(id) {
+let membrosAnterior = null;
+function entrarNoApp(id, recemEntrou = false) {
   casaId = id;
+  membrosAnterior = null;
   mostrarTela("app");
 
   const primeiroNome = (usuario.nome || usuario.email || "").split(/[\s@]/)[0];
@@ -222,6 +225,7 @@ function entrarNoApp(id) {
 
   $("cfg-usuario").textContent = usuario.nome ? `${usuario.nome} (${usuario.email})` : usuario.email;
   $("cfg-codigo").textContent = id;
+  $("cfg-teste").hidden = !DEMO;
 
   pararObservadores();
   cancelarCasa = backend.observarCasa(
@@ -230,8 +234,13 @@ function entrarNoApp(id) {
       $("titulo-casa").textContent = nome || "Conexões";
       $("cfg-nome").textContent = nome;
       aplicarDiasUteis(diasUteis === true);
-      $("cfg-membros").textContent =
-        `${membros} de ${MAX_MEMBROS}` + (membros < MAX_MEMBROS ? " (falta convidar)" : "");
+      const completa = membros >= MAX_MEMBROS;
+      $("cfg-membros").textContent = completa ? "Vocês dois estão conectados" : "Aguardando seu parceiro";
+      $("casa-par2").classList.toggle("on", completa);
+      $("cfg-convite").hidden = completa;
+      // Quem já estava na casa vê a animação no instante em que o parceiro entra.
+      if (membrosAnterior === 1 && membros >= MAX_MEMBROS) mostrarConexao();
+      membrosAnterior = membros;
     },
     (e) => {
       console.error(e);

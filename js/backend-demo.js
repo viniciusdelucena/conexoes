@@ -87,6 +87,8 @@ export function criarBackendDemo() {
       setTimeout(() => aoReceber({ ...casa }), 120);
       return () => { ouvinteCasa = null; };
     },
+    // Só na demonstração: faz de conta que o parceiro entrou na casa.
+    async simularParceiro() { casa.membros = 2; if (ouvinteCasa) ouvinteCasa({ ...casa }); },
     async salvarPreferencias(id, prefs) {
       Object.assign(casa, prefs);
       if (ouvinteCasa) ouvinteCasa({ ...casa });

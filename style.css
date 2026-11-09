@@ -456,3 +456,31 @@ input[type="text"]:focus, input[type="search"]:focus, input[type="date"]:focus {
   z-index: 20;
 }
 .dock .aba .rot { font-size: .64rem; letter-spacing: 0; }
+
+/* ----- Tela Casa ----- */
+.casa-topo { display: flex; align-items: center; gap: 14px; }
+.casa-par { display: flex; align-items: center; flex: none; }
+.casa-pessoa { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--borda); background: var(--fundo); transition: background .4s, border-color .4s; }
+.casa-pessoa.on { background: var(--grad-marca); border-color: transparent; }
+.casa-elo { width: 14px; height: 3px; margin: 0 -2px; background: var(--borda); border-radius: 2px; }
+.casa-txt { min-width: 0; }
+.casa-txt h2 { margin: 0; }
+.casa-txt p { margin: 2px 0 0; }
+
+/* ----- Conexão feita ----- */
+.conexao {
+  position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 24px; overflow: hidden;
+  background: radial-gradient(120% 90% at 30% 0%, #f4594f, #c8243a 55%, #5c0719);
+  color: #fff; animation: conexao-entra .4s ease-out both;
+}
+.conexao.saindo { animation: conexao-sai .35s ease-in both; }
+@keyframes conexao-entra { from { opacity: 0; } }
+@keyframes conexao-sai { to { opacity: 0; } }
+.conexao-miolo { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; max-width: 340px; }
+.conexao-orb { position: absolute; border-radius: 50%; filter: blur(50px); opacity: .45; background: #ff9d90; }
+.conexao-orb.a { width: 260px; height: 260px; top: -60px; right: -60px; }
+.conexao-orb.b { width: 220px; height: 220px; bottom: -50px; left: -50px; background: #ff5a6b; }
+.conexao-titulo { margin: 8px 0 0; font-size: 2rem; letter-spacing: -.03em; opacity: 0; animation: sobe .8s 2.5s both; }
+.conexao-sub { margin: 0; opacity: 0; font-size: 1rem; line-height: 1.4; animation: sobe .8s 2.7s both; color: rgba(255, 255, 255, .88); }
+.conexao-ok { margin-top: 14px; background: #fff; color: #b01c30; border: 0; font-weight: 700; opacity: 0; animation: sobe .8s 3.1s both; }
+@media (prefers-reduced-motion: reduce) { .conexao-titulo, .conexao-sub, .conexao-ok { animation: none; opacity: 1; } }
