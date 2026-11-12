@@ -144,3 +144,104 @@
 .ini-n { box-shadow: 0 4px 10px var(--marca-sombra), inset 0 1px 0 rgba(255, 255, 255, .45); }
 
 @media (prefers-reduced-motion: reduce) { #app::before, .ini-hero::before { animation: none; } }
+
+/* ===== Telas de entrada (login e criar casa) ===== */
+:root {
+  --hv-cartao: linear-gradient(160deg, rgba(255, 255, 255, .88), rgba(255, 255, 255, .66) 55%, rgba(255, 255, 255, .78));
+  --hv-borda: rgba(255, 255, 255, .8);
+  --hv-campo: rgba(255, 255, 255, .6);
+  --hv-campo-borda: rgba(150, 60, 70, .16);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --hv-cartao: linear-gradient(160deg, rgba(48, 28, 34, .78), rgba(30, 18, 22, .6) 55%, rgba(40, 24, 29, .7));
+    --hv-borda: rgba(255, 255, 255, .2);
+    --hv-campo: rgba(255, 255, 255, .07);
+    --hv-campo-borda: rgba(255, 255, 255, .16);
+  }
+}
+:root[data-theme="dark"] {
+  --hv-cartao: linear-gradient(160deg, rgba(48, 28, 34, .78), rgba(30, 18, 22, .6) 55%, rgba(40, 24, 29, .7));
+  --hv-borda: rgba(255, 255, 255, .2);
+  --hv-campo: rgba(255, 255, 255, .07);
+  --hv-campo-borda: rgba(255, 255, 255, .16);
+}
+
+/* Fundo: carmim profundo com luz coral no alto e um toque de ameixa embaixo */
+.hero {
+  background:
+    radial-gradient(70% 46% at 12% 0%, rgba(255, 150, 128, .75), transparent 70%),
+    radial-gradient(60% 44% at 100% 34%, rgba(255, 86, 118, .50), transparent 70%),
+    radial-gradient(80% 50% at 10% 100%, rgba(112, 22, 96, .65), transparent 72%),
+    linear-gradient(165deg, #e6525c 0%, #c9283b 48%, #8a1431 100%);
+}
+.orb { filter: blur(54px); }
+.orb.o1 { background: #ffb4a0; opacity: .42; }
+.orb.o2 { background: #6f1560; opacity: .5; }
+.orb.o3 { background: #ff7a8c; opacity: .38; }
+
+/* Títulos */
+.marca { letter-spacing: -.02em; font-size: 2.6rem; }
+.lema { opacity: .92; }
+
+/* Destaques: vidro com reflexo e borda de luz */
+.destaques { gap: 12px; }
+.destaques li {
+  position: relative; padding: 14px 13px 13px; border-radius: 22px; gap: 3px;
+  background: linear-gradient(160deg, rgba(255, 255, 255, .30), rgba(255, 255, 255, .08) 55%, rgba(255, 255, 255, .16));
+  border: 1px solid rgba(255, 255, 255, .38);
+  box-shadow: 0 12px 30px rgba(70, 0, 20, .22), inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 -1px 0 rgba(255, 255, 255, .12);
+  -webkit-backdrop-filter: blur(20px) saturate(1.15); backdrop-filter: blur(20px) saturate(1.15);
+}
+.destaques .d-ico {
+  display: grid; place-items: center; width: 38px; height: 38px; margin-bottom: 6px; border-radius: 13px; line-height: 0;
+  background: linear-gradient(160deg, rgba(255, 255, 255, .55), rgba(255, 255, 255, .16));
+  border: 1px solid rgba(255, 255, 255, .5);
+  box-shadow: 0 4px 10px rgba(70, 0, 20, .18), inset 0 1px 0 rgba(255, 255, 255, .7);
+}
+.destaques b { letter-spacing: -.01em; }
+
+/* Botão do Google: cápsula de vidro claro */
+.btn.google {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .98), rgba(255, 255, 255, .84));
+  border: 1px solid rgba(255, 255, 255, .9); border-radius: 22px;
+  box-shadow: 0 16px 34px rgba(70, 0, 20, .34), 0 2px 6px rgba(70, 0, 20, .18), inset 0 1px 0 #fff, inset 0 -2px 6px rgba(200, 40, 60, .10);
+}
+.btn.google .g-seta {
+  display: grid; place-items: center; width: 30px; height: 30px; box-sizing: content-box; padding: 0;
+  border-radius: 50%; color: #fff; background: var(--grad-marca); box-shadow: 0 4px 10px var(--marca-sombra), inset 0 1px 0 rgba(255, 255, 255, .45);
+}
+.btn.google .g-seta { width: 18px; height: 18px; padding: 6px; }
+
+/* Criar ou entrar numa casa: cartão de vidro */
+.hero .cartao-central {
+  position: relative; padding: 26px 22px 20px; border-radius: 32px;
+  background: var(--hv-cartao);
+  border: 1px solid var(--hv-borda);
+  -webkit-backdrop-filter: blur(26px) saturate(1.8); backdrop-filter: blur(26px) saturate(1.8);
+  box-shadow: 0 28px 60px rgba(60, 0, 20, .42), 0 2px 8px rgba(60, 0, 20, .2), inset 0 1.5px 0 rgba(255, 255, 255, .85), inset 0 -1px 0 rgba(255, 255, 255, .2);
+}
+.casa-selo {
+  display: grid; place-items: center; width: 52px; height: 52px; margin-bottom: 14px; border-radius: 18px; color: #fff;
+  background: radial-gradient(120% 90% at 0% 0%, rgba(255, 255, 255, .45), transparent 60%), var(--grad-marca);
+  border: 1px solid rgba(255, 255, 255, .5);
+  box-shadow: 0 10px 22px var(--marca-sombra), inset 0 1px 0 rgba(255, 255, 255, .6);
+}
+.hero .cartao-central h2 { font-size: 1.45rem; letter-spacing: -.02em; }
+.hero .cartao-central h3 { font-size: 1rem; }
+.hero .cartao-central input[type="text"] {
+  background: var(--hv-campo); border: 1px solid var(--hv-campo-borda); border-radius: 16px; padding: 13px 14px;
+  box-shadow: inset 0 2px 5px rgba(90, 20, 30, .08), 0 1px 0 rgba(255, 255, 255, .5);
+}
+.hero .cartao-central input[type="text"]:focus { outline: 0; border-color: var(--primaria); box-shadow: 0 0 0 4px var(--realce), inset 0 2px 5px rgba(90, 20, 30, .08); }
+.hero .cartao-central .btn { width: 100%; border-radius: 16px; padding: 13px 16px; }
+.hero .cartao-central .btn:not(.primario):not(.link) {
+  background: var(--hv-campo); border-color: var(--hv-campo-borda); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6);
+}
+.hero .cartao-central .btn.primario {
+  border: 1px solid rgba(255, 255, 255, .4);
+  background: radial-gradient(120% 120% at 0% 0%, rgba(255, 255, 255, .35), transparent 55%), var(--grad-marca);
+  color: #fff; box-shadow: 0 10px 22px var(--marca-sombra), inset 0 1px 0 rgba(255, 255, 255, .5);
+}
+.hero .cartao-central .btn.link { width: auto; padding: 13px 0 4px; }
+@media (hover: hover) { .hero .cartao-central .btn:not(.link):hover { filter: brightness(1.04); } }
