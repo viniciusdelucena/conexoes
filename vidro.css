@@ -124,8 +124,7 @@
 }
 
 /* Cartões de vidro */
-#pagina-inicio .ini-tile,
-#pagina-inicio .cartao {
+#pagina-inicio .ini-tile, #pagina-inicio .cartao {
   background: var(--vidro);
   -webkit-backdrop-filter: var(--vidro-blur); backdrop-filter: var(--vidro-blur);
   border: 1px solid var(--vidro-borda);
@@ -264,7 +263,7 @@
 
 /* ===== Tela Dívidas ===== */
 /* Cartão de resumo: vidro vermelho, igual ao do Início */
-#pagina-dividas .resumo-div, #pagina-contas .resumo-div {
+#pagina-dividas .resumo-div, #pagina-contas .resumo-div, #pagina-teto .resumo-div {
   background:
     radial-gradient(110% 80% at 0% 0%, rgba(255, 255, 255, .40), rgba(255, 255, 255, 0) 58%),
     radial-gradient(90% 90% at 100% 100%, rgba(110, 8, 30, .50), rgba(110, 8, 30, 0) 62%),
@@ -273,40 +272,40 @@
   box-shadow: 0 22px 44px var(--marca-sombra), inset 0 1.5px 0 rgba(255, 255, 255, .6), inset 0 -14px 28px rgba(110, 8, 30, .25);
   text-shadow: 0 1px 10px rgba(110, 8, 30, .25);
 }
-#pagina-dividas .resumo-div::before, #pagina-contas .resumo-div::before {
+#pagina-dividas .resumo-div::before, #pagina-contas .resumo-div::before, #pagina-teto .resumo-div::before {
   content: ""; position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(112deg, transparent 32%, rgba(255, 255, 255, .20) 47%, transparent 62%);
   transform: translateX(-120%); animation: ini-brilho 8s 1.5s ease-in-out infinite;
 }
-#pagina-dividas .resumo-div > *, #pagina-contas .resumo-div > * { position: relative; }
-#pagina-dividas .rd-valor, #pagina-contas .rd-valor { font-size: 2.45rem; letter-spacing: -.03em; }
-#pagina-dividas .resumo-div .barra, #pagina-contas .resumo-div .barra { height: 9px; background: rgba(110, 8, 30, .28); box-shadow: inset 0 1px 2px rgba(80, 0, 20, .35); }
-#pagina-dividas .resumo-div .barra > span, #pagina-contas .resumo-div .barra > span { background: linear-gradient(90deg, #fff, #ffe3df); box-shadow: 0 0 12px rgba(255, 255, 255, .7); }
-#pagina-dividas .rd-tend, #pagina-contas .rd-tend {
+#pagina-dividas .resumo-div > *, #pagina-contas .resumo-div > *, #pagina-teto .resumo-div > * { position: relative; }
+#pagina-dividas .rd-valor, #pagina-contas .rd-valor, #pagina-teto .rd-valor { font-size: 2.45rem; letter-spacing: -.03em; }
+#pagina-dividas .resumo-div .barra, #pagina-contas .resumo-div .barra, #pagina-teto .resumo-div .barra { height: 9px; background: rgba(110, 8, 30, .28); box-shadow: inset 0 1px 2px rgba(80, 0, 20, .35); }
+#pagina-dividas .resumo-div .barra > span, #pagina-contas .resumo-div .barra > span, #pagina-teto .resumo-div .barra > span { background: linear-gradient(90deg, #fff, #ffe3df); box-shadow: 0 0 12px rgba(255, 255, 255, .7); }
+#pagina-dividas .rd-tend, #pagina-contas .rd-tend, #pagina-teto .rd-tend {
   border-radius: 16px; background: rgba(255, 255, 255, .18); border: 1px solid rgba(255, 255, 255, .35);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45); text-shadow: none;
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
 }
 
 /* Seletor de visão: trilho de vidro, aba ativa como pílula clara (igual ao dock) */
-#pagina-dividas .segmentado {
+#pagina-dividas .segmentado, #pagina-config .segmentado {
   background: var(--vidro); border: 1px solid var(--vidro-borda); border-radius: 20px; padding: 5px;
   -webkit-backdrop-filter: var(--vidro-blur); backdrop-filter: var(--vidro-blur);
   box-shadow: var(--vidro-sombra), var(--vidro-brilho);
 }
-#pagina-dividas .segmentado button { border-radius: 15px; }
-#pagina-dividas .segmentado button.ativo {
+#pagina-dividas .segmentado button, #pagina-config .segmentado button { border-radius: 15px; }
+#pagina-dividas .segmentado button.ativo, #pagina-config .segmentado button.ativo {
   background: var(--vidro-ind); color: var(--primaria);
   box-shadow: 0 4px 12px rgba(110, 30, 45, .18), 0 0 0 1px var(--vidro-borda), inset 0 1px 0 rgba(255, 255, 255, .9);
 }
 
 /* Escolha de mês */
-#pagina-dividas .mes-seta, #pagina-contas .mes-seta, #pagina-dividas .mes-escolha, #pagina-contas .mes-escolha {
+#pagina-dividas .mes-seta, #pagina-contas .mes-seta, #pagina-teto .mes-seta, #pagina-dividas .mes-escolha, #pagina-contas .mes-escolha, #pagina-teto .mes-escolha {
   background: var(--vidro); border: 1px solid var(--vidro-borda); border-radius: 20px;
   -webkit-backdrop-filter: var(--vidro-blur); backdrop-filter: var(--vidro-blur);
   box-shadow: var(--vidro-sombra), var(--vidro-brilho);
 }
-#pagina-dividas .mes-seta, #pagina-contas .mes-seta { width: 52px; }
+#pagina-dividas .mes-seta, #pagina-contas .mes-seta, #pagina-teto .mes-seta { width: 52px; }
 
 /* Cartões de vidro: mês, dívida, evolução, vazio */
 #pagina-dividas .mes, #pagina-dividas .divida, #pagina-dividas .cartao:not(.resumo-div) {
@@ -329,22 +328,22 @@
 }
 
 /* Chips: pílulas de vidro tingidas */
-#pagina-dividas .chip, #pagina-contas .chip { padding: 3px 11px; border: 1px solid transparent; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6); }
-#pagina-dividas .chip.atual, #pagina-contas .chip.atual { border-color: rgba(204, 52, 59, .22); }
-#pagina-dividas .chip.atraso, #pagina-contas .chip.atraso { border-color: rgba(180, 83, 9, .25); }
-#pagina-dividas .chip.ok, #pagina-contas .chip.ok { border-color: rgba(6, 118, 71, .25); }
+#pagina-dividas .chip, #pagina-contas .chip, #pagina-teto .chip { padding: 3px 11px; border: 1px solid transparent; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6); }
+#pagina-dividas .chip.atual, #pagina-contas .chip.atual, #pagina-teto .chip.atual { border-color: rgba(204, 52, 59, .22); }
+#pagina-dividas .chip.atraso, #pagina-contas .chip.atraso, #pagina-teto .chip.atraso { border-color: rgba(180, 83, 9, .25); }
+#pagina-dividas .chip.ok, #pagina-contas .chip.ok, #pagina-teto .chip.ok { border-color: rgba(6, 118, 71, .25); }
 
 /* Marcas de pago: bolinha de vidro; quando paga, vermelho brilhante */
-#pagina-dividas .chk, #pagina-contas .chk, .chk {
+#pagina-dividas .chk, #pagina-contas .chk, #pagina-teto .chk, .chk {
   border: 1.5px solid var(--chk-borda); background: var(--vidro-solido);
   box-shadow: inset 0 1px 2px rgba(90, 20, 30, .12), 0 1px 0 rgba(255, 255, 255, .6);
 }
-#pagina-dividas .chk.on, #pagina-contas .chk.on {
+#pagina-dividas .chk.on, #pagina-contas .chk.on, #pagina-teto .chk.on {
   border-color: rgba(255, 255, 255, .5);
   background: radial-gradient(120% 120% at 0% 0%, rgba(255, 255, 255, .4), transparent 55%), var(--grad-marca);
   box-shadow: 0 4px 10px var(--marca-sombra), inset 0 1px 0 rgba(255, 255, 255, .5);
 }
-#pagina-dividas .chk.parcial, #pagina-contas .chk.parcial { border-color: var(--primaria); background: var(--realce); }
+#pagina-dividas .chk.parcial, #pagina-contas .chk.parcial, #pagina-teto .chk.parcial { border-color: var(--primaria); background: var(--realce); }
 
 /* Barras de progresso por dívida */
 #pagina-dividas .divida .barra { height: 8px; background: rgba(120, 40, 50, .10); box-shadow: inset 0 1px 2px rgba(80, 20, 30, .18); }
@@ -364,19 +363,19 @@
 }
 #pagina-dividas .evo-stats { border-top-color: var(--vidro-linha); }
 
-#pagina-dividas .btn-sutil, #pagina-contas .btn-sutil { border: 1px solid var(--vidro-borda); background: var(--vidro-solido); border-radius: 16px; box-shadow: var(--vidro-brilho); }
+#pagina-dividas .btn-sutil, #pagina-contas .btn-sutil, #pagina-teto .btn-sutil { border: 1px solid var(--vidro-borda); background: var(--vidro-solido); border-radius: 16px; box-shadow: var(--vidro-brilho); }
 
-@media (prefers-reduced-motion: reduce) { #pagina-dividas .resumo-div::before, #pagina-contas .resumo-div::before { animation: none; } }
+@media (prefers-reduced-motion: reduce) { #pagina-dividas .resumo-div::before, #pagina-contas .resumo-div::before, #pagina-teto .resumo-div::before { animation: none; } }
 
 /* ===== Tela Contas ===== */
-#pagina-contas .cartao:not(.resumo-div) {
+#pagina-contas .cartao:not(.resumo-div), #pagina-teto .cartao:not(.resumo-div) {
   background: var(--vidro); border: 1px solid var(--vidro-borda); border-radius: 24px;
   -webkit-backdrop-filter: var(--vidro-blur); backdrop-filter: var(--vidro-blur);
   box-shadow: var(--vidro-sombra), var(--vidro-brilho);
 }
-#pagina-contas .ct-secao { padding: 1.1rem 1.1rem .4rem; }
-#pagina-contas .ct-lista li + li { border-top-color: var(--vidro-linha); }
-#pagina-contas .ct-subtotal { text-shadow: 0 1px 8px var(--marca-sombra); }
+#pagina-contas .ct-secao, #pagina-teto .ct-secao { padding: 1.1rem 1.1rem .4rem; }
+#pagina-contas .ct-lista li + li, #pagina-teto .ct-lista li + li { border-top-color: var(--vidro-linha); }
+#pagina-contas .ct-subtotal, #pagina-teto .ct-subtotal { text-shadow: 0 1px 8px var(--marca-sombra); }
 .ct-ico {
   border-radius: 14px; border: 1px solid var(--vidro-borda);
   background: linear-gradient(160deg, rgba(255, 255, 255, .85), rgba(255, 255, 255, .35));
@@ -421,8 +420,7 @@
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .folha-painel { box-shadow: 0 -18px 50px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .18); } }
 .folha-alca { background: rgba(120, 50, 60, .28); }
 .folha-x { background: var(--vidro-solido); border: 1px solid var(--vidro-borda); box-shadow: var(--vidro-brilho); }
-.folha-painel input[type="text"], .folha-painel input[type="search"], .folha-painel input[type="date"], .folha-painel select,
-.campo-valor {
+.folha-painel input[type="text"], .folha-painel input[type="search"], .folha-painel input[type="date"], .folha-painel select, .campo-valor {
   background: var(--hv-campo); border: 1px solid var(--hv-campo-borda); border-radius: 16px;
   box-shadow: inset 0 2px 5px rgba(90, 20, 30, .08), 0 1px 0 rgba(255, 255, 255, .5);
 }
@@ -447,3 +445,147 @@
 .folha-acoes .btn.perigo:not(.confirmar) { color: var(--erro); border-color: rgba(180, 35, 24, .35); }
 
 .folha-painel .btn-sutil { border: 1px solid var(--vidro-borda); background: var(--vidro-solido); border-radius: 16px; box-shadow: var(--vidro-brilho); }
+
+/* ===== Imprevistos ===== */
+#pagina-teto .resumo-div.estourou {
+  background:
+    radial-gradient(110% 80% at 0% 0%, rgba(255, 255, 255, .34), rgba(255, 255, 255, 0) 58%),
+    radial-gradient(90% 90% at 100% 100%, rgba(60, 0, 10, .55), rgba(60, 0, 10, 0) 62%),
+    linear-gradient(135deg, #d6382e, #8e1a14);
+  box-shadow: 0 22px 44px rgba(180, 35, 24, .38), inset 0 1.5px 0 rgba(255, 255, 255, .55), inset 0 -14px 28px rgba(60, 0, 10, .3);
+}
+#pagina-teto .gt-acoes .btn { border-radius: 18px; padding: 13px 12px; }
+#pagina-teto .gt-acoes .btn:not(.primario) { background: var(--vidro-solido); border: 1px solid var(--vidro-borda); box-shadow: var(--vidro-brilho); }
+#pagina-teto .gt-acoes .btn.primario {
+  border: 1px solid rgba(255, 255, 255, .4);
+  background: radial-gradient(120% 120% at 0% 0%, rgba(255, 255, 255, .35), transparent 55%), var(--grad-marca);
+  box-shadow: 0 10px 22px var(--marca-sombra), inset 0 1px 0 rgba(255, 255, 255, .5);
+}
+#pagina-teto .vazio-ico {
+  border-radius: 22px; border: 1px solid var(--vidro-borda);
+  background: linear-gradient(160deg, rgba(255, 255, 255, .85), rgba(255, 255, 255, .35));
+  box-shadow: 0 6px 16px var(--marca-sombra), inset 0 1px 0 rgba(255, 255, 255, .9);
+}
+
+/* ===== Assistente ===== */
+.ch-avatar {
+  background: radial-gradient(120% 120% at 0% 0%, rgba(255, 255, 255, .45), transparent 55%), var(--grad-marca);
+  border: 1px solid rgba(255, 255, 255, .5); box-shadow: 0 6px 14px var(--marca-sombra), inset 0 1px 0 rgba(255, 255, 255, .55);
+}
+.ch-balao {
+  background: var(--vidro); border: 1px solid var(--vidro-borda); border-radius: 22px 22px 22px 8px;
+  -webkit-backdrop-filter: var(--vidro-blur); backdrop-filter: var(--vidro-blur);
+  box-shadow: var(--vidro-sombra), var(--vidro-brilho);
+}
+.ch-msg.eu .ch-balao {
+  border: 1px solid rgba(255, 255, 255, .45); border-radius: 22px 22px 8px 22px;
+  background: radial-gradient(120% 120% at 0% 0%, rgba(255, 255, 255, .35), transparent 55%), var(--grad-marca);
+  box-shadow: 0 10px 22px var(--marca-sombra), inset 0 1px 0 rgba(255, 255, 255, .5);
+}
+.ch-kpi, .ch-destaque, .ch-dica, .ch-etq {
+  border: 1px solid var(--vidro-borda); box-shadow: var(--vidro-brilho);
+}
+.ch-kpi, .ch-destaque { background: var(--vidro-solido); border-radius: 16px; }
+.ch-destaque strong { text-shadow: 0 1px 10px var(--marca-sombra); }
+.ch-dica { border-radius: 16px; }
+.ch-dica-ico { box-shadow: 0 3px 8px var(--marca-sombra), inset 0 1px 0 rgba(255, 255, 255, .5); }
+.ch-etq { border-radius: 999px; }
+.ch-detalhes { background: var(--vidro-solido); border: 1px solid var(--vidro-borda); border-radius: 16px; box-shadow: var(--vidro-brilho); }
+
+.ch-chip {
+  background: var(--vidro); border: 1px solid var(--vidro-borda);
+  -webkit-backdrop-filter: blur(14px) saturate(1.5); backdrop-filter: blur(14px) saturate(1.5);
+  box-shadow: 0 4px 12px rgba(110, 30, 45, .10), var(--vidro-brilho);
+}
+.chat-form input {
+  background: var(--vidro); border: 1px solid var(--vidro-borda); padding: 13px 18px;
+  -webkit-backdrop-filter: var(--vidro-blur); backdrop-filter: var(--vidro-blur);
+  box-shadow: var(--vidro-sombra), var(--vidro-brilho);
+}
+.chat-form input:focus { outline: 0; border-color: var(--primaria); box-shadow: 0 0 0 4px var(--realce), var(--vidro-brilho); }
+.chat-form button {
+  border: 1px solid rgba(255, 255, 255, .45);
+  background: radial-gradient(120% 120% at 0% 0%, rgba(255, 255, 255, .38), transparent 55%), var(--grad-marca);
+  box-shadow: 0 8px 18px var(--marca-sombra), inset 0 1px 0 rgba(255, 255, 255, .55);
+}
+
+/* Barras, colunas, anel e linha do tempo com brilho de vidro */
+.ch-barra, .ch-linhas .barra { background: rgba(120, 40, 50, .10); box-shadow: inset 0 1px 2px rgba(80, 20, 30, .18); }
+.ch-barra > span, .ch-linhas .barra span { box-shadow: 0 0 10px var(--marca-sombra), inset 0 1px 0 rgba(255, 255, 255, .45); }
+.ch-col-barra { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), 0 4px 10px rgba(110, 30, 45, .10); }
+.ch-col.on .ch-col-barra, .ch-col.atual .ch-col-barra { box-shadow: 0 6px 14px var(--marca-sombra), inset 0 1px 0 rgba(255, 255, 255, .5); }
+.ch-seg { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45); }
+.ch-anel-valor { filter: drop-shadow(0 0 5px var(--marca-sombra)); }
+.ch-ponto { border: 1px solid rgba(255, 255, 255, .45); background: radial-gradient(120% 120% at 0% 0%, rgba(255, 255, 255, .35), transparent 55%), var(--grad-marca); box-shadow: 0 5px 12px var(--marca-sombra), inset 0 1px 0 rgba(255, 255, 255, .5); }
+.ch-tempo li:not(:last-child)::before { background: var(--vidro-linha); }
+.ch-limite span { background: var(--vidro-dock); border: 1px solid var(--vidro-borda); }
+.ch-anel-txt small { font-size: .6rem; }
+#pagina-teto .gt-acoes .btn.primario, #pagina-contas .ct-migrar .btn.primario { color: #fff; }
+
+/* ===== Casa ===== */
+#pagina-config .cartao {
+  background: var(--vidro); border: 1px solid var(--vidro-borda); border-radius: 24px; padding: 18px;
+  -webkit-backdrop-filter: var(--vidro-blur); backdrop-filter: var(--vidro-blur);
+  box-shadow: var(--vidro-sombra), var(--vidro-brilho);
+}
+#pagina-config .cartao h2 { font-size: 1.1rem; letter-spacing: -.01em; }
+
+/* Cartão do casal: vidro vermelho; as duas pessoas se ligam quando o parceiro entra */
+#pagina-config .casa-topo {
+  position: relative; overflow: hidden; gap: 16px; padding: 1.3rem 1.2rem; color: #fff;
+  background:
+    radial-gradient(110% 80% at 0% 0%, rgba(255, 255, 255, .40), rgba(255, 255, 255, 0) 58%),
+    radial-gradient(90% 90% at 100% 100%, rgba(110, 8, 30, .50), rgba(110, 8, 30, 0) 62%),
+    linear-gradient(135deg, #f0636a, #c6303e);
+  border: 1px solid rgba(255, 255, 255, .5); border-radius: 28px;
+  box-shadow: 0 22px 44px var(--marca-sombra), inset 0 1.5px 0 rgba(255, 255, 255, .6), inset 0 -14px 28px rgba(110, 8, 30, .25);
+  text-shadow: 0 1px 10px rgba(110, 8, 30, .25);
+}
+#pagina-config .casa-topo::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(112deg, transparent 32%, rgba(255, 255, 255, .20) 47%, transparent 62%);
+  transform: translateX(-120%); animation: ini-brilho 8s 1.5s ease-in-out infinite;
+}
+#pagina-config .casa-topo > * { position: relative; }
+#pagina-config .casa-txt h2 { font-size: 1.4rem; letter-spacing: -.02em; }
+#pagina-config .casa-txt .sub { color: rgba(255, 255, 255, .9); }
+#pagina-config .casa-pessoa {
+  width: 38px; height: 38px; border: 1px solid rgba(255, 255, 255, .55); text-shadow: none;
+  background: rgba(255, 255, 255, .16); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+#pagina-config .casa-pessoa.on {
+  background: radial-gradient(120% 120% at 25% 15%, #fff, #ffd9d6); border-color: #fff;
+  box-shadow: 0 0 16px rgba(255, 255, 255, .65), inset 0 1px 0 #fff;
+}
+#pagina-config .casa-elo { width: 26px; height: 4px; margin: 0 -4px; background: rgba(255, 255, 255, .4); }
+#pagina-config .casa-par:has(#casa-par2.on) .casa-elo { background: #fff; box-shadow: 0 0 12px rgba(255, 255, 255, .8); }
+
+/* Convite */
+#pagina-config .codigo {
+  background: var(--hv-campo); border: 1px dashed rgba(204, 52, 59, .45); border-radius: 16px; padding: 12px 16px;
+  color: var(--primaria); letter-spacing: .18em; box-shadow: inset 0 2px 5px rgba(90, 20, 30, .08);
+}
+#pagina-config .btn { border-radius: 16px; }
+#pagina-config .btn:not(.primario) { background: var(--vidro-solido); border: 1px solid var(--vidro-borda); box-shadow: var(--vidro-brilho); }
+#pagina-config .btn.primario {
+  color: #fff; border: 1px solid rgba(255, 255, 255, .4);
+  background: radial-gradient(120% 120% at 0% 0%, rgba(255, 255, 255, .35), transparent 55%), var(--grad-marca);
+  box-shadow: 0 10px 22px var(--marca-sombra), inset 0 1px 0 rgba(255, 255, 255, .5);
+}
+#pagina-config #btn-sair { width: 100%; }
+
+@media (prefers-reduced-motion: reduce) { #pagina-config .casa-topo::before { animation: none; } }
+
+/* ===== Conexão feita (animação dos dois celulares) ===== */
+.conexao {
+  background:
+    radial-gradient(70% 46% at 12% 0%, rgba(255, 150, 128, .75), transparent 70%),
+    radial-gradient(60% 44% at 100% 38%, rgba(255, 86, 118, .50), transparent 70%),
+    radial-gradient(80% 50% at 10% 100%, rgba(112, 22, 96, .65), transparent 72%),
+    linear-gradient(165deg, #e6525c 0%, #c9283b 48%, #8a1431 100%);
+}
+.conexao-ok {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .98), rgba(255, 255, 255, .84)); border: 1px solid #fff; border-radius: 999px;
+  box-shadow: 0 14px 30px rgba(70, 0, 20, .34), inset 0 1px 0 #fff;
+}
