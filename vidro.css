@@ -1,0 +1,146 @@
+/* Tema "vidro líquido": luz de fundo, superfícies translúcidas com brilho nas bordas.
+   Etapa 1: casca do app (fundo, topo, dock) e tela Início. As outras telas seguem nas próximas etapas. */
+:root {
+  --vidro: linear-gradient(160deg, rgba(255, 255, 255, .72), rgba(255, 255, 255, .38) 55%, rgba(255, 255, 255, .55));
+  --vidro-solido: rgba(255, 255, 255, .6);
+  --vidro-borda: rgba(255, 255, 255, .85);
+  --vidro-linha: rgba(140, 50, 60, .10);
+  --vidro-brilho: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 -1px 0 rgba(255, 255, 255, .35);
+  --vidro-sombra: 0 10px 30px rgba(120, 30, 45, .10), 0 1px 2px rgba(120, 30, 45, .06);
+  --vidro-blur: blur(22px) saturate(1.7);
+  --vidro-topo: rgba(247, 242, 241, .55);
+  --vidro-dock: rgba(255, 255, 255, .55);
+  --vidro-ind: linear-gradient(180deg, rgba(255, 255, 255, .98), rgba(255, 255, 255, .7));
+  --luz-1: rgba(255, 92, 104, .40);
+  --luz-2: rgba(255, 178, 120, .36);
+  --luz-3: rgba(170, 130, 255, .22);
+  --fundo-base: #f7f2f1;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --vidro: linear-gradient(160deg, rgba(255, 255, 255, .13), rgba(255, 255, 255, .05) 55%, rgba(255, 255, 255, .09));
+    --vidro-solido: rgba(255, 255, 255, .08);
+    --vidro-borda: rgba(255, 255, 255, .16);
+    --vidro-linha: rgba(0, 0, 0, .35);
+    --vidro-brilho: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 -1px 0 rgba(255, 255, 255, .04);
+    --vidro-sombra: 0 12px 32px rgba(0, 0, 0, .35);
+    --vidro-topo: rgba(20, 14, 14, .55);
+    --vidro-dock: rgba(40, 30, 30, .55);
+    --vidro-ind: linear-gradient(180deg, rgba(255, 255, 255, .26), rgba(255, 255, 255, .1));
+    --luz-1: rgba(255, 70, 90, .30);
+    --luz-2: rgba(255, 140, 90, .16);
+    --luz-3: rgba(130, 90, 255, .24);
+    --fundo-base: #120d0d;
+  }
+}
+:root[data-theme="dark"] {
+  --vidro: linear-gradient(160deg, rgba(255, 255, 255, .13), rgba(255, 255, 255, .05) 55%, rgba(255, 255, 255, .09));
+  --vidro-solido: rgba(255, 255, 255, .08);
+  --vidro-borda: rgba(255, 255, 255, .16);
+  --vidro-linha: rgba(0, 0, 0, .35);
+  --vidro-brilho: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 -1px 0 rgba(255, 255, 255, .04);
+  --vidro-sombra: 0 12px 32px rgba(0, 0, 0, .35);
+  --vidro-topo: rgba(20, 14, 14, .55);
+  --vidro-dock: rgba(40, 30, 30, .55);
+  --vidro-ind: linear-gradient(180deg, rgba(255, 255, 255, .26), rgba(255, 255, 255, .1));
+  --luz-1: rgba(255, 70, 90, .30);
+  --luz-2: rgba(255, 140, 90, .16);
+  --luz-3: rgba(130, 90, 255, .24);
+  --fundo-base: #120d0d;
+}
+
+/* Luz de fundo: manchas de cor desfocadas que o vidro refrata. Fica parada atrás de tudo. */
+#app::before {
+  content: ""; position: fixed; z-index: -1; inset: -15% -25%; pointer-events: none;
+  background:
+    radial-gradient(38% 30% at 20% 12%, var(--luz-1), transparent 70%),
+    radial-gradient(34% 28% at 88% 34%, var(--luz-2), transparent 70%),
+    radial-gradient(40% 32% at 12% 82%, var(--luz-3), transparent 70%),
+    radial-gradient(32% 26% at 86% 92%, var(--luz-1), transparent 70%),
+    var(--fundo-base);
+  animation: luz-deriva 26s ease-in-out infinite alternate;
+}
+@keyframes luz-deriva { from { transform: translate3d(0, 0, 0) scale(1); } to { transform: translate3d(3%, -2%, 0) scale(1.06); } }
+
+/* Topo: vidro fosco, o conteúdo passa por baixo */
+.topo {
+  background: var(--vidro-topo);
+  -webkit-backdrop-filter: var(--vidro-blur); backdrop-filter: var(--vidro-blur);
+  border-bottom: 1px solid var(--vidro-linha);
+  box-shadow: 0 1px 0 var(--vidro-borda);
+}
+.selo { background: var(--vidro-solido); border-color: var(--vidro-borda); box-shadow: var(--vidro-brilho); }
+
+/* Dock: cápsula de vidro com indicador que desliza */
+.dock {
+  background: var(--vidro-dock);
+  -webkit-backdrop-filter: blur(26px) saturate(1.9); backdrop-filter: blur(26px) saturate(1.9);
+  border: 1px solid var(--vidro-borda);
+  box-shadow: 0 18px 40px rgba(90, 20, 35, .20), 0 2px 6px rgba(90, 20, 35, .08), var(--vidro-brilho);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .dock { background: var(--vidro-dock); }
+}
+.dock-ind {
+  background: var(--vidro-ind);
+  box-shadow: 0 5px 14px rgba(110, 30, 45, .20), 0 0 0 1px var(--vidro-borda), inset 0 1px 0 rgba(255, 255, 255, .9);
+}
+.aba.ativa { color: var(--primaria); }
+
+/* ----- Tela Início ----- */
+#pagina-inicio .ini-saudacao { padding: 6px 4px 16px; }
+#pagina-inicio .ini-saudacao h2 { font-size: 1.75rem; font-weight: 800; letter-spacing: -.03em; }
+
+/* Cartão principal: vidro tingido de vermelho, com reflexo e brilho que passa devagar */
+.ini-hero {
+  background:
+    radial-gradient(110% 80% at 0% 0%, rgba(255, 255, 255, .40), rgba(255, 255, 255, 0) 58%),
+    radial-gradient(90% 90% at 100% 100%, rgba(110, 8, 30, .50), rgba(110, 8, 30, 0) 62%),
+    linear-gradient(135deg, #f0636a, #c6303e);
+  border: 1px solid rgba(255, 255, 255, .5);
+  border-radius: 28px;
+  box-shadow: 0 22px 44px var(--marca-sombra), inset 0 1.5px 0 rgba(255, 255, 255, .6), inset 0 -14px 28px rgba(110, 8, 30, .25);
+  padding: 1.4rem 1.3rem 1.2rem;
+  text-shadow: 0 1px 10px rgba(110, 8, 30, .25);
+}
+.ini-hero::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(112deg, transparent 32%, rgba(255, 255, 255, .20) 47%, transparent 62%);
+  transform: translateX(-120%);
+  animation: ini-brilho 8s 1.5s ease-in-out infinite;
+}
+@keyframes ini-brilho { 0%, 62% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
+.ini-hero > * { position: relative; }
+.ini-valor { font-size: 2.6rem; letter-spacing: -.03em; }
+.ini-dia { background: rgba(255, 255, 255, .20); border: 1px solid rgba(255, 255, 255, .35); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); text-shadow: none; }
+.ini-ver {
+  padding: 7px 12px 7px 14px; border-radius: 999px; text-shadow: none;
+  background: rgba(255, 255, 255, .20); border: 1px solid rgba(255, 255, 255, .38);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+
+/* Cartões de vidro */
+#pagina-inicio .ini-tile,
+#pagina-inicio .cartao {
+  background: var(--vidro);
+  -webkit-backdrop-filter: var(--vidro-blur); backdrop-filter: var(--vidro-blur);
+  border: 1px solid var(--vidro-borda);
+  box-shadow: var(--vidro-sombra), var(--vidro-brilho);
+}
+#pagina-inicio .ini-tile { border-radius: 24px; padding: 1.05rem; }
+#pagina-inicio .cartao { border-radius: 24px; }
+.ini-ic {
+  width: 34px; height: 34px; border-radius: 12px; color: var(--primaria);
+  background: linear-gradient(160deg, rgba(255, 255, 255, .85), rgba(255, 255, 255, .35));
+  border: 1px solid var(--vidro-borda);
+  box-shadow: 0 2px 8px var(--marca-sombra), inset 0 1px 0 rgba(255, 255, 255, .9);
+}
+:root[data-theme="dark"] .ini-ic { background: rgba(255, 255, 255, .10); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .ini-ic { background: rgba(255, 255, 255, .10); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2); } }
+.ini-trilho { height: 8px; background: rgba(120, 40, 50, .10); box-shadow: inset 0 1px 2px rgba(80, 20, 30, .18); }
+.ini-trilho > span { box-shadow: 0 0 10px var(--marca-sombra), inset 0 1px 0 rgba(255, 255, 255, .45); }
+#pagina-inicio .ini-passos li + li { border-top-color: var(--vidro-linha); }
+.ini-n { box-shadow: 0 4px 10px var(--marca-sombra), inset 0 1px 0 rgba(255, 255, 255, .45); }
+
+@media (prefers-reduced-motion: reduce) { #app::before, .ini-hero::before { animation: none; } }
