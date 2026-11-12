@@ -7,7 +7,7 @@
 import { $, h, reais, paraCampo, parseReais, nomeMes, NOMES_MESES, somarMeses } from "./util.js";
 import { icone } from "./icones.js";
 import {
-  feriadosNacionaisCalculados, buscarFeriadosApi, feriadosDoMes,
+  feriadosNacionaisCalculados, buscarFeriadosApi, feriadosDoMes, diasUteisDoMes,
   datasQueContam, feriadosEmDiaDeSemana, gradeDoMes, diaDaSemana, DIAS_SEMANA
 } from "./calendario.js";
 import {
@@ -38,6 +38,7 @@ export function configurarContas(contexto) {
   const nacionais = {};      // feriados nacionais por ano
   const baixados = new Set(); // anos que já tentaram a BrasilAPI nesta sessão
   let feriadoAlvo = null;    // feriado aberto na folha (null = novo)
+  let calMes = null;         // mês escolhido no calendário ("AAAA-MM"); null = os meses do período
 
   const backend = () => contexto.obterBackend();
   const casa = () => contexto.obterCasaId();
@@ -62,6 +63,7 @@ export function configurarContas(contexto) {
   function atualizarFeriadosNacionais(p) {
     if (!usarDias || !p) return;
     const anos = new Set([Number(p.inicio.slice(0, 4)), Number(p.fim.slice(0, 4))]);
+    if (calMes) anos.add(Number(calMes.slice(0, 4)));
     for (const ano of anos) {
       if (baixados.has(ano)) continue;
       baixados.add(ano);
@@ -83,6 +85,7 @@ export function configurarContas(contexto) {
   // ----- Desenho -----
   function escolher(id) {
     selecao.id = id;
+    calMes = null;
     renderizar();
     if (contexto.aoPeriodo) contexto.aoPeriodo();
   }
@@ -154,26 +157,52 @@ export function configurarContas(contexto) {
     );
   }
 
+  // Escolha do mês do calendário: setas, lista de meses (1 ano atrás até 3 anos à frente) e volta ao período.
+  function navegacaoCalendario(p) {
+    const meses_ = mesesEntre(p.inicio, p.fim);
+    const atual = calMes || meses_[0];
+    const base = hojeIso().slice(0, 7);
+    const opcoes = [];
+    for (let i = -12; i <= 36; i++) opcoes.push(somarMeses(base, i));
+    if (!opcoes.includes(atual)) opcoes.push(atual);
+    opcoes.sort();
+    const ir = (n) => {
+      const ref = calMes || (n > 0 ? meses_[meses_.length - 1] : meses_[0]);
+      calMes = somarMeses(ref, n);
+      renderizar();
+    };
+    return h("div", { class: "cal-nav" },
+      h("button", { class: "mes-seta", type: "button", "aria-label": "Mês anterior", onclick: () => ir(-1), html: icone("esq", 20) }),
+      h("label", { class: "mes-escolha" },
+        h("span", { class: "mes-nome" }, calMes ? nomeMes(calMes) : meses_.length > 1 ? `${nomeMes(meses_[0])} e ${NOMES_MESES[Number(meses_[1].slice(5)) - 1]}` : nomeMes(meses_[0])),
+        h("span", { class: "mes-dica" }, calMes ? "Toque para escolher o mês" : "Período atual · toque para escolher o mês"),
+        h("select", { class: "mes-select", "aria-label": "Escolher o mês do calendário", onchange: (e) => { calMes = e.target.value; renderizar(); } },
+          opcoes.map((ym) => h("option", { value: ym, selected: ym === atual }, nomeMes(ym))))),
+      h("button", { class: "mes-seta", type: "button", "aria-label": "Próximo mês", onclick: () => ir(1), html: icone("dir", 20) }),
+      calMes ? h("button", { class: "btn-sutil cal-volta", type: "button", onclick: () => { calMes = null; renderizar(); } }, "Voltar ao período") : null);
+  }
+
   // ----- Calendário e feriados (só com o valor por dia útil ligado) -----
   function calendario(p) {
-    const lista = feriadosPeriodo(p);
+    const lista = calMes ? feriadosMes(calMes) : feriadosPeriodo(p);
     const porData = new Map(lista.map((f) => [f.data, f]));
     const hojeI = hojeIso();
     const alertas = feriadosEmDiaDeSemana(lista);
+    const onde = calMes ? "neste mês" : "neste período";
 
     const aviso = alertas.length
       ? h("div", { class: "cal-aviso" },
           h("strong", {}, alertas.length === 1 ? "Atenção: 1 feriado de segunda a sexta" : `Atenção: ${alertas.length} feriados de segunda a sexta`),
           h("span", {}, alertas.map((f) => `${DIAS_SEMANA[f.diaSemana]}, ${dataCurta(f.data)} (${f.nome})`).join(" · ")))
-      : h("div", { class: "cal-aviso ok" }, "Nenhum feriado de segunda a sexta neste período.");
+      : h("div", { class: "cal-aviso ok" }, `Nenhum feriado de segunda a sexta ${onde}.`);
 
     const cabecalho = ["D", "S", "T", "Q", "Q", "S", "S"].map((l) => h("span", { class: "cal-cab" }, l));
-    const mesesDoPeriodo = mesesEntre(p.inicio, p.fim);
+    const mesesDoPeriodo = calMes ? [calMes] : mesesEntre(p.inicio, p.fim);
     const blocos = mesesDoPeriodo.map((ym) => {
       const dias = gradeDoMes(ym).map((d) => {
         if (!d) return h("span", { class: "cal-vazio" });
         const data = `${ym}-${dois(d)}`;
-        const fora = !periodoContem(p, data);
+        const fora = !calMes && !periodoContem(p, data);
         const f = fora ? null : porData.get(data);
         const dow = diaDaSemana(data);
         const classes = ["cal-dia"];
@@ -188,7 +217,7 @@ export function configurarContas(contexto) {
         }, String(d));
       });
       return h("div", { class: "cal-mes" },
-        mesesDoPeriodo.length > 1 ? h("p", { class: "cal-mes-nome" }, nomeMes(ym)) : null,
+        mesesDoPeriodo.length > 1 && !calMes ? h("p", { class: "cal-mes-nome" }, nomeMes(ym)) : null,
         h("div", { class: "cal-grade" }, cabecalho, dias));
     });
 
@@ -204,8 +233,10 @@ export function configurarContas(contexto) {
     const descontados = lista.filter((f) => f.conta && f.diaSemana !== 0).length;
     return h("article", { class: "cartao ct-secao" },
       h("header", { class: "ct-topo" }, h("h3", {}, "Calendário e feriados"), h("span", { class: "ct-subtotal" }, descontados === 1 ? "1 dia descontado" : `${descontados} dias descontados`)),
+      navegacaoCalendario(p),
       aviso,
       blocos,
+      calMes ? h("p", { class: "cal-uteis" }, h("strong", {}, String(diasUteisDoMes(calMes, datasQueContam(lista)))), " dias úteis em ", nomeMes(calMes), " (segunda a sábado, sem feriados)") : null,
       linhas.length ? h("ul", { class: "ct-lista" }, linhas) : null,
       h("button", { class: "btn-sutil cal-add", type: "button", onclick: () => abrirFeriado(null, null) }, "+ Adicionar feriado ou folga"),
       h("p", { class: "ct-vazio cal-nota" }, "Feriados nacionais vêm da BrasilAPI (ou são calculados pelo app, sem internet). Toque num dia para adicionar uma folga ou deixar de descontar um feriado."));

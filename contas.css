@@ -101,3 +101,9 @@
 .folha-painel .pc-campo { margin: 0; gap: 4px; }
 .folha-painel .pc-campo span { margin: 0; }
 .folha-painel .pc-campo input[type="text"] { margin: 0; padding: 10px 12px; font-size: .95rem; }
+
+/* calendário: escolha de mês */
+.cal-nav { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; margin-bottom: 12px; }
+.cal-nav .mes-escolha { flex: 1; min-width: 0; }
+.cal-volta { flex: 0 0 100%; }
+.cal-uteis { margin: 8px 0 0; font-size: .82rem; font-weight: 600; color: var(--suave); text-align: center; }
