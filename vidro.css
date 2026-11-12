@@ -245,3 +245,16 @@
 }
 .hero .cartao-central .btn.link { width: auto; padding: 13px 0 4px; }
 @media (hover: hover) { .hero .cartao-central .btn:not(.link):hover { filter: brightness(1.04); } }
+
+/* ===== Ícones: traço + vidro ===== */
+.svg-ico { overflow: visible; }
+.svg-ico [data-vidro] { fill-opacity: .16; }
+/* Dock: traço cinza, vidro rosado; a aba ativa acende com brilho */
+.aba { --ico-fill: var(--primaria); }
+.aba .svg-ico [data-vidro] { fill-opacity: .14; }
+.aba.ativa .svg-ico { filter: drop-shadow(0 2px 5px var(--marca-sombra)); }
+.aba.ativa .svg-ico [data-vidro] { fill-opacity: .30; }
+/* Pastilhas de vidro: o preenchimento ganha corpo */
+.ini-ic .svg-ico [data-vidro], .d-ico .svg-ico [data-vidro], .casa-selo .svg-ico [data-vidro] { fill-opacity: .24; }
+.ini-ic .svg-ico { filter: drop-shadow(0 1px 3px var(--marca-sombra)); }
+.d-ico .svg-ico, .casa-selo .svg-ico { filter: drop-shadow(0 1px 4px rgba(70, 0, 20, .30)); }
