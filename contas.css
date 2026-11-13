@@ -37,7 +37,7 @@
 .cal-aviso { display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; margin-bottom: 12px; border-radius: 14px; background: var(--alerta-fundo); color: var(--alerta); font-size: .85rem; line-height: 1.35; }
 .cal-aviso.ok { background: var(--realce); color: var(--suave); }
 .cal-grade { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 8px; }
-.cal-cab { text-align: center; font-size: .72rem; font-weight: 700; color: var(--suave); padding: 4px 0; }
+.cal-cab { text-align: center; font-size: .75rem; font-weight: 700; color: var(--suave); padding: 4px 0; }
 .cal-dia { aspect-ratio: 1; border: 0; border-radius: 12px; background: none; font: inherit; font-size: .9rem; font-variant-numeric: tabular-nums; color: inherit; cursor: pointer; }
 .cal-dia:hover { background: var(--realce); }
 .cal-dia.domingo { color: var(--suave); opacity: .65; }

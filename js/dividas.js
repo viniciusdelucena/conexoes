@@ -5,9 +5,10 @@
 //   { id, contaId, nome, grupo, valorCentavos, totalParcelas, mesInicio: "AAAA-MM", diaVencimento, pagas: [1, 2, ...] }
 // A parcela k cai no mês (mesInicio + k - 1).
 
-import { $, h, reais, mesAtual, somarMeses, diffMeses, nomeMes, mesCurto } from "./util.js";
+import { estadoVazio } from "./vazio.js";
+import { $, h, reais, animarValor, animarLargura, mesAtual, somarMeses, diffMeses, nomeMes, mesCurto } from "./util.js";
 import { icone } from "./icones.js";
-import { montarEvolucao } from "./evolucao.js";
+import { montarEvolucao, saldoPorMes } from "./evolucao.js";
 import { diasNoMes } from "./calendario.js";
 import { listaPeriodos, derivarDividas } from "./periodos.js";
 
@@ -183,7 +184,7 @@ function fecharSeletorEvo() { $("folha-evo").hidden = true; }
 function recalcular() {
   dividas = derivarDividas(contas, listaPeriodos(meses));
   renderizar();
-  ctx.aoResumo(calcularResumo(dividas));
+  ctx.aoResumo({ ...calcularResumo(dividas), serie: saldoPorMes(dividas) });
 }
 
 export function receberContas(lista) { contas = lista || []; recalcular(); }
@@ -199,7 +200,7 @@ function renderizar() {
   renderizarResumo();
   const lista = $("div-lista");
   if (!dividas.length) {
-    lista.replaceChildren(estadoVazio());
+    lista.replaceChildren(estadoVazioDividas());
   } else if (visao === "evolucao") {
     evoSel = new Set([...evoSel].filter((id) => dividas.some((d) => d.id === id)));
     const animar = evoAnimar;
@@ -242,12 +243,16 @@ function renderizarResumo() {
       h("span", {}, (t.dif < 0 ? "↓ " : t.dif > 0 ? "↑ " : "→ ") + texto),
       h("small", {}, `${reais(t.agora)} este mês · ${reais(t.depois)} no próximo`));
   }
+  const valorHero = h("div", { class: "rd-valor" });
+  animarValor(valorHero, "dividas-hero", r.restanteCentavos);
+  const barraHero = h("span", {});
+  animarLargura(barraHero, "dividas-hero", r.quitadoPct);
   caixa.replaceChildren(
     h("div", { class: "cartao resumo-div" },
       h("div", { class: "rd-rotulo" }, quitado ? "Tudo quitado" : "Falta pagar"),
-      h("div", { class: "rd-valor" }, reais(r.restanteCentavos)),
+      valorHero,
       h("div", { class: "barra", role: "progressbar", "aria-valuemin": "0", "aria-valuemax": "100", "aria-valuenow": String(r.quitadoPct), "aria-label": "Quanto já foi quitado" },
-        h("span", { style: `width:${r.quitadoPct}%` })),
+        barraHero),
       h("div", { class: "rd-meta" },
         meta("Quitado", `${r.quitadoPct}%`),
         meta("Parcelas", quitado ? "nenhuma" : `${r.parcelasRestantes} restantes`),
@@ -257,13 +262,15 @@ function renderizarResumo() {
   );
 }
 
-function estadoVazio() {
-  return h("div", { class: "cartao vazio" },
-    h("div", { class: "vazio-ico", html: icone("dividas", 30) }),
-    h("h3", {}, "Nenhuma dívida por aqui ainda"),
-    h("p", { class: "sub" }, "As dívidas aparecem sozinhas quando você cria, em Contas, uma conta do tipo Parcelada, como cartão, empréstimo ou financiamento."),
-    h("button", { class: "btn primario", type: "button", onclick: () => ctx.irParaContas() }, "Ir para Contas")
-  );
+function estadoVazioDividas() {
+  // Dívidas nascem das contas parceladas: aqui não há botão de cadastrar, só o caminho até Contas.
+  return estadoVazio({
+    ilustracao: "dividas",
+    titulo: "Nenhuma dívida por aqui ainda",
+    texto: "Elas aparecem sozinhas quando você cria uma conta parcelada, como cartão, empréstimo ou financiamento.",
+    passos: ["Abra Contas", "Crie uma conta do tipo Parcelada", "Acompanhe as parcelas aqui"],
+    botao: { texto: "Ir para Contas", aoClicar: () => ctx.irParaContas() }
+  });
 }
 
 function listaMeses() {
@@ -342,7 +349,7 @@ function situacao(ym, dia, paga) {
   if (ym === hoje && dia) {
     const d = new Date().getDate();
     if (dia < d) return { tom: "atraso", texto: `Venceu dia ${dia}` };
-    if (dia === d) return { tom: "atual", texto: "Vence hoje" };
+    if (dia === d) return { tom: "atencao", texto: "Vence hoje" };
   }
   return null;
 }
@@ -359,7 +366,7 @@ function linhaConta(g, ym) {
       h("span", { class: "p-nome" }, g.nome),
       h("span", { class: "p-sub" },
         `${nomes}${g.dia ? ` · vence dia ${g.dia}` : ""}`,
-        g.parcial ? h("span", { class: "chip atraso p-chip" }, "pago em parte") : null,
+        g.parcial ? h("span", { class: "chip atencao p-chip" }, "pago em parte") : null,
         sit ? h("span", { class: `chip ${sit.tom} p-chip` }, sit.texto) : null)),
     h("span", { class: "p-valor" }, reais(g.total)),
     g.composta

@@ -15,8 +15,23 @@
   <link rel="icon" type="image/svg+xml" href="icons/icone.svg">
   <link rel="icon" type="image/png" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="apple-touch-startup-image" href="splash/splash-1320x2868.jpg" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/splash-1206x2622.jpg" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/splash-1290x2796.jpg" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/splash-1179x2556.jpg" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/splash-1170x2532.jpg" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/splash-1125x2436.jpg" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/splash-1242x2688.jpg" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/splash-828x1792.jpg" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/splash-1242x2208.jpg" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/splash-750x1334.jpg" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/splash-640x1136.jpg" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Conexões">
+    <link rel="preload" href="fonts/inter-Regular.woff" as="font" type="font/woff" crossorigin>
+  <link rel="preload" href="fonts/inter-SemiBold.woff" as="font" type="font/woff" crossorigin>
+  <link rel="preload" href="fonts/inter-Bold.woff" as="font" type="font/woff" crossorigin>
+  <link rel="preload" href="fonts/inter-ExtraBold.woff" as="font" type="font/woff" crossorigin>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="dividas.css">
   <link rel="stylesheet" href="contas.css">
@@ -151,7 +166,10 @@
         </div>
         <h1 class="topo-titulo" id="titulo-pagina">Início</h1>
       </div>
-      <div id="estado-rede" class="selo" role="status" hidden></div>
+      <div class="topo-acoes">
+        <div id="estado-rede" class="selo" role="status" hidden></div>
+        <button id="btn-avatar" class="avatar" type="button" aria-label="Casa e conta"><span id="avatar-ini">?</span></button>
+      </div>
     </header>
 
     <main id="conteudo">
@@ -176,16 +194,32 @@
           <button type="button" class="ini-hero" data-ir="contas">
             <span class="ini-rotulo" id="ini-mes">Contas do mês</span>
             <strong class="ini-valor" id="stat-contas-num">R$ —</strong>
+            <span class="ini-prog" aria-hidden="true"><span id="ini-hero-barra"></span></span>
             <span class="ini-sub" id="stat-contas-leg">Contas e imprevistos do período</span>
             <span class="ini-dia" id="stat-dia" hidden></span>
             <span class="ini-ver">Ver detalhes <span data-ico="dir" data-tam="16"></span></span>
           </button>
+
+          <div class="ini-acoes" role="group" aria-label="Ações rápidas">
+            <button type="button" class="ini-acao" data-acao="gasto"><span data-ico="plus" data-tam="20"></span>Gasto</button>
+            <button type="button" class="ini-acao" data-acao="pagar"><span data-ico="check" data-tam="20"></span>Pagar</button>
+            <button type="button" class="ini-acao" data-acao="perguntar"><span data-ico="infinito" data-tam="20"></span>Perguntar</button>
+          </div>
+
+          <section class="cartao ini-prox" id="ini-prox" hidden aria-labelledby="ini-prox-titulo">
+            <header class="ini-prox-topo">
+              <h3 id="ini-prox-titulo">Próximos vencimentos</h3>
+              <button type="button" class="ini-prox-todas" data-ir="contas">Ver todas</button>
+            </header>
+            <ul class="ini-prox-lista" id="ini-prox-lista"></ul>
+          </section>
 
           <div class="ini-tiles">
             <button type="button" class="ini-tile" data-ir="dividas">
               <span class="ini-tile-topo"><span class="ini-ic" data-ico="dividas" data-tam="20"></span>Dívidas</span>
               <strong class="ini-num" id="stat-divida-num">R$ —</strong>
               <span class="ini-leg" id="stat-divida-rot">falta pagar</span>
+              <span class="ini-spark" id="ini-div-spark" hidden></span>
               <span class="ini-trilho"><span id="ini-div-barra"></span></span>
               <span class="ini-leg" id="stat-divida-leg">cadastre em Dívidas</span>
             </button>
@@ -278,7 +312,6 @@
       <button class="aba" data-pagina="contas"><span class="ico" data-ico="contas" data-tam="22"></span><span class="rot">Contas</span></button>
       <button class="aba" data-pagina="teto"><span class="ico" data-ico="teto" data-tam="22"></span><span class="rot">Imprevistos</span></button>
       <button class="aba" data-pagina="assistente"><span class="ico" data-ico="infinito" data-tam="22"></span><span class="rot">Assistente</span></button>
-      <button class="aba" data-pagina="config"><span class="ico" data-ico="casa" data-tam="22"></span><span class="rot">Casa</span></button>
     </nav>
   </div>
 

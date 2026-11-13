@@ -30,13 +30,13 @@
 .evo-svg { display: block; overflow: visible; outline: none; }
 .evo-svg:focus-visible { outline: 2px solid var(--primaria); outline-offset: 4px; border-radius: 8px; }
 .evo-svg .g { stroke: var(--borda); stroke-width: 1; }
-.evo-svg .eixo { fill: var(--suave); font-size: 11px; font-variant-numeric: tabular-nums; }
+.evo-svg .eixo { fill: var(--suave); font-size: 12px; font-variant-numeric: tabular-nums; }
 .evo-svg .linha { fill: none; stroke: var(--primaria); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
 .evo-svg .linha.proj { stroke-dasharray: 2 7; stroke-width: 3; }
 .evo-svg .mira { stroke: var(--suave); stroke-width: 1; stroke-dasharray: 3 3; }
 .evo-svg .ponto, .evo-svg .miolo { fill: var(--primaria); stroke: var(--cartao); stroke-width: 2; }
-.evo-svg .pulso { fill: var(--primaria); opacity: .35; transform-box: fill-box; transform-origin: center; animation: evo-pulso 2s ease-out infinite; }
-.evo-svg .rot-hoje { fill: var(--suave); font-size: 11px; font-weight: 700; }
+.evo-svg .pulso { fill: var(--primaria); opacity: .35; transform-box: fill-box; transform-origin: center; animation: evo-pulso 2s ease-out 3; }
+.evo-svg .rot-hoje { fill: var(--suave); font-size: 12px; font-weight: 700; }
 .evo-svg .plot.anima { animation: evo-revelar 1.4s cubic-bezier(.22, 1, .36, 1) both; }
 .evo-svg .hoje { animation: evo-surgir .5s ease 1.1s both; }
 @keyframes evo-revelar { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 -2px 0 0); } }
@@ -51,7 +51,7 @@
 .evo-dica .atraso { color: var(--alerta); font-weight: 600; }
 
 .evo-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; padding-top: 12px; border-top: 1px solid var(--borda); }
-.evo-stat small { display: block; color: var(--suave); font-size: .72rem; }
+.evo-stat small { display: block; color: var(--suave); font-size: .75rem; }
 .evo-stat strong { font-size: .92rem; font-variant-numeric: tabular-nums; }
 .evo-tabela { margin-top: 12px; font-size: .82rem; }
 .evo-tabela summary { cursor: pointer; color: var(--suave); font-weight: 600; }

@@ -23,9 +23,10 @@
 }
 .barra { height: 8px; border-radius: 99px; background: rgba(255, 255, 255, .28); overflow: hidden; }
 .barra > span { display: block; height: 100%; border-radius: inherit; background: #fff; transition: width .7s cubic-bezier(.3, 1, .4, 1); }
-.rd-meta { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 1rem; }
-.rd-item { display: flex; flex-direction: column; min-width: 0; }
-.rd-item small { font-size: .74rem; opacity: .85; }
+.rd-meta { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(98px, 1fr)); gap: 10px; margin-top: 1rem; }
+/* Rótulo em cima, valor embaixo: os valores ficam na mesma linha mesmo se um rótulo quebrar */
+.rd-item { display: flex; flex-direction: column; justify-content: space-between; gap: 2px; min-width: 0; }
+.rd-item small { font-size: .75rem; opacity: .85; }
 .rd-item strong { font-size: 1rem; font-variant-numeric: tabular-nums; }
 
 /* Seletor de visão + botão de nova dívida */
@@ -80,16 +81,18 @@
 .mes-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding-bottom: 10px; }
 .mes-topo h3 { margin: 0 0 4px; }
 .mes-total { text-align: right; font-weight: 800; font-size: 1.1rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.mes-total small { display: block; font-size: .74rem; font-weight: 500; color: var(--suave); }
+.mes-total small { display: block; font-size: .75rem; font-weight: 500; color: var(--suave); }
 
 .chip {
   display: inline-block;
   padding: 2px 10px; border-radius: 99px;
-  font-size: .72rem; font-weight: 700; letter-spacing: .02em;
+  font-size: .75rem; font-weight: 700; letter-spacing: .02em;
 }
-.chip.atual { background: var(--realce); color: var(--primaria); }
-.chip.atraso { background: var(--alerta-fundo); color: var(--alerta); }
-.chip.ok { background: rgba(6, 118, 71, .12); color: var(--ok); }
+.chip.atual { background: var(--superficie-2, rgba(110, 70, 75, .09)); color: var(--texto); }
+/* Cor com significado: vermelho = atrasado, âmbar = atenção, verde = em dia / quitado */
+.chip.atraso { background: var(--erro-fundo); color: var(--erro); }
+.chip.atencao { background: var(--alerta-fundo); color: var(--alerta); }
+.chip.ok { background: var(--ok-fundo); color: var(--ok); }
 
 .parcelas { list-style: none; margin: 0; padding: 0; }
 .parcela {
@@ -113,7 +116,7 @@
   transition: background .2s, border-color .2s, transform .2s;
 }
 .chk .svg-ico { opacity: 0; transform: scale(.4); transition: opacity .2s, transform .3s cubic-bezier(.3, 1.6, .5, 1); }
-.chk.on { background: var(--grad-marca); border-color: transparent; }
+.chk.on { background: var(--grad-ok); border-color: transparent; }
 .chk.on .svg-ico { opacity: 1; transform: none; }
 .chk:active { transform: scale(.9); }
 
@@ -133,7 +136,7 @@
 .dv-valor { font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; margin: 4px 0 10px; }
 .dv-valor small { font-size: .9rem; font-weight: 600; color: var(--suave); }
 .divida .barra { background: var(--borda); }
-.divida .barra > span { background: var(--grad-barra); }
+.divida .barra > span { background: var(--grad-barra-ok); }
 .dv-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; margin-top: 8px; font-size: .8rem; color: var(--suave); }
 
 /* Estado vazio */
@@ -198,7 +201,7 @@ select:focus { outline: 2px solid var(--primaria); outline-offset: 1px; }
   background: var(--cartao); border: 1px solid var(--borda); border-radius: 16px; cursor: pointer;
 }
 .mes-nome { font-size: 1.1rem; font-weight: 800; line-height: 1.2; }
-.mes-dica { font-size: .74rem; color: var(--suave); }
+.mes-dica { font-size: .75rem; color: var(--suave); }
 .mes-select {
   position: absolute; inset: 0; width: 100%; height: 100%;
   padding: 0; border: 0; border-radius: 16px; background: transparent;
@@ -302,7 +305,7 @@ select:focus { outline: 2px solid var(--primaria); outline-offset: 1px; }
   width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--borda);
   display: grid; place-items: center; color: #fff;
 }
-.p-marca.on { background: var(--grad-marca); border-color: transparent; }
+.p-marca.on { background: var(--grad-ok); border-color: transparent; }
 .parcela.somente.paga .p-nome { text-decoration: line-through; color: var(--suave); }
 .p-chip { margin-left: 6px; }
 .mes-falta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin: 10px 0 0; font-size: .85rem; color: var(--suave); }
@@ -314,3 +317,23 @@ select:focus { outline: 2px solid var(--primaria); outline-offset: 1px; }
 .dv-add { margin-top: 10px; }
 .rd-tend { flex-wrap: nowrap; flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px 14px; }
 .rd-tend-seta { display: none; }
+
+/* Estado vazio ilustrado */
+.vazio-ilustrado { padding: 22px 18px 24px; }
+.vazio-arte { display: grid; place-items: center; margin: 0 auto 4px; }
+.vazio-ilustrado h3 { font-size: var(--t-secao); font-weight: 700; margin-bottom: .3rem; }
+.vazio-ilustrado .sub { max-width: 34ch; margin: 0 auto .9rem; }
+.vazio-passos { list-style: none; margin: 0 auto 1rem; padding: 0; max-width: 300px; text-align: left; display: grid; gap: 8px; }
+.vazio-passos li { display: flex; align-items: center; gap: 12px; font-size: var(--t-corpo); font-weight: 600; }
+.vazio-n { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--realce); color: var(--primaria); font-size: var(--t-rotulo); font-weight: 800; }
+.vazio-ilustrado .btn { width: 100%; max-width: 300px; }
+
+/* Marcar como pago: pulso do botão, anel que se abre e traço do check sendo desenhado */
+@keyframes chk-pulso { 0% { transform: scale(.8); } 55% { transform: scale(1.2); } 100% { transform: scale(1); } }
+@keyframes chk-anel { 0% { box-shadow: 0 0 0 0 rgba(6, 118, 71, .45); } 100% { box-shadow: 0 0 0 14px rgba(6, 118, 71, 0); } }
+@keyframes chk-traco { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }
+.chk.on.acabou { animation: chk-pulso .5s cubic-bezier(.3, 1.4, .5, 1), chk-anel .7s ease-out; }
+.chk.on.acabou .svg-ico path { stroke-dasharray: 24; animation: chk-traco .38s .08s ease-out backwards; }
+@media (prefers-reduced-motion: reduce) {
+  .chk.on.acabou, .chk.on.acabou .svg-ico path { animation: none !important; }
+}

@@ -210,7 +210,7 @@ export function resumoTetoPeriodo(p, lista, gastos, hoje = hojeIso()) {
   const pct = teto > 0 ? Math.min(100, Math.round((gasto / teto) * 100)) : (gasto > 0 ? 100 : 0);
   let porDia = null;
   if (periodoContem(p, hoje) && restante > 0) porDia = Math.floor(restante / (diasEntre(hoje, p.fim) + 1));
-  return { p, teto, gasto, restante, pct, estourou: restante < 0, porDia };
+  return { p, teto, gasto, restante, pct, estourou: restante < 0, porDia, qtdGastos: gastosDoPeriodo(p, gastos).length };
 }
 
 // Série do gráfico do Início: do período anterior ao atual em diante, completando com períodos previstos.

@@ -4,7 +4,8 @@
 // O período (por exemplo 20/10 a 19/11) é o mesmo de Contas. O teto vem do período (periodos.js);
 // o gasto do período é a soma dos lançamentos com data dentro dele.
 
-import { $, h, reais, paraCampo, parseReais } from "./util.js";
+import { estadoVazio } from "./vazio.js";
+import { $, h, reais, animarValor, animarLargura, paraCampo, parseReais } from "./util.js";
 import { icone } from "./icones.js";
 import { diaDaSemana, DIAS_SEMANA } from "./calendario.js";
 import {
@@ -58,14 +59,18 @@ export function configurarGastos(contexto) {
 
   function resumo(r) {
     const meta = (rotulo, valor) => h("div", { class: "rd-item" }, h("small", {}, rotulo), h("strong", {}, valor));
+    const valor = h("div", { class: "rd-valor" });
+    animarValor(valor, "teto-hero", Math.abs(r.restante));
+    const preenchido = h("span", {});
+    animarLargura(preenchido, "teto-hero", r.pct);
     return h("div", { class: "cartao resumo-div" + (r.estourou ? " estourou" : "") },
       h("div", { class: "rd-rotulo" }, r.estourou ? "Passou do limite em" : "Ainda dá para gastar"),
-      h("div", { class: "rd-valor" }, reais(Math.abs(r.restante))),
+      valor,
       h("div", { class: "barra", role: "progressbar", "aria-valuemin": "0", "aria-valuemax": "100", "aria-valuenow": String(r.pct), "aria-label": "Quanto do limite já foi usado" },
-        h("span", { style: `width:${r.pct}%` })),
+        preenchido),
       h("div", { class: "rd-meta" },
         meta("Limite", reais(r.teto)),
-        meta("Gasto", `${reais(r.gasto)} (${r.teto > 0 ? Math.round((r.gasto / r.teto) * 100) : 0}%)`),
+        meta(`Gasto · ${r.teto > 0 ? Math.round((r.gasto / r.teto) * 100) : 0}%`, reais(r.gasto)),
         r.porDia !== null ? meta("Por dia até o fim do período", reais(r.porDia)) : null));
   }
 
@@ -132,10 +137,11 @@ export function configurarGastos(contexto) {
     const doPeriodo = gastosDoPeriodo(p, gastos)
       .sort((a, b) => (a.data === b.data ? 0 : a.data < b.data ? 1 : -1));
     if (!doPeriodo.length) {
-      return h("div", { class: "cartao vazio" },
-        h("div", { class: "vazio-ico", html: icone("teto", 30) }),
-        h("h3", {}, "Nenhum gasto neste período"),
-        h("p", { class: "sub" }, "Lance os gastos imprevistos, como farmácia, lanche e conserto. Eles saem do limite de imprevistos."));
+      return estadoVazio({
+        ilustracao: "teto",
+        titulo: "Nenhum gasto neste período",
+        texto: "Use o botão acima para lançar gastos imprevistos, como farmácia, lanche e conserto. Eles saem do limite de imprevistos."
+      });
     }
     return h("article", { class: "cartao ct-secao" },
       h("header", { class: "ct-topo" }, h("h3", {}, "Gastos do período"), h("span", { class: "ct-subtotal" }, reais(totalGastosDoPeriodo(p, gastos)))),
@@ -203,6 +209,7 @@ export function configurarGastos(contexto) {
     receberMeses(m) { meses = m; pronto.meses = true; renderizar(); },
     receberGastos(l) { gastos = l; pronto.gastos = true; renderizar(); },
     atualizar() { renderizar(); },
+    abrirNovo() { abrirGasto(null); },
     limpar() { meses = {}; gastos = []; pronto.meses = pronto.gastos = false; selecao.id = null; fechar(); renderizar(); }
   };
 }

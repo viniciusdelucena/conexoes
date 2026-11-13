@@ -64,6 +64,10 @@ export function configurarPainel() {
       const topo = maxTotal * 1.08;
       const Y = (v) => mt + ih - (v / topo) * ih;
       const banda = iw / n, larg = Math.min(38, banda * 0.62);
+      // Em tela estreita os rótulos se encostam: mostra um sim, um não, sempre alinhado ao período atual.
+      const iAtual = Math.max(0, serie.findIndex((r) => r.atual));
+      const passo = banda < 40 ? 2 : 1;
+      const mostraRot = (i) => (((i - iAtual) % passo) + passo) % passo === 0;
 
       const grades = [0, 0.5, 1].map((f) => {
         const y = mt + ih - f * ih;
@@ -88,7 +92,7 @@ export function configurarPainel() {
         }).join("");
         const atual = r.atual;
         return `<g class="col${comAnimacao ? " anima" : ""}" data-i="${i}" style="--i:${i}">${rects}</g>
-<text class="eixo${atual ? " atual" : ""}" x="${cx}" y="${H - 8}" text-anchor="middle">${r.curto}</text>
+${mostraRot(i) ? `<text class="eixo${atual ? " atual" : ""}" x="${cx}" y="${H - 8}" text-anchor="middle">${r.curto}</text>` : ""}
 <rect class="captura" data-i="${i}" x="${cx - banda / 2}" y="${mt}" width="${banda}" height="${ih + 8}" fill="transparent"/>`;
       }).join("");
 

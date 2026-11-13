@@ -1,7 +1,7 @@
 {
   "name": "Conexões",
   "short_name": "Conexões",
-  "description": "Dívidas, contas do mês e teto de gastos da casa.",
+  "description": "Dívidas, contas do mês e imprevistos da casa.",
   "lang": "pt-BR",
   "start_url": "./index.html",
   "scope": "./",

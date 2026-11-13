@@ -23,6 +23,49 @@ export function h(tag, attrs, ...filhos) {
 // ---------- Dinheiro (sempre em centavos inteiros) ----------
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 export const reais = (centavos) => BRL.format(centavos / 100);
+// Valor de destaque: "R$" e centavos ficam menores (as classes .rs e .ct), o inteiro domina.
+// O texto lido por leitor de tela continua "R$ 3.901,40". Só números e símbolos entram no HTML.
+export function reaisHtml(centavos) {
+  const t = reais(centavos);
+  const m = t.match(/^(-?)R\$[\s\u00a0]*([\d.]+)(,\d+)$/);
+  if (!m) return t.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  return `${m[1]}<span class="rs">R$</span>&nbsp;${m[2]}<span class="ct">${m[3]}</span>`;
+}
+// ----- Movimento dos números e barras -----
+// Guardam o último valor mostrado por "chave" (ex.: "contas-hero"), para animar a partir dele.
+// Quem pediu menos movimento no sistema recebe o valor final direto.
+const semMovimento = () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+const estadoValores = new Map();
+const estadoBarras = new Map();
+
+// Conta de um valor até o outro (centavos) dentro do elemento, em ~0,7 s. Primeira vez: sobe de zero.
+export function animarValor(el, chave, centavos, duracao = 700) {
+  const est = estadoValores.get(chave) || { mostrado: 0, raf: 0 };
+  estadoValores.set(chave, est);
+  if (est.raf) cancelAnimationFrame(est.raf);
+  const de = est.mostrado;
+  if (semMovimento() || de === centavos) { est.mostrado = centavos; est.raf = 0; el.innerHTML = reaisHtml(centavos); return; }
+  const t0 = performance.now();
+  const passo = (t) => {
+    const k = Math.min(1, (t - t0) / duracao);
+    const suave = 1 - Math.pow(1 - k, 3);
+    est.mostrado = Math.round(de + (centavos - de) * suave);
+    el.innerHTML = reaisHtml(est.mostrado);
+    est.raf = k < 1 ? requestAnimationFrame(passo) : 0;
+  };
+  el.innerHTML = reaisHtml(de);
+  est.raf = requestAnimationFrame(passo);
+}
+
+// Barra que cresce do tamanho anterior até o novo (a barra é recriada a cada desenho da tela).
+export function animarLargura(span, chave, pct) {
+  const de = estadoBarras.has(chave) ? estadoBarras.get(chave) : 0;
+  estadoBarras.set(chave, pct);
+  if (semMovimento() || de === pct) { span.style.width = `${pct}%`; return; }
+  span.style.width = `${de}%`;
+  requestAnimationFrame(() => requestAnimationFrame(() => { span.style.width = `${pct}%`; }));
+}
+
 export const paraCampo = (centavos) => (centavos / 100).toFixed(2).replace(".", ",");
 
 // Aceita "1.234,56", "1234,56", "150.50", "R$ 90". Devolve centavos ou NaN.

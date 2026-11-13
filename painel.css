@@ -28,7 +28,7 @@
 .pn-svg { display: block; overflow: visible; outline: none; }
 .pn-svg:focus-visible { outline: 2px solid var(--primaria); outline-offset: 4px; border-radius: 8px; }
 .pn-svg .g { stroke: var(--borda); stroke-width: 1; }
-.pn-svg .eixo { fill: var(--suave); font-size: 11px; font-variant-numeric: tabular-nums; }
+.pn-svg .eixo { fill: var(--suave); font-size: 12px; font-variant-numeric: tabular-nums; }
 .pn-svg .eixo.atual { fill: var(--texto); font-weight: 800; }
 .pn-svg .col { transition: opacity .2s; transform-box: fill-box; transform-origin: center bottom; }
 .pn-svg .col.apagada { opacity: .45; }

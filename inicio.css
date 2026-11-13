@@ -60,3 +60,60 @@
 
 @keyframes ini-sobe { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .ini-hero, .ini-tile, .ini-comeco { animation: none; } .ini-trilho > span { transition: none; } }
+
+/* Barra de progresso dentro do cartão principal: quanto do período já foi pago */
+.ini-prog { display: block; width: 100%; height: 7px; margin: 10px 0 8px; border-radius: 99px; background: rgba(255, 255, 255, .28); overflow: hidden; }
+.ini-prog > span { display: block; height: 100%; width: 0; border-radius: 99px; background: #fff; transition: width .9s cubic-bezier(.22, 1, .36, 1); }
+
+/* Ações rápidas */
+.ini-acoes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+.ini-acao {
+  display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 48px; padding: 0 8px;
+  border: 1px solid var(--borda); border-radius: 16px; background: var(--cartao); color: var(--texto);
+  font: inherit; font-size: var(--t-corpo); font-weight: 700; cursor: pointer; touch-action: manipulation;
+  animation: ini-sobe .55s .06s cubic-bezier(.22, 1, .36, 1) both;
+}
+.ini-acao [data-ico], .ini-acao .svg-ico { color: var(--primaria); display: inline-grid; }
+.ini-acao:active { transform: scale(.97); }
+.ini-acao:focus-visible { outline: 3px solid var(--primaria); outline-offset: 2px; }
+
+/* Próximos vencimentos */
+.ini-prox { padding: 1rem 1rem .4rem; margin-bottom: 14px; animation: ini-sobe .55s .1s cubic-bezier(.22, 1, .36, 1) both; }
+.ini-prox-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 2px; }
+.ini-prox-topo h3 { margin: 0; font-size: var(--t-secao); font-weight: 700; }
+.ini-prox-todas { min-height: 44px; padding: 0 4px; border: 0; background: none; color: var(--primaria); font: inherit; font-size: var(--t-leg); font-weight: 700; cursor: pointer; }
+.ini-prox-lista { list-style: none; margin: 0; padding: 0; }
+.ini-prox-lista li + li { border-top: 1px solid var(--borda); }
+.ini-prox-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 56px; padding: 8px 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.ini-prox-info { display: flex; flex-direction: column; min-width: 0; }
+.ini-prox-nome { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ini-prox-data { font-size: var(--t-rotulo); color: var(--suave); }
+.ini-prox-dir { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.ini-prox-valor { font-weight: 800; font-variant-numeric: tabular-nums; }
+.ini-prox-ok { padding: 10px 0 14px; color: var(--suave); font-size: var(--t-leg); }
+.ini-prox-ok .chip { margin-right: 6px; }
+
+/* Barras dos cartões: verde = progresso; no Imprevistos a cor acompanha o quanto do limite já foi usado */
+.ini-trilho > span { background: var(--grad-barra-ok); }
+#ini-tile-teto[data-nivel="atencao"] .ini-trilho > span { background: linear-gradient(90deg, #f5b04a, #b45309); }
+#ini-tile-teto[data-nivel="alto"] .ini-trilho > span { background: linear-gradient(90deg, #f97066, #b42318); }
+@media (prefers-reduced-motion: reduce) { .ini-acao, .ini-prox { animation: none; } .ini-prog > span { transition: none; } }
+
+/* Minigráfico do saldo devedor no cartão de Dívidas */
+.ini-spark { position: relative; display: block; width: 100%; height: 32px; margin: 8px 0 2px; }
+.ini-spark[hidden] { display: none; }
+.ini-spark-svg { display: block; width: 100%; height: 100%; }
+.ini-spark svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.ini-spark .trecho { stroke: var(--ok); stroke-width: 2.25; stroke-linecap: round; stroke-linejoin: round; }
+.ini-spark .trecho.futuro { stroke-width: 1.75; stroke-dasharray: 3 4; opacity: .55; }
+.ini-spark-ponto {
+  position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%;
+  background: var(--ok); box-shadow: 0 0 0 3px var(--cartao), 0 0 0 4px var(--ok-fundo);
+}
+.ini-spark.anima .ini-spark-svg { animation: spark-revela 1s .35s cubic-bezier(.22, 1, .36, 1) both; }
+.ini-spark.anima .ini-spark-ponto { animation: spark-ponto .35s 1.2s ease-out both; }
+@keyframes spark-revela { from { clip-path: inset(-4px 100% -4px 0); } to { clip-path: inset(-4px 0 -4px 0); } }
+@keyframes spark-ponto { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .ini-spark.anima .ini-spark-svg, .ini-spark.anima .ini-spark-ponto { animation: none; } }
+/* Os dois cartões terminam alinhados embaixo, mesmo com alturas de conteúdo diferentes */
+#stat-divida-rot, #stat-teto-rot { margin-bottom: auto; }

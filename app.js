@@ -2,8 +2,9 @@
 // O app conversa com um "backend": o Firebase de verdade, ou uma demonstração em memória
 // usada só para pré-visualizar as telas (só na pré-visualização).
 
-import { $, reais, mesCurto } from "./js/util.js";
+import { $, reais, animarValor, mesCurto } from "./js/util.js";
 import { rotuloPeriodo } from "./js/periodos.js";
+import { montarProximos, montarMinigrafico } from "./js/inicio.js";
 import { aplicarIcones } from "./js/icones.js";
 import * as dividasUI from "./js/dividas.js";
 import { configurarContas } from "./js/contas.js";
@@ -49,7 +50,7 @@ function atualizarCorBarra() {
   const attr = document.documentElement.getAttribute("data-theme");
   const escuro = attr ? attr === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
   const heroVermelho = telaAtual === "tela-login" || telaAtual === "tela-casa";
-  meta.setAttribute("content", heroVermelho ? "#e0545a" : escuro ? "#141010" : "#f6f3f2");
+  meta.setAttribute("content", heroVermelho ? "#cd323f" : escuro ? "#141010" : "#f6f3f2");
 }
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", atualizarCorBarra);
 
@@ -223,6 +224,7 @@ function entrarNoApp(id, recemEntrou = false) {
     weekday: "long", day: "numeric", month: "long"
   }).format(new Date());
 
+  $("avatar-ini").textContent = iniciais(usuario.nome, usuario.email);
   $("cfg-usuario").textContent = usuario.nome ? `${usuario.nome} (${usuario.email})` : usuario.email;
   $("cfg-codigo").textContent = id;
   $("cfg-teste").hidden = !DEMO;
@@ -274,22 +276,27 @@ function barra(id, pct) { $(id).style.width = `${Math.max(0, Math.min(100, pct))
 
 function mostrarResumoDividas(r) {
   resumoVazio.dividas = r.quantidade;
+  // Com parcelas pela frente o cartão mostra o minigráfico do saldo; sem elas, a barra de progresso.
+  let comGrafico = false;
   if (!r.quantidade) {
-    $("stat-divida-num").textContent = "R$ 0,00";
+    animarValor($("stat-divida-num"), "ini-divida", 0);
     $("stat-divida-rot").textContent = "nenhuma dívida";
-    $("stat-divida-leg").textContent = "toque para cadastrar";
+    $("stat-divida-leg").textContent = "vêm das contas parceladas";
     barra("ini-div-barra", 0);
   } else if (r.parcelasRestantes === 0) {
-    $("stat-divida-num").textContent = reais(0);
+    animarValor($("stat-divida-num"), "ini-divida", 0);
     $("stat-divida-rot").textContent = "tudo quitado";
     $("stat-divida-leg").textContent = "parabéns!";
     barra("ini-div-barra", 100);
   } else {
-    $("stat-divida-num").textContent = reais(r.restanteCentavos);
+    animarValor($("stat-divida-num"), "ini-divida", r.restanteCentavos);
     $("stat-divida-rot").textContent = "falta pagar";
     $("stat-divida-leg").textContent = `${r.quitadoPct}% quitado`;
     barra("ini-div-barra", r.quitadoPct);
+    comGrafico = montarMinigrafico($("ini-div-spark"), r.serie);
   }
+  if (!comGrafico) montarMinigrafico($("ini-div-spark"), null);
+  $("ini-div-barra").parentElement.hidden = comGrafico;
   atualizarVazio();
 }
 dividasUI.configurar({
@@ -324,6 +331,7 @@ function mostrarResumoContas(r) {
   if (!r) {
     resumoVazio.contas = null;
     $("stat-contas-num").textContent = "R$ —";
+    montarProximos($("ini-prox"), null, () => abrirPagina("contas"));
     atualizarVazio();
     return;
   }
@@ -333,14 +341,26 @@ function mostrarResumoContas(r) {
     $("stat-contas-num").textContent = "R$ —";
     $("stat-contas-leg").textContent = "hoje não está em nenhum período: crie um em Contas";
     $("stat-dia").hidden = true;
+    barra("ini-hero-barra", 0);
+    montarProximos($("ini-prox"), r, () => abrirPagina("contas"));
     atualizarVazio();
     return;
   }
   $("stat-dia").hidden = !diasUteisAtivo;
-  $("ini-mes").textContent = `Contas de ${rotuloPeriodo(r.p)}`;
-  $("stat-contas-num").textContent = reais(r.total);
-  $("stat-contas-leg").textContent = r.qtdContas ? `${r.qtdPagas} de ${r.qtdContas} contas pagas` : "contas fixas, variáveis e imprevistos do período";
+  const tudoPago = r.qtdContas > 0 && r.faltaPagar === 0;
+  if (r.qtdContas) {
+    // O que importa no dia a dia é o que ainda falta pagar; o total do período vai na legenda.
+    $("ini-mes").textContent = `${tudoPago ? "Tudo pago" : "Falta pagar"} · ${rotuloPeriodo(r.p)}`;
+    animarValor($("stat-contas-num"), "ini-contas", r.faltaPagar);
+    $("stat-contas-leg").textContent = `${r.qtdPagas} de ${r.qtdContas} contas pagas · total ${reais(r.contasTotal)}`;
+  } else {
+    $("ini-mes").textContent = `Contas de ${rotuloPeriodo(r.p)}`;
+    animarValor($("stat-contas-num"), "ini-contas", r.total);
+    $("stat-contas-leg").textContent = "contas fixas, variáveis e imprevistos do período";
+  }
+  barra("ini-hero-barra", r.qtdContas ? r.pagoPct : 0);
   $("stat-dia").textContent = `${reais(r.porDia)} por dia útil · ${r.dias} dias úteis` + (r.feriados ? ` · ${r.feriados} feriado${r.feriados > 1 ? "s" : ""}` : "");
+  montarProximos($("ini-prox"), r, () => abrirPagina("contas"));
   atualizarVazio();
 }
 const painelUI = configurarPainel();
@@ -366,9 +386,11 @@ function mostrarResumoTeto(r) {
     return;
   }
   tile.classList.toggle("estourou", r.estourou);
-  $("stat-teto-num").textContent = reais(Math.abs(r.restante));
+  // Barra: verde enquanto sobra folga, âmbar perto do limite, vermelha ao estourar.
+  tile.dataset.nivel = r.estourou ? "alto" : r.pct >= 75 ? "atencao" : "ok";
+  animarValor($("stat-teto-num"), "ini-teto", Math.abs(r.restante));
   $("stat-teto-rot").textContent = r.estourou ? "passou do limite" : "ainda dá para gastar";
-  $("stat-teto-leg").textContent = `${reais(r.gasto)} gastos`;
+  $("stat-teto-leg").textContent = r.qtdGastos === 1 ? "1 gasto no período" : `${r.qtdGastos || 0} gastos no período`;
   barra("ini-teto-barra", r.teto > 0 ? (r.gasto / r.teto) * 100 : (r.gasto > 0 ? 100 : 0));
 }
 const gastosUI = configurarGastos({
@@ -382,7 +404,7 @@ const gastosUI = configurarGastos({
 });
 
 // ---------- Navegação ----------
-const ORDEM = ["inicio", "dividas", "contas", "teto", "assistente", "config"];
+const ORDEM = ["inicio", "dividas", "contas", "teto", "assistente"]; // abas do dock; "config" abre pelo avatar
 const TITULOS = {
   inicio: "Início",
   dividas: "Dívidas",
@@ -392,19 +414,22 @@ const TITULOS = {
   config: "Casa e conta"
 };
 let paginaAtual = "inicio";
+let ultimaAba = "inicio";
 
 function abrirPagina(nome) {
   paginaAtual = nome;
   document.querySelectorAll(".pagina").forEach((p) => (p.hidden = p.id !== `pagina-${nome}`));
-  document.querySelectorAll("[data-ir]").forEach((el) =>
-  el.addEventListener("click", () => abrirPagina(el.dataset.ir))
-);
-document.querySelectorAll(".aba").forEach((a) => {
+  document.querySelectorAll(".aba").forEach((a) => {
     const ativa = a.dataset.pagina === nome;
     a.classList.toggle("ativa", ativa);
     a.setAttribute("aria-current", ativa ? "page" : "false");
   });
-  $("dock").style.setProperty("--idx", String(ORDEM.indexOf(nome)));
+  const naDock = ORDEM.includes(nome);
+  if (naDock) { $("dock").style.setProperty("--idx", String(ORDEM.indexOf(nome))); ultimaAba = nome; }
+  $("dock").classList.toggle("sem-aba", !naDock);
+  const av = $("btn-avatar");
+  av.classList.toggle("ativo", nome === "config");
+  if (nome === "config") av.setAttribute("aria-current", "page"); else av.removeAttribute("aria-current");
   $("titulo-pagina").textContent = TITULOS[nome] || "";
   if (nome === "inicio" && typeof painelUI !== "undefined") painelUI.animar();
   if (nome === "contas") contasUI.atualizar();
@@ -416,6 +441,38 @@ document.querySelectorAll(".aba").forEach((a) => {
 document.querySelectorAll(".aba").forEach((a) =>
   a.addEventListener("click", () => abrirPagina(a.dataset.pagina))
 );
+
+// Atalhos que levam a outra página (cartões do Início, passos, "Ver todas"): ligados uma única vez.
+document.querySelectorAll("[data-ir]").forEach((el) =>
+  el.addEventListener("click", () => abrirPagina(el.dataset.ir))
+);
+
+// Ações rápidas do Início.
+document.querySelectorAll("[data-acao]").forEach((b) => b.addEventListener("click", () => {
+  const a = b.dataset.acao;
+  if (a === "gasto") { abrirPagina("teto"); gastosUI.abrirNovo(); }
+  else if (a === "pagar") abrirPagina("contas");
+  else abrirPagina("assistente");
+}));
+
+// Avatar no topo: abre "Casa e conta"; tocar de novo volta para a aba de onde veio.
+$("btn-avatar").addEventListener("click", () => abrirPagina(paginaAtual === "config" ? ultimaAba : "config"));
+
+function iniciais(nome, email) {
+  const partes = (nome || "").trim().split(/\s+/).filter(Boolean);
+  if (partes.length) return (partes[0][0] + (partes.length > 1 ? partes[partes.length - 1][0] : "")).toUpperCase();
+  return ((email || "?")[0] || "?").toUpperCase();
+}
+
+// Topo que encolhe ao rolar: título grande vira barra compacta (com folga para não ficar piscando).
+let topoCompacto = false;
+window.addEventListener("scroll", () => {
+  const y = window.scrollY;
+  const novo = topoCompacto ? y > 12 : y > 44;
+  if (novo === topoCompacto) return;
+  topoCompacto = novo;
+  document.body.classList.toggle("topo-compacto", novo);
+}, { passive: true });
 
 $("btn-copiar").addEventListener("click", async () => {
   try {

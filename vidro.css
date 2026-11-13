@@ -16,6 +16,11 @@
   --luz-3: rgba(170, 130, 255, .22);
   --fundo-base: #f7f2f1;
   --chk-borda: rgba(140, 60, 70, .30);
+  /* Camada de conteúdo: superfícies firmes (quase sólidas) com sombra suave. O vidro fica só na camada de navegação e controles. */
+  --superficie: rgba(255, 255, 255, .95);
+  --superficie-2: rgba(120, 50, 60, .045);
+  --superficie-borda: rgba(120, 50, 60, .09);
+  --superficie-sombra: 0 1px 2px rgba(90, 30, 40, .06), 0 10px 26px -10px rgba(90, 30, 40, .16);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -33,6 +38,10 @@
     --luz-3: rgba(130, 90, 255, .24);
     --fundo-base: #120d0d;
     --chk-borda: rgba(255, 255, 255, .32);
+    --superficie: rgba(37, 27, 29, .96);
+    --superficie-2: rgba(255, 255, 255, .05);
+    --superficie-borda: rgba(255, 255, 255, .08);
+    --superficie-sombra: 0 1px 2px rgba(0, 0, 0, .45), 0 12px 28px -10px rgba(0, 0, 0, .55);
   }
 }
 :root[data-theme="dark"] {
@@ -50,6 +59,18 @@
   --luz-3: rgba(130, 90, 255, .24);
   --fundo-base: #120d0d;
   --chk-borda: rgba(255, 255, 255, .32);
+  --superficie: rgba(37, 27, 29, .96);
+  --superficie-2: rgba(255, 255, 255, .05);
+  --superficie-borda: rgba(255, 255, 255, .08);
+  --superficie-sombra: 0 1px 2px rgba(0, 0, 0, .45), 0 12px 28px -10px rgba(0, 0, 0, .55);
+}
+
+:root {
+  /* Cartão principal tingido de vermelho: reflexo no canto de cima, sombra funda embaixo — o texto branco fica >= 4.5:1 */
+  --hero-grad:
+    radial-gradient(70% 60% at 100% 0%, rgba(255, 255, 255, .22), rgba(255, 255, 255, 0) 62%),
+    radial-gradient(90% 90% at 100% 100%, rgba(80, 0, 20, .40), rgba(80, 0, 20, 0) 62%),
+    linear-gradient(135deg, #cd323f, #9f1f2d);
 }
 
 /* Luz de fundo: manchas de cor desfocadas que o vidro refrata. Fica parada atrás de tudo. */
@@ -61,16 +82,26 @@
     radial-gradient(40% 32% at 12% 82%, var(--luz-3), transparent 70%),
     radial-gradient(32% 26% at 86% 92%, var(--luz-1), transparent 70%),
     var(--fundo-base);
-  animation: luz-deriva 26s ease-in-out infinite alternate;
 }
-@keyframes luz-deriva { from { transform: translate3d(0, 0, 0) scale(1); } to { transform: translate3d(3%, -2%, 0) scale(1.06); } }
 
-/* Topo: vidro fosco, o conteúdo passa por baixo */
-.topo {
+/* Topo: vidro fosco em uma camada própria; a altura no fluxo é fixa e só o vidro encolhe ao rolar */
+.topo { background: none; border-bottom: 0; }
+.topo::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; z-index: -1; pointer-events: none;
+  height: 100%;
   background: var(--vidro-topo);
   -webkit-backdrop-filter: var(--vidro-blur); backdrop-filter: var(--vidro-blur);
   border-bottom: 1px solid var(--vidro-linha);
   box-shadow: 0 1px 0 var(--vidro-borda);
+  transition: height .28s cubic-bezier(.3, .9, .3, 1), box-shadow .28s ease;
+}
+.topo-compacto .topo::before {
+  height: calc(var(--topo-h-c) + env(safe-area-inset-top));
+  box-shadow: 0 1px 0 var(--vidro-borda), 0 8px 18px -12px rgba(90, 30, 40, .30);
+}
+.avatar {
+  background: var(--vidro-ind); border-color: var(--vidro-borda);
+  box-shadow: 0 3px 10px rgba(110, 30, 45, .16), inset 0 1px 0 rgba(255, 255, 255, .9);
 }
 .selo { background: var(--vidro-solido); border-color: var(--vidro-borda); box-shadow: var(--vidro-brilho); }
 
@@ -94,41 +125,29 @@
 #pagina-inicio .ini-saudacao { padding: 6px 4px 16px; }
 #pagina-inicio .ini-saudacao h2 { font-size: 1.75rem; font-weight: 800; letter-spacing: -.03em; }
 
-/* Cartão principal: vidro tingido de vermelho, com reflexo e brilho que passa devagar */
+/* Cartão principal: vidro tingido de vermelho, com reflexo fixo */
 .ini-hero {
-  background:
-    radial-gradient(110% 80% at 0% 0%, rgba(255, 255, 255, .40), rgba(255, 255, 255, 0) 58%),
-    radial-gradient(90% 90% at 100% 100%, rgba(110, 8, 30, .50), rgba(110, 8, 30, 0) 62%),
-    linear-gradient(135deg, #f0636a, #c6303e);
+  background: var(--hero-grad);
   border: 1px solid rgba(255, 255, 255, .5);
   border-radius: 28px;
-  box-shadow: 0 22px 44px var(--marca-sombra), inset 0 1.5px 0 rgba(255, 255, 255, .6), inset 0 -14px 28px rgba(110, 8, 30, .25);
+  box-shadow: 0 10px 20px -14px var(--marca-sombra), inset 0 1.5px 0 rgba(255, 255, 255, .6), inset 0 -14px 28px rgba(110, 8, 30, .25);
   padding: 1.4rem 1.3rem 1.2rem;
   text-shadow: 0 1px 10px rgba(110, 8, 30, .25);
 }
-.ini-hero::before {
-  content: ""; position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(112deg, transparent 32%, rgba(255, 255, 255, .20) 47%, transparent 62%);
-  transform: translateX(-120%);
-  animation: ini-brilho 8s 1.5s ease-in-out infinite;
-}
-@keyframes ini-brilho { 0%, 62% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
 .ini-hero > * { position: relative; }
 .ini-valor { font-size: 2.6rem; letter-spacing: -.03em; }
-.ini-dia { background: rgba(255, 255, 255, .20); border: 1px solid rgba(255, 255, 255, .35); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); text-shadow: none; }
+.ini-dia { background: rgba(255, 255, 255, .20); border: 1px solid rgba(255, 255, 255, .35); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4); text-shadow: none; }
 .ini-ver {
   padding: 7px 12px 7px 14px; border-radius: 999px; text-shadow: none;
-  background: rgba(255, 255, 255, .20); border: 1px solid rgba(255, 255, 255, .38);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45);
-  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, .12); border: 1px solid rgba(255, 255, 255, .38);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35);
 }
 
-/* Cartões de vidro */
+/* Cartões de conteúdo: firmes, com sombra suave */
 #pagina-inicio .ini-tile, #pagina-inicio .cartao {
-  background: var(--vidro);
-  -webkit-backdrop-filter: var(--vidro-blur); backdrop-filter: var(--vidro-blur);
-  border: 1px solid var(--vidro-borda);
-  box-shadow: var(--vidro-sombra), var(--vidro-brilho);
+  background: var(--superficie);
+  border: 1px solid var(--superficie-borda);
+  box-shadow: var(--superficie-sombra);
 }
 #pagina-inicio .ini-tile { border-radius: 24px; padding: 1.05rem; }
 #pagina-inicio .cartao { border-radius: 24px; }
@@ -145,25 +164,24 @@
 #pagina-inicio .ini-passos li + li { border-top-color: var(--vidro-linha); }
 .ini-n { box-shadow: 0 4px 10px var(--marca-sombra), inset 0 1px 0 rgba(255, 255, 255, .45); }
 
-@media (prefers-reduced-motion: reduce) { #app::before, .ini-hero::before { animation: none; } }
 
 /* ===== Telas de entrada (login e criar casa) ===== */
 :root {
-  --hv-cartao: linear-gradient(160deg, rgba(255, 255, 255, .88), rgba(255, 255, 255, .66) 55%, rgba(255, 255, 255, .78));
+  --hv-cartao: linear-gradient(160deg, rgba(255, 255, 255, .95), rgba(255, 255, 255, .88) 55%, rgba(255, 255, 255, .92));
   --hv-borda: rgba(255, 255, 255, .8);
   --hv-campo: rgba(255, 255, 255, .6);
   --hv-campo-borda: rgba(150, 60, 70, .16);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --hv-cartao: linear-gradient(160deg, rgba(48, 28, 34, .78), rgba(30, 18, 22, .6) 55%, rgba(40, 24, 29, .7));
+    --hv-cartao: linear-gradient(160deg, rgba(48, 28, 34, .88), rgba(30, 18, 22, .8) 55%, rgba(40, 24, 29, .85));
     --hv-borda: rgba(255, 255, 255, .2);
     --hv-campo: rgba(255, 255, 255, .07);
     --hv-campo-borda: rgba(255, 255, 255, .16);
   }
 }
 :root[data-theme="dark"] {
-  --hv-cartao: linear-gradient(160deg, rgba(48, 28, 34, .78), rgba(30, 18, 22, .6) 55%, rgba(40, 24, 29, .7));
+  --hv-cartao: linear-gradient(160deg, rgba(48, 28, 34, .88), rgba(30, 18, 22, .8) 55%, rgba(40, 24, 29, .85));
   --hv-borda: rgba(255, 255, 255, .2);
   --hv-campo: rgba(255, 255, 255, .07);
   --hv-campo-borda: rgba(255, 255, 255, .16);
@@ -190,7 +208,7 @@
 .destaques { gap: 12px; }
 .destaques li {
   position: relative; padding: 14px 13px 13px; border-radius: 22px; gap: 3px;
-  background: linear-gradient(160deg, rgba(255, 255, 255, .30), rgba(255, 255, 255, .08) 55%, rgba(255, 255, 255, .16));
+  background: linear-gradient(160deg, rgba(255, 255, 255, .20), rgba(255, 255, 255, .05) 55%, rgba(255, 255, 255, .12));
   border: 1px solid rgba(255, 255, 255, .38);
   box-shadow: 0 12px 30px rgba(70, 0, 20, .22), inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 -1px 0 rgba(255, 255, 255, .12);
   -webkit-backdrop-filter: blur(20px) saturate(1.15); backdrop-filter: blur(20px) saturate(1.15);
@@ -220,7 +238,6 @@
   position: relative; padding: 26px 22px 20px; border-radius: 32px;
   background: var(--hv-cartao);
   border: 1px solid var(--hv-borda);
-  -webkit-backdrop-filter: blur(26px) saturate(1.8); backdrop-filter: blur(26px) saturate(1.8);
   box-shadow: 0 28px 60px rgba(60, 0, 20, .42), 0 2px 8px rgba(60, 0, 20, .2), inset 0 1.5px 0 rgba(255, 255, 255, .85), inset 0 -1px 0 rgba(255, 255, 255, .2);
 }
 .casa-selo {
@@ -264,18 +281,10 @@
 /* ===== Tela Dívidas ===== */
 /* Cartão de resumo: vidro vermelho, igual ao do Início */
 #pagina-dividas .resumo-div, #pagina-contas .resumo-div, #pagina-teto .resumo-div {
-  background:
-    radial-gradient(110% 80% at 0% 0%, rgba(255, 255, 255, .40), rgba(255, 255, 255, 0) 58%),
-    radial-gradient(90% 90% at 100% 100%, rgba(110, 8, 30, .50), rgba(110, 8, 30, 0) 62%),
-    linear-gradient(135deg, #f0636a, #c6303e);
+  background: var(--hero-grad);
   border: 1px solid rgba(255, 255, 255, .5); border-radius: 28px; padding: 1.3rem 1.2rem 1.15rem;
-  box-shadow: 0 22px 44px var(--marca-sombra), inset 0 1.5px 0 rgba(255, 255, 255, .6), inset 0 -14px 28px rgba(110, 8, 30, .25);
+  box-shadow: 0 10px 20px -14px var(--marca-sombra), inset 0 1.5px 0 rgba(255, 255, 255, .6), inset 0 -14px 28px rgba(110, 8, 30, .25);
   text-shadow: 0 1px 10px rgba(110, 8, 30, .25);
-}
-#pagina-dividas .resumo-div::before, #pagina-contas .resumo-div::before, #pagina-teto .resumo-div::before {
-  content: ""; position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(112deg, transparent 32%, rgba(255, 255, 255, .20) 47%, transparent 62%);
-  transform: translateX(-120%); animation: ini-brilho 8s 1.5s ease-in-out infinite;
 }
 #pagina-dividas .resumo-div > *, #pagina-contas .resumo-div > *, #pagina-teto .resumo-div > * { position: relative; }
 #pagina-dividas .rd-valor, #pagina-contas .rd-valor, #pagina-teto .rd-valor { font-size: 2.45rem; letter-spacing: -.03em; }
@@ -284,7 +293,6 @@
 #pagina-dividas .rd-tend, #pagina-contas .rd-tend, #pagina-teto .rd-tend {
   border-radius: 16px; background: rgba(255, 255, 255, .18); border: 1px solid rgba(255, 255, 255, .35);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45); text-shadow: none;
-  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
 }
 
 /* Seletor de visão: trilho de vidro, aba ativa como pílula clara (igual ao dock) */
@@ -307,18 +315,17 @@
 }
 #pagina-dividas .mes-seta, #pagina-contas .mes-seta, #pagina-teto .mes-seta { width: 52px; }
 
-/* Cartões de vidro: mês, dívida, evolução, vazio */
+/* Cartões de conteúdo: mês, dívida, evolução, vazio */
 #pagina-dividas .mes, #pagina-dividas .divida, #pagina-dividas .cartao:not(.resumo-div) {
-  background: var(--vidro); border: 1px solid var(--vidro-borda); border-radius: 24px;
-  -webkit-backdrop-filter: var(--vidro-blur); backdrop-filter: var(--vidro-blur);
-  box-shadow: var(--vidro-sombra), var(--vidro-brilho);
+  background: var(--superficie); border: 1px solid var(--superficie-borda); border-radius: 24px;
+  box-shadow: var(--superficie-sombra);
 }
 #pagina-dividas .mes { padding: 16px 18px 6px; }
 #pagina-dividas .divida { padding: 16px 18px; }
-#pagina-dividas .mes.atual { border-color: rgba(204, 52, 59, .55); box-shadow: 0 0 0 3px var(--realce), var(--vidro-sombra), var(--vidro-brilho); }
-#pagina-dividas .parcela, #pagina-dividas .mes-falta { border-top-color: var(--vidro-linha); }
+#pagina-dividas .mes.atual { border-color: rgba(204, 52, 59, .55); box-shadow: 0 0 0 3px var(--realce), var(--superficie-sombra); }
+#pagina-dividas .parcela, #pagina-dividas .mes-falta { border-top-color: var(--superficie-borda); }
 #pagina-dividas .p-itens li, #pagina-dividas .dv-item {
-  background: var(--vidro-solido); border: 1px solid var(--vidro-borda); box-shadow: var(--vidro-brilho);
+  background: var(--superficie-2); border: 1px solid var(--superficie-borda);
 }
 #pagina-dividas .dv-item { border-radius: 14px; }
 #pagina-dividas .vazio-ico {
@@ -329,25 +336,26 @@
 
 /* Chips: pílulas de vidro tingidas */
 #pagina-dividas .chip, #pagina-contas .chip, #pagina-teto .chip { padding: 3px 11px; border: 1px solid transparent; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6); }
-#pagina-dividas .chip.atual, #pagina-contas .chip.atual, #pagina-teto .chip.atual { border-color: rgba(204, 52, 59, .22); }
-#pagina-dividas .chip.atraso, #pagina-contas .chip.atraso, #pagina-teto .chip.atraso { border-color: rgba(180, 83, 9, .25); }
+#pagina-dividas .chip.atual, #pagina-contas .chip.atual, #pagina-teto .chip.atual { border-color: var(--superficie-borda); }
+#pagina-dividas .chip.atraso, #pagina-contas .chip.atraso, #pagina-teto .chip.atraso { border-color: rgba(180, 35, 24, .25); }
+#pagina-dividas .chip.atencao, #pagina-contas .chip.atencao, #pagina-teto .chip.atencao { border-color: rgba(180, 83, 9, .25); }
 #pagina-dividas .chip.ok, #pagina-contas .chip.ok, #pagina-teto .chip.ok { border-color: rgba(6, 118, 71, .25); }
 
-/* Marcas de pago: bolinha de vidro; quando paga, vermelho brilhante */
+/* Marcas de pago: bolinha de vidro; quando paga, verde brilhante (verde = em dia) */
 #pagina-dividas .chk, #pagina-contas .chk, #pagina-teto .chk, .chk {
   border: 1.5px solid var(--chk-borda); background: var(--vidro-solido);
   box-shadow: inset 0 1px 2px rgba(90, 20, 30, .12), 0 1px 0 rgba(255, 255, 255, .6);
 }
 #pagina-dividas .chk.on, #pagina-contas .chk.on, #pagina-teto .chk.on {
   border-color: rgba(255, 255, 255, .5);
-  background: radial-gradient(120% 120% at 0% 0%, rgba(255, 255, 255, .4), transparent 55%), var(--grad-marca);
-  box-shadow: 0 4px 10px var(--marca-sombra), inset 0 1px 0 rgba(255, 255, 255, .5);
+  background: radial-gradient(120% 120% at 0% 0%, rgba(255, 255, 255, .4), transparent 55%), var(--grad-ok);
+  box-shadow: 0 4px 10px rgba(6, 118, 71, .30), inset 0 1px 0 rgba(255, 255, 255, .5);
 }
-#pagina-dividas .chk.parcial, #pagina-contas .chk.parcial, #pagina-teto .chk.parcial { border-color: var(--primaria); background: var(--realce); }
+#pagina-dividas .chk.parcial, #pagina-contas .chk.parcial, #pagina-teto .chk.parcial { border-color: var(--alerta); background: var(--alerta-fundo); }
 
 /* Barras de progresso por dívida */
 #pagina-dividas .divida .barra { height: 8px; background: rgba(120, 40, 50, .10); box-shadow: inset 0 1px 2px rgba(80, 20, 30, .18); }
-#pagina-dividas .divida .barra > span { box-shadow: 0 0 10px var(--marca-sombra), inset 0 1px 0 rgba(255, 255, 255, .45); }
+#pagina-dividas .divida .barra > span { box-shadow: 0 0 10px rgba(6, 118, 71, .28), inset 0 1px 0 rgba(255, 255, 255, .45); }
 
 /* Evolução */
 #pagina-dividas .evo-filtro {
@@ -365,13 +373,11 @@
 
 #pagina-dividas .btn-sutil, #pagina-contas .btn-sutil, #pagina-teto .btn-sutil { border: 1px solid var(--vidro-borda); background: var(--vidro-solido); border-radius: 16px; box-shadow: var(--vidro-brilho); }
 
-@media (prefers-reduced-motion: reduce) { #pagina-dividas .resumo-div::before, #pagina-contas .resumo-div::before, #pagina-teto .resumo-div::before { animation: none; } }
 
 /* ===== Tela Contas ===== */
 #pagina-contas .cartao:not(.resumo-div), #pagina-teto .cartao:not(.resumo-div) {
-  background: var(--vidro); border: 1px solid var(--vidro-borda); border-radius: 24px;
-  -webkit-backdrop-filter: var(--vidro-blur); backdrop-filter: var(--vidro-blur);
-  box-shadow: var(--vidro-sombra), var(--vidro-brilho);
+  background: var(--superficie); border: 1px solid var(--superficie-borda); border-radius: 24px;
+  box-shadow: var(--superficie-sombra);
 }
 #pagina-contas .ct-secao, #pagina-teto .ct-secao { padding: 1.1rem 1.1rem .4rem; }
 #pagina-contas .ct-lista li + li, #pagina-teto .ct-lista li + li { border-top-color: var(--vidro-linha); }
@@ -385,15 +391,15 @@
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .ct-ico { background: rgba(255, 255, 255, .10); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2); } }
 .ct-ico .svg-ico [data-vidro] { fill-opacity: .24; }
 .ct-linha:active { background: var(--realce); }
-#pagina-contas .ct-migrar { border-left: 1px solid var(--vidro-borda); box-shadow: inset 4px 0 0 var(--primaria), var(--vidro-sombra), var(--vidro-brilho); }
+#pagina-contas .ct-migrar { border-left: 1px solid var(--superficie-borda); box-shadow: inset 4px 0 0 var(--primaria), var(--superficie-sombra); }
 #pagina-contas .ct-migrar .btn.primario { background: radial-gradient(120% 120% at 0% 0%, rgba(255, 255, 255, .35), transparent 55%), var(--grad-marca); border: 1px solid rgba(255, 255, 255, .4); box-shadow: 0 8px 18px var(--marca-sombra), inset 0 1px 0 rgba(255, 255, 255, .5); }
 #pagina-contas .ct-item.paga .ct-ico { opacity: .6; }
 
-/* Calendário (easter egg): dias como pastilhas de vidro */
+/* Calendário (easter egg): dias como pastilhas suaves */
 #pagina-contas .cal-aviso { border: 1px solid rgba(180, 83, 9, .22); border-radius: 18px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6); }
-#pagina-contas .cal-aviso.ok { border-color: var(--vidro-borda); background: var(--vidro-solido); }
+#pagina-contas .cal-aviso.ok { border-color: var(--superficie-borda); background: var(--superficie-2); }
 #pagina-contas .cal-grade { gap: 5px; }
-#pagina-contas .cal-dia { border: 1px solid transparent; border-radius: 14px; background: var(--vidro-solido); box-shadow: var(--vidro-brilho); }
+#pagina-contas .cal-dia { border: 1px solid transparent; border-radius: 14px; background: var(--superficie-2); }
 #pagina-contas .cal-dia:hover { background: var(--realce); }
 #pagina-contas .cal-dia.domingo { background: none; box-shadow: none; }
 #pagina-contas .cal-dia.feriado {
@@ -402,7 +408,7 @@
   box-shadow: 0 5px 12px var(--marca-sombra), inset 0 1px 0 rgba(255, 255, 255, .5);
 }
 #pagina-contas .cal-dia.isento { box-shadow: inset 0 0 0 2px var(--primaria), 0 3px 8px var(--marca-sombra); }
-#pagina-contas .cal-dia.hoje:not(.feriado) { box-shadow: inset 0 0 0 2px var(--suave), var(--vidro-brilho); }
+#pagina-contas .cal-dia.hoje:not(.feriado) { box-shadow: inset 0 0 0 2px var(--suave); }
 #pagina-contas .cal-dia.fora { background: none; box-shadow: none; }
 
 /* ===== Folhas (janelas que sobem de baixo) — valem para todas as telas ===== */
@@ -452,7 +458,7 @@
     radial-gradient(110% 80% at 0% 0%, rgba(255, 255, 255, .34), rgba(255, 255, 255, 0) 58%),
     radial-gradient(90% 90% at 100% 100%, rgba(60, 0, 10, .55), rgba(60, 0, 10, 0) 62%),
     linear-gradient(135deg, #d6382e, #8e1a14);
-  box-shadow: 0 22px 44px rgba(180, 35, 24, .38), inset 0 1.5px 0 rgba(255, 255, 255, .55), inset 0 -14px 28px rgba(60, 0, 10, .3);
+  box-shadow: 0 10px 20px -14px rgba(180, 35, 24, .5), inset 0 1.5px 0 rgba(255, 255, 255, .55), inset 0 -14px 28px rgba(60, 0, 10, .3);
 }
 #pagina-teto .gt-acoes .btn { border-radius: 18px; padding: 13px 12px; }
 #pagina-teto .gt-acoes .btn:not(.primario) { background: var(--vidro-solido); border: 1px solid var(--vidro-borda); box-shadow: var(--vidro-brilho); }
@@ -473,9 +479,8 @@
   border: 1px solid rgba(255, 255, 255, .5); box-shadow: 0 6px 14px var(--marca-sombra), inset 0 1px 0 rgba(255, 255, 255, .55);
 }
 .ch-balao {
-  background: var(--vidro); border: 1px solid var(--vidro-borda); border-radius: 22px 22px 22px 8px;
-  -webkit-backdrop-filter: var(--vidro-blur); backdrop-filter: var(--vidro-blur);
-  box-shadow: var(--vidro-sombra), var(--vidro-brilho);
+  background: var(--superficie); border: 1px solid var(--superficie-borda); border-radius: 22px 22px 22px 8px;
+  box-shadow: var(--superficie-sombra);
 }
 .ch-msg.eu .ch-balao {
   border: 1px solid rgba(255, 255, 255, .45); border-radius: 22px 22px 8px 22px;
@@ -483,14 +488,14 @@
   box-shadow: 0 10px 22px var(--marca-sombra), inset 0 1px 0 rgba(255, 255, 255, .5);
 }
 .ch-kpi, .ch-destaque, .ch-dica, .ch-etq {
-  border: 1px solid var(--vidro-borda); box-shadow: var(--vidro-brilho);
+  border: 1px solid var(--superficie-borda);
 }
-.ch-kpi, .ch-destaque { background: var(--vidro-solido); border-radius: 16px; }
+.ch-kpi, .ch-destaque { background: var(--superficie-2); border-radius: 16px; }
 .ch-destaque strong { text-shadow: 0 1px 10px var(--marca-sombra); }
 .ch-dica { border-radius: 16px; }
 .ch-dica-ico { box-shadow: 0 3px 8px var(--marca-sombra), inset 0 1px 0 rgba(255, 255, 255, .5); }
 .ch-etq { border-radius: 999px; }
-.ch-detalhes { background: var(--vidro-solido); border: 1px solid var(--vidro-borda); border-radius: 16px; box-shadow: var(--vidro-brilho); }
+.ch-detalhes { background: var(--superficie-2); border: 1px solid var(--superficie-borda); border-radius: 16px; }
 
 .ch-chip {
   background: var(--vidro); border: 1px solid var(--vidro-borda);
@@ -519,32 +524,23 @@
 .ch-ponto { border: 1px solid rgba(255, 255, 255, .45); background: radial-gradient(120% 120% at 0% 0%, rgba(255, 255, 255, .35), transparent 55%), var(--grad-marca); box-shadow: 0 5px 12px var(--marca-sombra), inset 0 1px 0 rgba(255, 255, 255, .5); }
 .ch-tempo li:not(:last-child)::before { background: var(--vidro-linha); }
 .ch-limite span { background: var(--vidro-dock); border: 1px solid var(--vidro-borda); }
-.ch-anel-txt small { font-size: .6rem; }
+.ch-anel-txt small { font-size: .75rem; }
 #pagina-teto .gt-acoes .btn.primario, #pagina-contas .ct-migrar .btn.primario { color: #fff; }
 
 /* ===== Casa ===== */
 #pagina-config .cartao {
-  background: var(--vidro); border: 1px solid var(--vidro-borda); border-radius: 24px; padding: 18px;
-  -webkit-backdrop-filter: var(--vidro-blur); backdrop-filter: var(--vidro-blur);
-  box-shadow: var(--vidro-sombra), var(--vidro-brilho);
+  background: var(--superficie); border: 1px solid var(--superficie-borda); border-radius: 24px; padding: 18px;
+  box-shadow: var(--superficie-sombra);
 }
 #pagina-config .cartao h2 { font-size: 1.1rem; letter-spacing: -.01em; }
 
 /* Cartão do casal: vidro vermelho; as duas pessoas se ligam quando o parceiro entra */
 #pagina-config .casa-topo {
   position: relative; overflow: hidden; gap: 16px; padding: 1.3rem 1.2rem; color: #fff;
-  background:
-    radial-gradient(110% 80% at 0% 0%, rgba(255, 255, 255, .40), rgba(255, 255, 255, 0) 58%),
-    radial-gradient(90% 90% at 100% 100%, rgba(110, 8, 30, .50), rgba(110, 8, 30, 0) 62%),
-    linear-gradient(135deg, #f0636a, #c6303e);
+  background: var(--hero-grad);
   border: 1px solid rgba(255, 255, 255, .5); border-radius: 28px;
-  box-shadow: 0 22px 44px var(--marca-sombra), inset 0 1.5px 0 rgba(255, 255, 255, .6), inset 0 -14px 28px rgba(110, 8, 30, .25);
+  box-shadow: 0 10px 20px -14px var(--marca-sombra), inset 0 1.5px 0 rgba(255, 255, 255, .6), inset 0 -14px 28px rgba(110, 8, 30, .25);
   text-shadow: 0 1px 10px rgba(110, 8, 30, .25);
-}
-#pagina-config .casa-topo::before {
-  content: ""; position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(112deg, transparent 32%, rgba(255, 255, 255, .20) 47%, transparent 62%);
-  transform: translateX(-120%); animation: ini-brilho 8s 1.5s ease-in-out infinite;
 }
 #pagina-config .casa-topo > * { position: relative; }
 #pagina-config .casa-txt h2 { font-size: 1.4rem; letter-spacing: -.02em; }
@@ -552,7 +548,6 @@
 #pagina-config .casa-pessoa {
   width: 38px; height: 38px; border: 1px solid rgba(255, 255, 255, .55); text-shadow: none;
   background: rgba(255, 255, 255, .16); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45);
-  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
 }
 #pagina-config .casa-pessoa.on {
   background: radial-gradient(120% 120% at 25% 15%, #fff, #ffd9d6); border-color: #fff;
@@ -575,7 +570,6 @@
 }
 #pagina-config #btn-sair { width: 100%; }
 
-@media (prefers-reduced-motion: reduce) { #pagina-config .casa-topo::before { animation: none; } }
 
 /* ===== Conexão feita (animação dos dois celulares) ===== */
 .conexao {
@@ -589,3 +583,94 @@
   background: linear-gradient(180deg, rgba(255, 255, 255, .98), rgba(255, 255, 255, .84)); border: 1px solid #fff; border-radius: 999px;
   box-shadow: 0 14px 30px rgba(70, 0, 20, .34), inset 0 1px 0 #fff;
 }
+
+/* ===== Etapa 1: toque e acessibilidade ===== */
+/* Áreas de toque de 44px: o desenho continua do mesmo tamanho, a área sensível cresce com ::after */
+.chk, .p-exp { position: relative; }
+.chk::after, .p-exp::after { content: ""; position: absolute; inset: -7px; border-radius: 50%; }
+.link-ir { min-height: 44px; display: inline-flex; align-items: center; padding: 0 4px; }
+.ch-chip { min-height: 44px; display: inline-flex; align-items: center; }
+.btn { min-height: 44px; }
+.btn.link { min-height: 44px; display: inline-flex; align-items: center; }
+.btn-sutil { min-height: 44px; }
+.ini-ver { min-height: 44px; }
+
+/* Menos transparência: quem pediu isso no sistema recebe superfícies sólidas */
+@media (prefers-reduced-transparency: reduce) {
+  :root:root:root {
+    --vidro: var(--cartao); --vidro-solido: var(--cartao); --vidro-topo: var(--cartao); --vidro-dock: var(--cartao);
+    --vidro-blur: none; --vidro-ind: var(--realce);
+  }
+  *, *::before, *::after { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+  #app::before { background: var(--fundo-base); }
+}
+/* Mais contraste: bordas firmes e cartões sem véu */
+@media (prefers-contrast: more) {
+  :root:root:root {
+    --vidro: var(--cartao); --vidro-solido: var(--cartao); --vidro-topo: var(--cartao); --vidro-dock: var(--cartao);
+    --vidro-borda: var(--suave); --vidro-linha: var(--suave); --chk-borda: var(--texto);
+    --hero-grad: linear-gradient(#8f1722, #8f1722);
+  }
+  *, *::before, *::after { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+  #app::before { background: var(--fundo-base); }
+}
+/* Navegadores sem backdrop-filter: vidro vira superfície sólida, o texto continua legível */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root:root:root { --vidro: var(--cartao); --vidro-solido: var(--cartao); --vidro-topo: var(--cartao); --vidro-dock: var(--cartao); }
+}
+/* Texto pequeno nunca abaixo de 12px, mesmo dentro de <small> sem tamanho próprio */
+small { font-size: max(.75rem, .85em); }
+
+/* Botões secundários dentro de cartões firmes: fundo levemente tingido em vez de vidro */
+#pagina-config .cartao .btn:not(.primario):not(.perigo),
+#pagina-dividas .cartao .btn-sutil, #pagina-dividas .mes .btn-sutil, #pagina-dividas .divida .btn-sutil,
+#pagina-contas .cartao .btn:not(.primario):not(.perigo), #pagina-contas .cartao .btn-sutil,
+#pagina-teto .cartao .btn:not(.primario):not(.perigo), #pagina-teto .cartao .btn-sutil {
+  background: var(--superficie-2); border: 1px solid var(--superficie-borda); box-shadow: none;
+}
+.topo-acoes .selo { margin: 0; }
+
+/* ===== Etapa 4: tipografia e números ===== */
+/* Números de destaque: inteiro grande; "R$" e centavos menores, na mesma linha de base */
+.rs { font-size: .46em; font-weight: 700; letter-spacing: .01em; margin-right: .04em; opacity: .85; }
+.ct { font-size: .58em; font-weight: 700; letter-spacing: 0; opacity: .85; }
+.ini-num .rs { font-size: .64em; }
+.ini-num .ct { font-size: .76em; }
+.ini-valor, .rd-valor { font-weight: 800; letter-spacing: -.035em; }
+.ini-valor { font-size: var(--t-heroi); }
+#pagina-dividas .rd-valor, #pagina-contas .rd-valor, #pagina-teto .rd-valor { font-size: var(--t-heroi); }
+.ini-num { font-weight: 800; }
+
+/* Rótulo de cima do cartão principal: pequeno, maiúsculo, com respiro entre as letras */
+.ini-rotulo, .rd-rotulo {
+  font-size: var(--t-rotulo); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; opacity: .92;
+}
+/* Rótulos dos itens do cartão e legendas */
+.rd-item small { font-size: var(--t-rotulo); font-weight: 600; opacity: .9; }
+.ini-sub { font-size: var(--t-leg); }
+
+/* Valores em colunas alinham melhor com algarismos de mesma largura */
+.ct-valor, .ct-subtotal, .p-valor, .pi-valor, .dv-valor, .mes-total, .rd-item strong, .ini-num, .ini-valor, .rd-valor {
+  font-variant-numeric: tabular-nums;
+}
+/* Títulos de seção e corpo seguem a escala */
+.ct-topo h3 { font-size: var(--t-secao); font-weight: 700; letter-spacing: -.01em; }
+
+/* Início: ações rápidas são controles (vidro); a lista de vencimentos é conteúdo (superfície firme) */
+.ini-acao {
+  background: var(--vidro); border-color: var(--vidro-borda);
+  -webkit-backdrop-filter: var(--vidro-blur); backdrop-filter: var(--vidro-blur);
+  box-shadow: var(--vidro-sombra), var(--vidro-brilho);
+}
+.ini-prog { background: rgba(110, 8, 30, .30); box-shadow: inset 0 1px 2px rgba(80, 0, 20, .25); }
+.ini-prog > span { background: linear-gradient(90deg, #fff, #ffe3df); box-shadow: 0 0 12px rgba(255, 255, 255, .55); }
+.ini-prox-lista li + li { border-top-color: var(--superficie-borda); }
+.ini-rotulo { letter-spacing: .08em; }
+
+/* Escuro: a aba ativa dos seletores usa texto claro (vermelho sobre a pílula cinza ficava com pouco contraste) */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) #pagina-dividas .segmentado button.ativo,
+  :root:not([data-theme="light"]) #pagina-config .segmentado button.ativo { color: #fff; }
+}
+:root[data-theme="dark"] #pagina-dividas .segmentado button.ativo,
+:root[data-theme="dark"] #pagina-config .segmentado button.ativo { color: #fff; }

@@ -4,7 +4,7 @@
 //   { id, nome, tipo: "fixa" | "variavel" | "parcelada", valorCentavos, inicio, fim, dia, parcelas? }
 // É aqui que se marca o que foi pago. A aba Dívidas só lê as parcelas das contas parceladas.
 
-import { $, h, reais, paraCampo, parseReais, nomeMes, NOMES_MESES, somarMeses } from "./util.js";
+import { $, h, reais, animarValor, animarLargura, paraCampo, parseReais, nomeMes, NOMES_MESES, somarMeses } from "./util.js";
 import { icone } from "./icones.js";
 import {
   feriadosNacionaisCalculados, buscarFeriadosApi, feriadosDoMes, diasUteisDoMes,
@@ -97,6 +97,18 @@ export function configurarContas(contexto) {
     });
   }
 
+  // Avisos de marco: metade das contas pagas e tudo pago. A primeira vez que um período aparece só guarda a base.
+  const pagasVistas = new Map();
+  function avisarMarcos(p, r) {
+    if (!r.qtdContas) return;
+    const agora = r.qtdPagas / r.qtdContas;
+    const antes = pagasVistas.get(p.id);
+    pagasVistas.set(p.id, agora);
+    if (antes === undefined) return;
+    if (agora === 1 && antes < 1) contexto.aviso("Tudo pago neste período. Parabéns!");
+    else if (agora >= 0.5 && antes < 0.5) contexto.aviso("Metade das contas já está paga");
+  }
+
   function renderizar() {
     const caixa = $("ct-conteudo");
     if (!caixa) return;
@@ -117,7 +129,9 @@ export function configurarContas(contexto) {
       caixa.replaceChildren(navegacao(lista, null));
       return;
     }
-    caixa.replaceChildren(navegacao(lista, p), ...corpo(calcularPeriodo(p, dados(p)), p));
+    const rSel = calcularPeriodo(p, dados(p));
+    avisarMarcos(p, rSel);
+    caixa.replaceChildren(navegacao(lista, p), ...corpo(rSel, p));
     atualizarFeriadosNacionais(p);
   }
 
@@ -136,15 +150,19 @@ export function configurarContas(contexto) {
 
   function resumo(r, p) {
     const meta = (rotulo, valor) => h("div", { class: "rd-item" }, h("small", {}, rotulo), h("strong", {}, valor));
+    const valor = h("div", { class: "rd-valor" });
+    animarValor(valor, "contas-hero", r.total);
+    const preenchido = h("span", {});
+    animarLargura(preenchido, "contas-hero", r.pagoPct);
     return h("div", { class: "cartao resumo-div" },
       h("div", { class: "rd-rotulo" }, `Total de ${rotuloPeriodo(p)}`),
-      h("div", { class: "rd-valor" }, reais(r.total)),
+      valor,
       h("div", { class: "rd-pago" },
         h("div", { class: "rd-pago-txt" },
           h("span", {}, r.qtdContas ? `${r.qtdPagas} de ${r.qtdContas} ${r.qtdContas === 1 ? "conta paga" : "contas pagas"}` : "Nenhuma conta neste período"),
           h("strong", {}, `${r.pagoPct}%`)),
         h("div", { class: "barra", role: "progressbar", "aria-valuemin": "0", "aria-valuemax": "100", "aria-valuenow": String(r.pagoPct), "aria-label": "Quanto das contas já foi pago" },
-          h("span", { style: `width:${r.pagoPct}%` }))),
+          preenchido)),
       h("div", { class: "rd-meta" },
         meta("Já pago", reais(r.pago)),
         meta("Falta pagar", reais(r.faltaPagar)),
@@ -264,13 +282,13 @@ export function configurarContas(contexto) {
       const venc = i.conta.dia ? `vence ${dataCurta(i.data)}` : null;
       let resto;
       if (tipo === "parcelada") resto = i.parcelas.map((x) => `${x.it.nome} ${x.k}/${x.it.total}`).join(" · ");
-      else if (i.estimada) resto = [h("span", { class: "chip atraso" }, "Estimada"), " toque para informar"];
+      else if (i.estimada) resto = [h("span", { class: "chip atencao" }, "Estimada"), " toque para informar"];
       else if (tipo === "fixa") resto = i.alterada ? "valor ajustado só neste período" : "todo mês";
       else resto = "valor informado";
       const sub = venc ? [`${venc} · `, ...[].concat(resto)] : [].concat(resto);
       return h("div", { class: "ct-item" + (i.paga ? " paga" : "") },
         h("button", {
-          type: "button", class: "chk" + (i.paga ? " on" : ""), role: "checkbox",
+          type: "button", class: "chk" + (i.paga ? " on" : "") + (acabouDeMarcar(i.conta.id, i.paga) ? " acabou" : ""), role: "checkbox",
           "aria-checked": String(i.paga), "aria-label": `${i.conta.nome}: marcar como paga`,
           disabled: !!i.automatica, title: i.automatica ? "Parcelas já pagas antes do cadastro" : null,
           html: icone("check", 16), onclick: () => marcarPaga(i)
@@ -282,9 +300,14 @@ export function configurarContas(contexto) {
     });
   }
 
+  // Última conta marcada agora: o check dela ganha o pulso (o desenho da tela é refeito a cada mudança).
+  let marcadaAgora = null;
+  const acabouDeMarcar = (id, paga) => paga && marcadaAgora && marcadaAgora.id === id && Date.now() - marcadaAgora.t < 900;
+
   function marcarPaga(item) {
     const p = periodoAtual();
     if (!p) return;
+    if (!item.paga) marcadaAgora = { id: item.conta.id, t: Date.now() };
     contexto.aviso(item.paga ? "Pagamento desmarcado" : "Conta marcada como paga");
     executar(() => backend().salvarPaga(casa(), p.id, item.conta.id, !item.paga));
   }
@@ -292,6 +315,7 @@ export function configurarContas(contexto) {
   function marcarTetoPago(r) {
     const p = periodoAtual();
     if (!p) return;
+    if (!r.tetoPago) marcadaAgora = { id: "imprevistos", t: Date.now() };
     contexto.aviso(r.tetoPago ? "Pagamento desmarcado" : "Imprevistos marcado como pago");
     executar(() => backend().salvarPaga(casa(), p.id, "imprevistos", !r.tetoPago));
   }
@@ -300,7 +324,7 @@ export function configurarContas(contexto) {
     const pago = r.tetoPago;
     return h("div", { class: "ct-item" + (pago ? " paga" : "") },
       h("button", {
-        type: "button", class: "chk" + (pago ? " on" : ""), role: "checkbox",
+        type: "button", class: "chk" + (pago ? " on" : "") + (acabouDeMarcar("imprevistos", pago) ? " acabou" : ""), role: "checkbox",
         "aria-checked": String(pago), "aria-label": "Imprevistos: marcar como pago",
         html: icone("check", 16), onclick: () => marcarTetoPago(r)
       }),
