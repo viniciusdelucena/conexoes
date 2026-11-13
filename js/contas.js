@@ -214,7 +214,8 @@ export function configurarContas(contexto) {
           h("span", {}, alertas.map((f) => `${DIAS_SEMANA[f.diaSemana]}, ${dataCurta(f.data)} (${f.nome})`).join(" · ")))
       : h("div", { class: "cal-aviso ok" }, `Nenhum feriado de segunda a sexta ${onde}.`);
 
-    const cabecalho = ["D", "S", "T", "Q", "Q", "S", "S"].map((l) => h("span", { class: "cal-cab" }, l));
+    // Um cabeçalho novo por mês: o mesmo nó reaproveitado seria movido e só o último mês ficaria com os dias da semana
+    const cabecalho = () => ["D", "S", "T", "Q", "Q", "S", "S"].map((l) => h("span", { class: "cal-cab" }, l));
     const mesesDoPeriodo = calMes ? [calMes] : mesesEntre(p.inicio, p.fim);
     const blocos = mesesDoPeriodo.map((ym) => {
       const dias = gradeDoMes(ym).map((d) => {
@@ -236,7 +237,7 @@ export function configurarContas(contexto) {
       });
       return h("div", { class: "cal-mes" },
         mesesDoPeriodo.length > 1 && !calMes ? h("p", { class: "cal-mes-nome" }, nomeMes(ym)) : null,
-        h("div", { class: "cal-grade" }, cabecalho, dias));
+        h("div", { class: "cal-grade" }, cabecalho(), dias));
     });
 
     const linhas = lista.map((f) => h("li", {},

@@ -75,7 +75,10 @@
 .ch-dica.alerta .ch-dica-ico { background: var(--alerta, #d2394a); }
 .ch-dica.info { background: var(--realce); }
 
-.ch-kpis { display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); gap: 8px; }
+/* As caixas de números quebram em mais linhas quando a conversa é estreita, em vez de o valor vazar da caixa */
+.ch-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr)); gap: 8px; }
+.ch-kpis[style*="--n:2"] { grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr)); }
+.ch-kpis[style*="--n:1"] { grid-template-columns: minmax(0, 1fr); }
 .ch-kpi { display: flex; flex-direction: column; gap: 2px; padding: 10px; border-radius: 14px; background: var(--realce); min-width: 0; }
 .ch-kpi small { font-size: .75rem; color: var(--suave); font-weight: 600; }
 .ch-kpi strong { font-size: .92rem; letter-spacing: -.02em; font-variant-numeric: tabular-nums; white-space: nowrap; }

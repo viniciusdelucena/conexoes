@@ -467,7 +467,7 @@ input[type="text"]:focus, input[type="search"]:focus, input[type="date"]:focus {
   bottom: calc(10px + env(safe-area-inset-bottom));
   max-width: 520px; margin: 0 auto;
   height: var(--aba-altura);
-  padding: 6px;
+  --dock-pad: 6px; padding: var(--dock-pad);
   display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
   background: var(--dock-solido);
   user-select: none; -webkit-user-select: none;
@@ -480,8 +480,8 @@ input[type="text"]:focus, input[type="search"]:focus, input[type="date"]:focus {
   .dock { background: var(--dock); }
 }
 .dock-ind {
-  position: absolute; top: 6px; bottom: 6px; left: 6px;
-  width: calc((100% - 12px) / 5);
+  position: absolute; top: var(--dock-pad, 6px); bottom: var(--dock-pad, 6px); left: var(--dock-pad, 6px);
+  width: calc((100% - 2 * var(--dock-pad, 6px)) / 5);
   border-radius: 22px;
   background: var(--grad-marca);
   box-shadow: 0 6px 14px var(--marca-sombra), inset 0 1px 0 rgba(255, 255, 255, .3);
@@ -520,7 +520,12 @@ input[type="text"]:focus, input[type="search"]:focus, input[type="date"]:focus {
   font-size: .9rem;
   z-index: 20;
 }
-.dock .aba .rot { font-size: clamp(.7rem, 2.95vw, .75rem); letter-spacing: 0; }
+.dock .aba .rot { font-size: 12px; letter-spacing: -.01em; }
+@media (max-width: 380px) { .dock .aba .rot { font-size: 11.5px; letter-spacing: -.02em; } }
+@media (max-width: 350px) {
+  .dock { left: 6px; right: 6px; --dock-pad: 4px; }
+  .dock .aba .rot { font-size: 11px; letter-spacing: -.02em; }
+}
 
 /* ----- Tela Casa ----- */
 .casa-topo { display: flex; align-items: center; gap: 14px; }

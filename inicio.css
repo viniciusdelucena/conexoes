@@ -81,12 +81,12 @@
 .ini-prox { padding: 1rem 1rem .4rem; margin-bottom: 14px; animation: ini-sobe .55s .1s cubic-bezier(.22, 1, .36, 1) both; }
 .ini-prox-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 2px; }
 .ini-prox-topo h3 { margin: 0; font-size: var(--t-secao); font-weight: 700; }
-.ini-prox-todas { min-height: 44px; padding: 0 4px; border: 0; background: none; color: var(--primaria); font: inherit; font-size: var(--t-leg); font-weight: 700; cursor: pointer; }
+.ini-prox-todas { flex: none; white-space: nowrap; min-height: 44px; padding: 0 4px; border: 0; background: none; color: var(--primaria); font: inherit; font-size: var(--t-leg); font-weight: 700; cursor: pointer; }
 .ini-prox-lista { list-style: none; margin: 0; padding: 0; }
 .ini-prox-lista li + li { border-top: 1px solid var(--borda); }
 .ini-prox-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 56px; padding: 8px 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .ini-prox-info { display: flex; flex-direction: column; min-width: 0; }
-.ini-prox-nome { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ini-prox-nome { font-weight: 700; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow-wrap: break-word; }
 .ini-prox-data { font-size: var(--t-rotulo); color: var(--suave); }
 .ini-prox-dir { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
 .ini-prox-valor { font-weight: 800; font-variant-numeric: tabular-nums; }
@@ -117,3 +117,10 @@
 @media (prefers-reduced-motion: reduce) { .ini-spark.anima .ini-spark-svg, .ini-spark.anima .ini-spark-ponto { animation: none; } }
 /* Os dois cartões terminam alinhados embaixo, mesmo com alturas de conteúdo diferentes */
 #stat-divida-rot, #stat-teto-rot { margin-bottom: auto; }
+
+/* Ações rápidas em telas estreitas: o texto cabe sem encostar na borda */
+@media (max-width: 380px) {
+  .ini-acoes { gap: 8px; }
+  .ini-acao { gap: 5px; padding: 0 4px; font-size: .9rem; }
+}
+@media (max-width: 340px) { .ini-acao [data-ico], .ini-acao .svg-ico { display: none; } }

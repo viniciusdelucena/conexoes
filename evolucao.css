@@ -19,7 +19,7 @@
 .evo-opcao { display: flex; align-items: center; gap: 12px; padding: 11px 12px; cursor: pointer; }
 .evo-opcao input { width: 20px; height: 20px; margin: 0; accent-color: var(--primaria); flex: none; }
 .evo-opcao-txt { display: flex; flex-direction: column; min-width: 0; }
-.evo-opcao-txt strong { font-size: .92rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.evo-opcao-txt strong { font-size: .92rem; color: var(--texto); font-weight: 700; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow-wrap: break-word; }
 .evo-opcao-txt small { color: var(--suave); font-size: .76rem; }
 .evo-vazio { padding: 14px; color: var(--suave); font-size: .88rem; }
 .evo-sel-barra { display: flex; justify-content: space-between; align-items: center; margin: 4px 0 8px; font-size: .82rem; color: var(--suave); }
@@ -50,11 +50,11 @@
 .evo-dica .suave { color: var(--suave); }
 .evo-dica .atraso { color: var(--alerta); font-weight: 600; }
 
-.evo-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; padding-top: 12px; border-top: 1px solid var(--borda); }
+.evo-stats { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 14px; margin-top: 10px; padding-top: 12px; border-top: 1px solid var(--borda); }
 .evo-stat small { display: block; color: var(--suave); font-size: .75rem; }
 .evo-stat strong { font-size: .92rem; font-variant-numeric: tabular-nums; }
-.evo-tabela { margin-top: 12px; font-size: .82rem; }
-.evo-tabela summary { cursor: pointer; color: var(--suave); font-weight: 600; }
+.evo-tabela { margin-top: 2px; font-size: .82rem; }
+.evo-tabela summary { cursor: pointer; color: var(--suave); font-weight: 600; padding: 13px 0; }
 .evo-tabela table { width: 100%; border-collapse: collapse; margin-top: 8px; font-variant-numeric: tabular-nums; }
 .evo-tabela th, .evo-tabela td { text-align: right; padding: 5px 4px; border-bottom: 1px solid var(--borda); }
 .evo-tabela th:first-child, .evo-tabela td:first-child { text-align: left; }

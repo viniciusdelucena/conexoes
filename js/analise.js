@@ -171,7 +171,7 @@ export function analisarResumo(dados, hoje) {
   const abertas = r.itens.filter((i) => !i.paga).map((i) => i.conta.nome);
   const cats = [["Fixas", r.fixas], ["Variáveis", r.variaveis], ["Parcelas", r.parceladas], ["Imprevistos", r.gastoTeto]].filter((x) => x[1] > 0);
   const blocos = [
-    { t: "anel", pct: r.pagoPct, centro: `${r.qtdPagas}/${r.qtdContas}`, sub: "contas pagas", titulo: rotuloPeriodo(per) },
+    { t: "anel", pct: r.pagoPct, centro: `${r.qtdPagas}/${r.qtdContas}`, sub: "pagas", titulo: rotuloPeriodo(per) },
     { t: "kpis", itens: [
       kpi("Falta pagar", reais(r.faltaPagar), `${r.qtdContas - r.qtdPagas} ${r.qtdContas - r.qtdPagas === 1 ? "conta" : "contas"}`, r.faltaPagar > 0 ? "alerta" : "ok"),
       kpi("Imprevistos", reais(t.gasto), `de ${reais(t.teto)} · ${t.pct}%`, t.estourou ? "alerta" : "neutro")] },

@@ -24,7 +24,7 @@
   display: grid; place-items: center; background: var(--realce); color: var(--primaria);
 }
 .ct-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.ct-nome { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ct-nome { font-weight: 600; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow-wrap: break-word; text-wrap: pretty; }
 .ct-sub { font-size: .8rem; color: var(--suave); }
 .ct-sub .chip { margin-right: 4px; }
 .ct-valor { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -93,7 +93,7 @@
 .pc-campo span { font-size: .75rem; color: var(--suave); }
 .pc-campo input { width: 100%; min-width: 0; }
 .pc-trio { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 8px; }
-.pc-remover { align-self: flex-start; border: 0; background: none; color: var(--alerta); font: inherit; font-size: .82rem; font-weight: 600; padding: 4px 0; cursor: pointer; }
+.pc-remover { align-self: flex-start; border: 0; background: none; color: var(--alerta); font: inherit; font-size: .82rem; font-weight: 600; padding: 4px 0; min-height: 44px; cursor: pointer; }
 .pc-campo input { padding: 10px 12px; height: auto; min-height: 0; font-size: .95rem; margin: 0; }
 .pc-campo { justify-content: flex-end; }
 .pc-linha { gap: 10px; }
@@ -107,3 +107,11 @@
 .cal-nav .mes-escolha { flex: 1; min-width: 0; }
 .cal-volta { flex: 0 0 100%; }
 .cal-uteis { margin: 8px 0 0; font-size: .82rem; font-weight: 600; color: var(--suave); text-align: center; }
+
+/* Telas bem estreitas (320px): sem a seta e com vãos menores, para o nome não ficar espremido */
+@media (max-width: 340px) {
+  .ct-seta { display: none; }
+  .ct-linha { gap: 8px; }
+  .ct-item { gap: 6px; }
+}
+#folha-valor .btn-sutil { margin-top: 10px; }

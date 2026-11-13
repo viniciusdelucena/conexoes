@@ -107,10 +107,9 @@ export function montarEvolucao(lista, { filtro, animar }) {
       const y = mt + ih - f * ih;
       return `<line class="g" x1="${ml}" x2="${W - mr}" y1="${y}" y2="${y}"/><text class="eixo" x="${ml - 8}" y="${y + 4}" text-anchor="end">${f === 0 ? "R$ 0" : compacto(total * f)}</text>`;
     }).join("");
-    const passo = Math.max(1, Math.ceil((n - 1) / 4));
-    const marcas = [];
-    for (let i = 0; i < n; i += passo) marcas.push(i);
-    if (marcas[marcas.length - 1] !== n - 1 && n - 1 - marcas[marcas.length - 1] >= passo / 2) marcas.push(n - 1);
+    // Quantos rótulos cabem sem encostar um no outro (cada um tem ~48px; sobra folga entre eles)
+    const qtd = Math.min(n, Math.max(2, Math.min(5, Math.floor(iw / 76))));
+    const marcas = [...new Set(Array.from({ length: qtd }, (_, j) => Math.round((j * (n - 1)) / Math.max(qtd - 1, 1))))];
     const eixoX = marcas.map((i) => `<text class="eixo" x="${xs[i]}" y="${H - 8}" text-anchor="${i === 0 ? "start" : i === n - 1 ? "end" : "middle"}">${rotuloCurto(pontos[i].m)}</text>`).join("");
 
     const pontoHoje = idxAgora >= 0

@@ -632,10 +632,10 @@ small { font-size: max(.75rem, .85em); }
 
 /* ===== Etapa 4: tipografia e números ===== */
 /* Números de destaque: inteiro grande; "R$" e centavos menores, na mesma linha de base */
-.rs { font-size: .46em; font-weight: 700; letter-spacing: .01em; margin-right: .04em; opacity: .85; }
-.ct { font-size: .58em; font-weight: 700; letter-spacing: 0; opacity: .85; }
-.ini-num .rs { font-size: .64em; }
-.ini-num .ct { font-size: .76em; }
+.rs { font-size: max(12px, .46em); font-weight: 700; letter-spacing: .01em; margin-right: .04em; opacity: .85; }
+.ct { font-size: max(12px, .58em); font-weight: 700; letter-spacing: 0; opacity: .85; }
+.ini-num .rs { font-size: max(12px, .64em); }
+.ini-num .ct { font-size: max(12px, .76em); }
 .ini-valor, .rd-valor { font-weight: 800; letter-spacing: -.035em; }
 .ini-valor { font-size: var(--t-heroi); }
 #pagina-dividas .rd-valor, #pagina-contas .rd-valor, #pagina-teto .rd-valor { font-size: var(--t-heroi); }

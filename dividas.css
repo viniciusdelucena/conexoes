@@ -40,7 +40,7 @@
   border-radius: 16px;
 }
 .segmentado button {
-  padding: 10px; border: 0; border-radius: 12px;
+  min-height: 44px; padding: 10px 6px; border: 0; border-radius: 12px; white-space: nowrap;
   font: inherit; font-size: .92rem; font-weight: 600;
   color: var(--suave); background: none; cursor: pointer;
   transition: background .25s, color .25s;
@@ -337,3 +337,7 @@ select:focus { outline: 2px solid var(--primaria); outline-offset: 1px; }
 @media (prefers-reduced-motion: reduce) {
   .chk.on.acabou, .chk.on.acabou .svg-ico path { animation: none !important; }
 }
+@media (max-width: 340px) { .segmentado button { font-size: .84rem; padding: 10px 2px; } }
+.rd-tend span { text-wrap: balance; }
+/* Botão de fechar das folhas: área de toque de 44px mesmo com o desenho de 36px */
+.folha-x::after { content: ""; position: absolute; inset: -4px; }

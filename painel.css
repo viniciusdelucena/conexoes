@@ -41,3 +41,4 @@
 .pn-linha.total { border-top: 1px solid var(--borda); padding-top: 4px; margin-top: 2px; font-weight: 700; color: var(--texto); }
 .pn-insight { margin: 10px 0 0; font-size: .85rem; color: var(--suave); }
 @media (prefers-reduced-motion: reduce) { .pn-barra.anima .pn-seg, .pn-svg .col.anima { animation: none; } }
+.pn-legenda span { flex: none; white-space: nowrap; overflow: visible; text-overflow: clip; max-width: none; }
