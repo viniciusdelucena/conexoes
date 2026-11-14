@@ -33,12 +33,12 @@ export function saldoPorMes(lista, hoje = mesAtual()) {
   return pontos;
 }
 
-function compacto(centavos) {
+export function compacto(centavos) {
   const v = centavos / 100;
   if (v >= 1000) return `R$ ${(v / 1000).toFixed(v % 1000 ? 1 : 0).replace(".", ",")} mil`;
   return `R$ ${Math.round(v)}`;
 }
-const rotuloCurto = (ym) => mesCurto(ym).replace(/\/\d{2}(\d{2})$/, "/$1");
+export const rotuloCurto = (ym) => mesCurto(ym).replace(/\/\d{2}(\d{2})$/, "/$1");
 
 // filtro: null (poucas dívidas) ou { texto, filtrado, aoAbrir() }; animar: desenha com animação
 export function montarEvolucao(lista, { filtro, animar }) {

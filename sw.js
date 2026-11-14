@@ -1,6 +1,6 @@
 // Service worker simples: guarda os arquivos do app para abrir offline.
 // Os dados financeiros NÃO passam por aqui; o Firestore tem cache próprio.
-const VERSAO = "v54";
+const VERSAO = "v56";
 const CACHE = `financas-${VERSAO}`;
 const ARQUIVOS = [
   "./",
@@ -12,6 +12,7 @@ const ARQUIVOS = [
   "./painel.css",
   "./inicio.css",
   "./assistente.css",
+  "./investimentos.css",
   "./vidro.css",
   "./app.js",
   "./firebase-config.js",
@@ -24,6 +25,9 @@ const ARQUIVOS = [
   "./js/calendario.js",
   "./js/contas.js",
   "./js/gastos.js",
+  "./js/investimentos.js",
+  "./js/invest-calc.js",
+  "./js/invest-grafico.js",
   "./js/inicio.js",
   "./js/vazio.js",
   "./js/painel.js",

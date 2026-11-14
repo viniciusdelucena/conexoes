@@ -99,6 +99,47 @@ export async function criarBackendFirebase() {
       return F.deleteDoc(F.doc(db, "households", casaId, "spendings", id));
     },
 
+    // ----- Investimentos (households/{casa}/investments/{id}) -----
+    //   { tipo: "saldo" | "aporte", valorCentavos, data: "AAAA-MM-DD", nota: "", ordem: milissegundos }
+    //   "saldo" = quanto a pessoa tem no total naquela data; "aporte" = dinheiro novo que entrou.
+    observarInvestimentos(casaId, aoReceber, aoFalhar) {
+      return F.onSnapshot(
+        F.collection(db, "households", casaId, "investments"),
+        (snap) => aoReceber(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+        aoFalhar
+      );
+    },
+
+    salvarInvestimento(casaId, id, dados) {
+      if (id) return F.updateDoc(F.doc(db, "households", casaId, "investments", id), dados);
+      const ref = F.doc(F.collection(db, "households", casaId, "investments"));
+      return F.setDoc(ref, { ...dados, criadoEm: F.serverTimestamp() });
+    },
+
+    excluirInvestimento(casaId, id) {
+      return F.deleteDoc(F.doc(db, "households", casaId, "investments", id));
+    },
+
+    // ----- Metas de investimento (households/{casa}/investmentGoals/{id}) -----
+    //   { nome, alvoCentavos, prazo: "AAAA-MM-DD" | null }
+    observarMetas(casaId, aoReceber, aoFalhar) {
+      return F.onSnapshot(
+        F.collection(db, "households", casaId, "investmentGoals"),
+        (snap) => aoReceber(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+        aoFalhar
+      );
+    },
+
+    salvarMeta(casaId, id, dados) {
+      if (id) return F.updateDoc(F.doc(db, "households", casaId, "investmentGoals", id), dados);
+      const ref = F.doc(F.collection(db, "households", casaId, "investmentGoals"));
+      return F.setDoc(ref, { ...dados, criadoEm: F.serverTimestamp() });
+    },
+
+    excluirMeta(casaId, id) {
+      return F.deleteDoc(F.doc(db, "households", casaId, "investmentGoals", id));
+    },
+
     // ----- Feriados da casa (households/{casa}/holidays/{AAAA-MM-DD}) -----
     //   { nome, tipo: "extra" | "removido" }
     observarFeriados(casaId, aoReceber, aoFalhar) {

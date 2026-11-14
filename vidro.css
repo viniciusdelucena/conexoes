@@ -280,17 +280,17 @@
 
 /* ===== Tela Dívidas ===== */
 /* Cartão de resumo: vidro vermelho, igual ao do Início */
-#pagina-dividas .resumo-div, #pagina-contas .resumo-div, #pagina-teto .resumo-div {
+#pagina-dividas .resumo-div, #pagina-contas .resumo-div, #pagina-teto .resumo-div, #pagina-investimentos .resumo-div {
   background: var(--hero-grad);
   border: 1px solid rgba(255, 255, 255, .5); border-radius: 28px; padding: 1.3rem 1.2rem 1.15rem;
   box-shadow: 0 10px 20px -14px var(--marca-sombra), inset 0 1.5px 0 rgba(255, 255, 255, .6), inset 0 -14px 28px rgba(110, 8, 30, .25);
   text-shadow: 0 1px 10px rgba(110, 8, 30, .25);
 }
-#pagina-dividas .resumo-div > *, #pagina-contas .resumo-div > *, #pagina-teto .resumo-div > * { position: relative; }
-#pagina-dividas .rd-valor, #pagina-contas .rd-valor, #pagina-teto .rd-valor { font-size: 2.45rem; letter-spacing: -.03em; }
-#pagina-dividas .resumo-div .barra, #pagina-contas .resumo-div .barra, #pagina-teto .resumo-div .barra { height: 9px; background: rgba(110, 8, 30, .28); box-shadow: inset 0 1px 2px rgba(80, 0, 20, .35); }
-#pagina-dividas .resumo-div .barra > span, #pagina-contas .resumo-div .barra > span, #pagina-teto .resumo-div .barra > span { background: linear-gradient(90deg, #fff, #ffe3df); box-shadow: 0 0 12px rgba(255, 255, 255, .7); }
-#pagina-dividas .rd-tend, #pagina-contas .rd-tend, #pagina-teto .rd-tend {
+#pagina-dividas .resumo-div > *, #pagina-contas .resumo-div > *, #pagina-teto .resumo-div > *, #pagina-investimentos .resumo-div > * { position: relative; }
+#pagina-dividas .rd-valor, #pagina-contas .rd-valor, #pagina-teto .rd-valor, #pagina-investimentos .rd-valor { font-size: 2.45rem; letter-spacing: -.03em; }
+#pagina-dividas .resumo-div .barra, #pagina-contas .resumo-div .barra, #pagina-teto .resumo-div .barra, #pagina-investimentos .resumo-div .barra { height: 9px; background: rgba(110, 8, 30, .28); box-shadow: inset 0 1px 2px rgba(80, 0, 20, .35); }
+#pagina-dividas .resumo-div .barra > span, #pagina-contas .resumo-div .barra > span, #pagina-teto .resumo-div .barra > span, #pagina-investimentos .resumo-div .barra > span { background: linear-gradient(90deg, #fff, #ffe3df); box-shadow: 0 0 12px rgba(255, 255, 255, .7); }
+#pagina-dividas .rd-tend, #pagina-contas .rd-tend, #pagina-teto .rd-tend, #pagina-investimentos .rd-tend {
   border-radius: 16px; background: rgba(255, 255, 255, .18); border: 1px solid rgba(255, 255, 255, .35);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45); text-shadow: none;
 }
@@ -335,11 +335,11 @@
 }
 
 /* Chips: pílulas de vidro tingidas */
-#pagina-dividas .chip, #pagina-contas .chip, #pagina-teto .chip { padding: 3px 11px; border: 1px solid transparent; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6); }
-#pagina-dividas .chip.atual, #pagina-contas .chip.atual, #pagina-teto .chip.atual { border-color: var(--superficie-borda); }
-#pagina-dividas .chip.atraso, #pagina-contas .chip.atraso, #pagina-teto .chip.atraso { border-color: rgba(180, 35, 24, .25); }
-#pagina-dividas .chip.atencao, #pagina-contas .chip.atencao, #pagina-teto .chip.atencao { border-color: rgba(180, 83, 9, .25); }
-#pagina-dividas .chip.ok, #pagina-contas .chip.ok, #pagina-teto .chip.ok { border-color: rgba(6, 118, 71, .25); }
+#pagina-dividas .chip, #pagina-contas .chip, #pagina-teto .chip, #pagina-investimentos .chip { padding: 3px 11px; border: 1px solid transparent; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6); }
+#pagina-dividas .chip.atual, #pagina-contas .chip.atual, #pagina-teto .chip.atual, #pagina-investimentos .chip.atual { border-color: var(--superficie-borda); }
+#pagina-dividas .chip.atraso, #pagina-contas .chip.atraso, #pagina-teto .chip.atraso, #pagina-investimentos .chip.atraso { border-color: rgba(180, 35, 24, .25); }
+#pagina-dividas .chip.atencao, #pagina-contas .chip.atencao, #pagina-teto .chip.atencao, #pagina-investimentos .chip.atencao { border-color: rgba(180, 83, 9, .25); }
+#pagina-dividas .chip.ok, #pagina-contas .chip.ok, #pagina-teto .chip.ok, #pagina-investimentos .chip.ok { border-color: rgba(6, 118, 71, .25); }
 
 /* Marcas de pago: bolinha de vidro; quando paga, verde brilhante (verde = em dia) */
 #pagina-dividas .chk, #pagina-contas .chk, #pagina-teto .chk, .chk {
@@ -371,17 +371,17 @@
 }
 #pagina-dividas .evo-stats { border-top-color: var(--vidro-linha); }
 
-#pagina-dividas .btn-sutil, #pagina-contas .btn-sutil, #pagina-teto .btn-sutil { border: 1px solid var(--vidro-borda); background: var(--vidro-solido); border-radius: 16px; box-shadow: var(--vidro-brilho); }
+#pagina-dividas .btn-sutil, #pagina-contas .btn-sutil, #pagina-teto .btn-sutil, #pagina-investimentos .btn-sutil { border: 1px solid var(--vidro-borda); background: var(--vidro-solido); border-radius: 16px; box-shadow: var(--vidro-brilho); }
 
 
 /* ===== Tela Contas ===== */
-#pagina-contas .cartao:not(.resumo-div), #pagina-teto .cartao:not(.resumo-div) {
+#pagina-contas .cartao:not(.resumo-div), #pagina-teto .cartao:not(.resumo-div), #pagina-investimentos .cartao:not(.resumo-div) {
   background: var(--superficie); border: 1px solid var(--superficie-borda); border-radius: 24px;
   box-shadow: var(--superficie-sombra);
 }
-#pagina-contas .ct-secao, #pagina-teto .ct-secao { padding: 1.1rem 1.1rem .4rem; }
-#pagina-contas .ct-lista li + li, #pagina-teto .ct-lista li + li { border-top-color: var(--vidro-linha); }
-#pagina-contas .ct-subtotal, #pagina-teto .ct-subtotal { text-shadow: 0 1px 8px var(--marca-sombra); }
+#pagina-contas .ct-secao, #pagina-teto .ct-secao, #pagina-investimentos .ct-secao { padding: 1.1rem 1.1rem .4rem; }
+#pagina-contas .ct-lista li + li, #pagina-teto .ct-lista li + li, #pagina-investimentos .ct-lista li + li { border-top-color: var(--vidro-linha); }
+#pagina-contas .ct-subtotal, #pagina-teto .ct-subtotal, #pagina-investimentos .ct-subtotal { text-shadow: 0 1px 8px var(--marca-sombra); }
 .ct-ico {
   border-radius: 14px; border: 1px solid var(--vidro-borda);
   background: linear-gradient(160deg, rgba(255, 255, 255, .85), rgba(255, 255, 255, .35));
@@ -449,6 +449,8 @@
   box-shadow: 0 10px 22px var(--marca-sombra), inset 0 1px 0 rgba(255, 255, 255, .5);
 }
 .folha-acoes .btn.perigo:not(.confirmar) { color: var(--erro); border-color: rgba(180, 35, 24, .35); }
+/* Segundo toque da exclusão: vermelho firme com texto branco (o vidro claro deixava o texto ilegível nos dois temas) */
+.folha-acoes .btn.perigo.confirmar { background: var(--grad-alerta); border-color: transparent; color: #fff; box-shadow: none; }
 
 .folha-painel .btn-sutil { border: 1px solid var(--vidro-borda); background: var(--vidro-solido); border-radius: 16px; box-shadow: var(--vidro-brilho); }
 
@@ -460,9 +462,9 @@
     linear-gradient(135deg, #d6382e, #8e1a14);
   box-shadow: 0 10px 20px -14px rgba(180, 35, 24, .5), inset 0 1.5px 0 rgba(255, 255, 255, .55), inset 0 -14px 28px rgba(60, 0, 10, .3);
 }
-#pagina-teto .gt-acoes .btn { border-radius: 18px; padding: 13px 12px; }
-#pagina-teto .gt-acoes .btn:not(.primario) { background: var(--vidro-solido); border: 1px solid var(--vidro-borda); box-shadow: var(--vidro-brilho); }
-#pagina-teto .gt-acoes .btn.primario {
+#pagina-teto .gt-acoes .btn, #pagina-investimentos .gt-acoes .btn { border-radius: 18px; padding: 13px 12px; }
+#pagina-teto .gt-acoes .btn:not(.primario), #pagina-investimentos .gt-acoes .btn:not(.primario) { background: var(--vidro-solido); border: 1px solid var(--vidro-borda); box-shadow: var(--vidro-brilho); }
+#pagina-teto .gt-acoes .btn.primario, #pagina-investimentos .gt-acoes .btn.primario {
   border: 1px solid rgba(255, 255, 255, .4);
   background: radial-gradient(120% 120% at 0% 0%, rgba(255, 255, 255, .35), transparent 55%), var(--grad-marca);
   box-shadow: 0 10px 22px var(--marca-sombra), inset 0 1px 0 rgba(255, 255, 255, .5);
@@ -525,7 +527,7 @@
 .ch-tempo li:not(:last-child)::before { background: var(--vidro-linha); }
 .ch-limite span { background: var(--vidro-dock); border: 1px solid var(--vidro-borda); }
 .ch-anel-txt small { font-size: .75rem; }
-#pagina-teto .gt-acoes .btn.primario, #pagina-contas .ct-migrar .btn.primario { color: #fff; }
+#pagina-teto .gt-acoes .btn.primario, #pagina-investimentos .gt-acoes .btn.primario, #pagina-contas .ct-migrar .btn.primario { color: #fff; }
 
 /* ===== Casa ===== */
 #pagina-config .cartao {
@@ -625,7 +627,7 @@ small { font-size: max(.75rem, .85em); }
 #pagina-config .cartao .btn:not(.primario):not(.perigo),
 #pagina-dividas .cartao .btn-sutil, #pagina-dividas .mes .btn-sutil, #pagina-dividas .divida .btn-sutil,
 #pagina-contas .cartao .btn:not(.primario):not(.perigo), #pagina-contas .cartao .btn-sutil,
-#pagina-teto .cartao .btn:not(.primario):not(.perigo), #pagina-teto .cartao .btn-sutil {
+#pagina-teto .cartao .btn:not(.primario):not(.perigo), #pagina-investimentos .cartao .btn:not(.primario):not(.perigo), #pagina-teto .cartao .btn-sutil, #pagina-investimentos .cartao .btn-sutil {
   background: var(--superficie-2); border: 1px solid var(--superficie-borda); box-shadow: none;
 }
 .topo-acoes .selo { margin: 0; }
@@ -638,7 +640,7 @@ small { font-size: max(.75rem, .85em); }
 .ini-num .ct { font-size: max(12px, .76em); }
 .ini-valor, .rd-valor { font-weight: 800; letter-spacing: -.035em; }
 .ini-valor { font-size: var(--t-heroi); }
-#pagina-dividas .rd-valor, #pagina-contas .rd-valor, #pagina-teto .rd-valor { font-size: var(--t-heroi); }
+#pagina-dividas .rd-valor, #pagina-contas .rd-valor, #pagina-teto .rd-valor, #pagina-investimentos .rd-valor { font-size: var(--t-heroi); }
 .ini-num { font-weight: 800; }
 
 /* Rótulo de cima do cartão principal: pequeno, maiúsculo, com respiro entre as letras */

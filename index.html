@@ -39,6 +39,7 @@
   <link rel="stylesheet" href="painel.css">
   <link rel="stylesheet" href="inicio.css">
   <link rel="stylesheet" href="assistente.css">
+  <link rel="stylesheet" href="investimentos.css">
   <link rel="stylesheet" href="vidro.css">
 </head>
 <body>
@@ -188,6 +189,7 @@
             <li><button type="button" data-ir="contas"><span class="ini-n">2</span><span><strong>Adicione as contas</strong><small>Aluguel, internet, cartão, empréstimo</small></span><span class="ini-seta" data-ico="dir" data-tam="18"></span></button></li>
             <li><button type="button" data-ir="teto"><span class="ini-n">3</span><span><strong>Lance os gastos do dia a dia</strong><small>Eles saem do limite de imprevistos</small></span><span class="ini-seta" data-ico="dir" data-tam="18"></span></button></li>
           </ol>
+          <button type="button" class="ini-invest-link" data-ir="investimentos"><span data-ico="invest" data-tam="18"></span>Quer acompanhar investimentos? Comece por aqui</button>
         </div>
 
         <div id="ini-dados">
@@ -230,6 +232,13 @@
               <span class="ini-trilho"><span id="ini-teto-barra"></span></span>
               <span class="ini-leg" id="stat-teto-leg">de imprevistos</span>
             </button>
+            <button type="button" class="ini-tile ini-tile-largo" id="ini-tile-invest" data-ir="investimentos">
+              <span class="ini-tile-topo"><span class="ini-ic" data-ico="invest" data-tam="20"></span>Investimentos</span>
+              <strong class="ini-num" id="stat-invest-num">R$ —</strong>
+              <span class="ini-leg" id="stat-invest-rot">total investido</span>
+              <span class="ini-trilho" id="ini-invest-trilho" hidden><span id="ini-invest-barra"></span></span>
+              <span class="ini-leg" id="stat-invest-leg">toque para informar quanto você tem</span>
+            </button>
           </div>
 
           <div id="painel"></div>
@@ -254,6 +263,10 @@
 
       <section id="pagina-teto" class="pagina" hidden>
         <div id="gt-conteudo"></div>
+      </section>
+
+      <section id="pagina-investimentos" class="pagina" hidden>
+        <div id="inv-conteudo"></div>
       </section>
 
       <section id="pagina-assistente" class="pagina" hidden>
@@ -311,6 +324,7 @@
       <button class="aba" data-pagina="dividas"><span class="ico" data-ico="dividas" data-tam="22"></span><span class="rot">Dívidas</span></button>
       <button class="aba" data-pagina="contas"><span class="ico" data-ico="contas" data-tam="22"></span><span class="rot">Contas</span></button>
       <button class="aba" data-pagina="teto"><span class="ico" data-ico="teto" data-tam="22"></span><span class="rot">Imprevistos</span></button>
+      <button class="aba" data-pagina="investimentos"><span class="ico" data-ico="invest" data-tam="22"></span><span class="rot">Investir</span></button>
       <button class="aba" data-pagina="assistente"><span class="ico" data-ico="infinito" data-tam="22"></span><span class="rot">Assistente</span></button>
     </nav>
   </div>
@@ -452,6 +466,51 @@
       <p id="erro-gasto" class="erro" role="alert" hidden></p>
       <div class="folha-acoes">
         <button type="button" id="btn-excluir-gasto" class="btn perigo" hidden>Excluir</button>
+        <button type="button" class="btn" data-fechar>Cancelar</button>
+        <button type="submit" class="btn primario">Salvar</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Investimentos: aporte ou valor informado -->
+  <div id="folha-invest" class="folha" hidden>
+    <div class="folha-fundo" data-fechar></div>
+    <form id="form-invest" class="folha-painel" novalidate aria-labelledby="invest-titulo">
+      <div class="folha-alca" aria-hidden="true"></div>
+      <h2 id="invest-titulo">Adicionar aporte</h2>
+      <p id="invest-dica" class="sub pequeno dica"></p>
+      <label for="iv-valor" id="iv-valor-rotulo">Valor do aporte</label>
+      <div class="campo-valor"><span aria-hidden="true">R$</span><input id="iv-valor" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off"></div>
+      <label for="iv-data">Data</label>
+      <input id="iv-data" type="date">
+      <p id="invest-aviso" class="aviso-folha" role="status" hidden></p>
+      <label for="iv-nota">Observação <em>(opcional)</em></label>
+      <input id="iv-nota" type="text" maxlength="40" placeholder="Ex.: Tesouro Selic, CDB do banco" autocomplete="off">
+      <p id="erro-invest" class="erro" role="alert" hidden></p>
+      <div class="folha-acoes">
+        <button type="button" id="btn-excluir-invest" class="btn perigo" hidden>Excluir</button>
+        <button type="button" class="btn" data-fechar>Cancelar</button>
+        <button type="submit" class="btn primario">Salvar</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Investimentos: meta -->
+  <div id="folha-meta" class="folha" hidden>
+    <div class="folha-fundo" data-fechar></div>
+    <form id="form-meta" class="folha-painel" novalidate aria-labelledby="meta-titulo">
+      <div class="folha-alca" aria-hidden="true"></div>
+      <h2 id="meta-titulo">Nova meta</h2>
+      <label for="mt-nome">Nome da meta</label>
+      <input id="mt-nome" type="text" maxlength="40" placeholder="Ex.: Reserva de emergência, viagem" autocomplete="off">
+      <label for="mt-valor">Quanto quer juntar</label>
+      <div class="campo-valor"><span aria-hidden="true">R$</span><input id="mt-valor" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off"></div>
+      <label for="mt-prazo">Até quando <em>(opcional)</em></label>
+      <input id="mt-prazo" type="date">
+      <p class="sub pequeno dica">Com um prazo, o app calcula quanto guardar por mês. O progresso de cada meta é medido pelo total investido.</p>
+      <p id="erro-meta" class="erro" role="alert" hidden></p>
+      <div class="folha-acoes">
+        <button type="button" id="btn-excluir-meta" class="btn perigo" hidden>Excluir</button>
         <button type="button" class="btn" data-fechar>Cancelar</button>
         <button type="submit" class="btn primario">Salvar</button>
       </div>

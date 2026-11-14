@@ -15,6 +15,23 @@ const ILUSTRACOES = {
     <g fill="#f0636a"><circle cx="22" cy="22" r="3" opacity=".55"/><circle cx="140" cy="94" r="3.5" opacity=".45"/><circle cx="144" cy="26" r="2.4" opacity=".4"/></g>
     <g stroke="#f0636a" stroke-linecap="round" stroke-width="2.2" opacity=".5"><path d="M130 14v10M125 19h10"/><path d="M26 86v8M22 90h8"/></g>
   </svg>`,
+  // Barras que crescem com uma seta subindo: os investimentos
+  investimentos: `<svg viewBox="0 0 160 110" width="150" height="103" aria-hidden="true">
+    <defs>
+      <linearGradient id="vz-i1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0636a"/><stop offset="1" stop-color="#b52334"/></linearGradient>
+      <radialGradient id="vz-i2" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#f0636a" stop-opacity=".26"/><stop offset="1" stop-color="#f0636a" stop-opacity="0"/></radialGradient>
+    </defs>
+    <ellipse cx="80" cy="58" rx="72" ry="46" fill="url(#vz-i2)"/>
+    <rect x="38" y="66" width="24" height="22" rx="7" fill="url(#vz-i1)" opacity=".55"/>
+    <rect x="68" y="52" width="24" height="36" rx="7" fill="url(#vz-i1)" opacity=".8"/>
+    <rect x="98" y="36" width="24" height="52" rx="7" fill="url(#vz-i1)"/>
+    <path d="M104 44v18" stroke="#fff" stroke-opacity=".5" stroke-width="3" stroke-linecap="round"/>
+    <path d="M30 54l32-20 20 6 42-26" fill="none" stroke="#b52334" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M114 12h12v12" fill="none" stroke="#b52334" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M28 94h104" stroke="#b52334" stroke-opacity=".22" stroke-width="3" stroke-linecap="round"/>
+    <g fill="#f0636a"><circle cx="24" cy="26" r="3" opacity=".5"/><circle cx="142" cy="78" r="3.4" opacity=".45"/></g>
+    <g stroke="#f0636a" stroke-linecap="round" stroke-width="2.2" opacity=".5"><path d="M138 44v8M134 48h8"/><path d="M22 76v8M18 80h8"/></g>
+  </svg>`,
   // Guarda-chuva com gotas: os imprevistos
   teto: `<svg viewBox="0 0 160 110" width="150" height="103" aria-hidden="true">
     <defs>

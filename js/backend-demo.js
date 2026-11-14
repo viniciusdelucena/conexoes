@@ -56,6 +56,28 @@ export function criarBackendDemo() {
   });
   const ouvintesGastos = new Set();
   const notificarGastos = () => ouvintesGastos.forEach((f) => f([...gastos.values()].map((g) => ({ ...g }))));
+  // Investimentos de exemplo: oito meses de histórico e três metas, sempre relativos ao mês atual.
+  const investimentos = new Map();
+  const metas = new Map();
+  let seqInv = 0, seqMeta = 0;
+  const ouvintesInv = new Set();
+  const ouvintesMetas = new Set();
+  const notificarInv = () => ouvintesInv.forEach((f) => f([...investimentos.values()].map((m) => ({ ...m }))));
+  const notificarMetas = () => ouvintesMetas.forEach((f) => f([...metas.values()].map((m) => ({ ...m }))));
+  function semearInvestimentos() {
+    const diaHoje = hojeData.getDate();
+    const quando = (atras, dia) => `${somarMeses(hoje, -atras)}-${dia2(atras === 0 ? Math.min(dia, diaHoje) : dia)}`;
+    // [tipo, centavos, meses atrás, dia]: um aporte por mês e, de vez em quando, o valor total atualizado.
+    [["saldo", 800000, 7, 5], ["aporte", 50000, 6, 10], ["aporte", 50000, 5, 10], ["aporte", 50000, 4, 10], ["saldo", 964000, 4, 28],
+     ["aporte", 60000, 3, 10], ["aporte", 60000, 2, 10], ["aporte", 60000, 1, 10], ["saldo", 1171000, 1, 28], ["aporte", 70000, 0, 2]]
+      .forEach(([tipo, valorCentavos, atras, dia], i) => {
+        const id = `i${++seqInv}`;
+        investimentos.set(id, { id, tipo, valorCentavos, data: quando(atras, dia), nota: "", ordem: i + 1 });
+      });
+    [["Primeiro marco", 1000000, null], ["Reserva de emergência", 1500000, `${somarMeses(hoje, 6)}-28`], ["Viagem de fim de ano", 3000000, `${somarMeses(hoje, 12)}-15`]]
+      .forEach(([nome, alvoCentavos, prazo]) => { const id = `m${++seqMeta}`; metas.set(id, { id, nome, alvoCentavos, prazo }); });
+  }
+  semearInvestimentos();
   const feriados = {};
   const ouvintesFeriados = new Set();
   const ouvintesContas = new Set();
@@ -144,6 +166,30 @@ export function criarBackendDemo() {
       notificarGastos();
     },
     async excluirGasto(id, gastoId) { gastos.delete(gastoId); notificarGastos(); },
+
+    observarInvestimentos(id, aoReceber) {
+      ouvintesInv.add(aoReceber);
+      setTimeout(() => aoReceber([...investimentos.values()].map((m) => ({ ...m }))), 150);
+      return () => ouvintesInv.delete(aoReceber);
+    },
+    async salvarInvestimento(id, movId, dados) {
+      if (movId) Object.assign(investimentos.get(movId), dados);
+      else { movId = `i${++seqInv}`; investimentos.set(movId, { id: movId, ...dados }); }
+      notificarInv();
+    },
+    async excluirInvestimento(id, movId) { investimentos.delete(movId); notificarInv(); },
+
+    observarMetas(id, aoReceber) {
+      ouvintesMetas.add(aoReceber);
+      setTimeout(() => aoReceber([...metas.values()].map((m) => ({ ...m }))), 150);
+      return () => ouvintesMetas.delete(aoReceber);
+    },
+    async salvarMeta(id, metaId, dados) {
+      if (metaId) Object.assign(metas.get(metaId), dados);
+      else { metaId = `m${++seqMeta}`; metas.set(metaId, { id: metaId, ...dados }); }
+      notificarMetas();
+    },
+    async excluirMeta(id, metaId) { metas.delete(metaId); notificarMetas(); },
 
     observarFeriados(id, aoReceber) {
       ouvintesFeriados.add(aoReceber);

@@ -9,6 +9,7 @@ import { aplicarIcones } from "./js/icones.js";
 import * as dividasUI from "./js/dividas.js";
 import { configurarContas } from "./js/contas.js";
 import { configurarGastos } from "./js/gastos.js";
+import { configurarInvestimentos } from "./js/investimentos.js";
 import { configurarPainel } from "./js/painel.js";
 import { configurarLogo, mostrarConexao } from "./js/logo.js";
 import * as assistenteUI from "./js/assistente.js";
@@ -97,8 +98,12 @@ let cancelarContas = null;
 let cancelarMeses = null;
 let cancelarFeriados = null;
 let cancelarGastos = null;
+let cancelarInvest = null;
+let cancelarMetas = null;
 
 function pararObservadores() {
+  if (cancelarInvest) { cancelarInvest(); cancelarInvest = null; }
+  if (cancelarMetas) { cancelarMetas(); cancelarMetas = null; }
   if (cancelarCasa) { cancelarCasa(); cancelarCasa = null; }
   if (cancelarDividas) { cancelarDividas(); cancelarDividas = null; }
   if (cancelarContas) { cancelarContas(); cancelarContas = null; }
@@ -128,6 +133,7 @@ async function sair() {
   dividasUI.limpar();
   contasUI.limpar();
   gastosUI.limpar();
+  investUI.limpar();
   painelUI.limpar();
   assistenteUI.limpar();
   casaId = null;
@@ -262,6 +268,8 @@ function entrarNoApp(id, recemEntrou = false) {
   cancelarFeriados = backend.observarFeriados(id, (m) => contasUI.receberFeriados(m), falhou);
   cancelarGastos = backend.observarGastos(id, (l) => { contasUI.receberGastos(l); gastosUI.receberGastos(l); assistenteUI.receberGastos(l); }, falhou);
   cancelarMeses = backend.observarMeses(id, (m) => { contasUI.receberMeses(m); gastosUI.receberMeses(m); dividasUI.receberMeses(m); assistenteUI.receberMeses(m); }, falhou);
+  cancelarInvest = backend.observarInvestimentos(id, (l) => investUI.receberInvestimentos(l), falhou);
+  cancelarMetas = backend.observarMetas(id, (l) => investUI.receberMetas(l), falhou);
   abrirPagina(paginaAtual);
 }
 
@@ -403,18 +411,58 @@ const gastosUI = configurarGastos({
   aoResumo: mostrarResumoTeto
 });
 
+// Total investido no cartão da tela Início: a barra mostra a meta mais próxima de ser alcançada.
+function mostrarResumoInvest(r) {
+  const trilho = $("ini-invest-trilho");
+  $("stat-invest-rot").textContent = "total investido";
+  if (!r || r.vazio) {
+    $("stat-invest-num").textContent = "R$ —";
+    $("stat-invest-leg").textContent = "toque para informar quanto você tem";
+    trilho.hidden = true;
+    return;
+  }
+  animarValor($("stat-invest-num"), "ini-invest", r.total);
+  trilho.hidden = !r.proxima;
+  if (r.proxima) {
+    barra("ini-invest-barra", r.proxima.pct);
+    $("stat-invest-leg").textContent = `${r.proxima.nome}: ${r.proxima.pct}% da meta`;
+  } else {
+    $("stat-invest-leg").textContent = r.temMetas ? "Todas as metas atingidas" : `${r.rendimento > 0 ? "+" : ""}${reais(r.rendimento)} de rendimento`;
+  }
+}
+const investUI = configurarInvestimentos({
+  obterBackend: () => backend,
+  obterCasaId: () => casaId,
+  aviso,
+  aoResumo: mostrarResumoInvest
+});
+
 // ---------- Navegação ----------
-const ORDEM = ["inicio", "dividas", "contas", "teto", "assistente"]; // abas do dock; "config" abre pelo avatar
+const ORDEM = ["inicio", "dividas", "contas", "teto", "investimentos", "assistente"]; // abas do dock; "config" abre pelo avatar
 const TITULOS = {
   inicio: "Início",
   dividas: "Dívidas",
   contas: "Contas",
   teto: "Imprevistos",
+  investimentos: "Investimentos",
   assistente: "Assistente",
   config: "Casa e conta"
 };
 let paginaAtual = "inicio";
 let ultimaAba = "inicio";
+
+// O indicador da barra segue a aba ativa pela posição e largura reais (as abas têm larguras diferentes, conforme o rótulo).
+function posicionarIndicador() {
+  const dock = $("dock");
+  const ativa = dock.querySelector(".aba.ativa");
+  if (!ativa || !ativa.offsetWidth) return;
+  dock.style.setProperty("--ind-x", `${ativa.offsetLeft}px`);
+  dock.style.setProperty("--ind-w", `${ativa.offsetWidth}px`);
+  // Só anima a partir da segunda vez: na primeira o indicador já nasce no lugar certo.
+  if (!dock.classList.contains("ind-ok")) requestAnimationFrame(() => dock.classList.add("ind-ok"));
+}
+if ("ResizeObserver" in window) new ResizeObserver(posicionarIndicador).observe($("dock"));
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(posicionarIndicador);
 
 function abrirPagina(nome) {
   paginaAtual = nome;
@@ -425,8 +473,9 @@ function abrirPagina(nome) {
     a.setAttribute("aria-current", ativa ? "page" : "false");
   });
   const naDock = ORDEM.includes(nome);
-  if (naDock) { $("dock").style.setProperty("--idx", String(ORDEM.indexOf(nome))); ultimaAba = nome; }
+  if (naDock) ultimaAba = nome;
   $("dock").classList.toggle("sem-aba", !naDock);
+  posicionarIndicador();
   const av = $("btn-avatar");
   av.classList.toggle("ativo", nome === "config");
   if (nome === "config") av.setAttribute("aria-current", "page"); else av.removeAttribute("aria-current");
@@ -434,6 +483,7 @@ function abrirPagina(nome) {
   if (nome === "inicio" && typeof painelUI !== "undefined") painelUI.animar();
   if (nome === "contas") contasUI.atualizar();
   if (nome === "teto") gastosUI.atualizar();
+  if (nome === "investimentos") investUI.atualizar();
   if (nome === "assistente") assistenteUI.aoAbrir();
   window.scrollTo(0, 0);
 }
