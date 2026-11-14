@@ -207,7 +207,15 @@ input[type="text"]:focus, input[type="search"]:focus, input[type="date"]:focus {
 .topo-titulo { margin: 2px 0 0; font-size: var(--t-pagina); font-weight: 700; letter-spacing: -.02em; line-height: 1.15; transition: font-size .25s ease, margin .25s ease; }
 .topo-compacto .topo-linha { max-height: 0; opacity: 0; overflow: hidden; pointer-events: none; }
 .topo-compacto .topo-titulo { font-size: 1.1rem; margin-top: 6px; }
-.topo-acoes { flex: none; display: flex; align-items: center; gap: 8px; margin-top: -3px; }
+/* O avatar acompanha o centro da barra de vidro (80px normal, 52px compacta): a conta abaixo leva o topo do avatar (10px de padding)
+   até (altura da barra − 40px) / 2, com a mesma curva do vidro encolhendo. */
+.topo-acoes {
+  flex: none; display: flex; align-items: center; gap: 8px;
+  transform: translateY(calc((var(--topo-h) - 40px) / 2 - 10px));
+  transition: transform .28s cubic-bezier(.3, .9, .3, 1);
+}
+.topo-compacto .topo-acoes { transform: translateY(calc((var(--topo-h-c) - 40px) / 2 - 10px)); }
+@media (prefers-reduced-motion: reduce) { .topo-acoes { transition: none; } }
 .avatar {
   position: relative; width: 40px; height: 40px; padding: 0; border-radius: 50%;
   display: grid; place-items: center;
