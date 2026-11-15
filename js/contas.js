@@ -15,6 +15,7 @@ import {
   listaPeriodos, periodoDeHoje, periodoSeguinte, periodoContem, selecao, resolverSelecionado,
   tetoDoPeriodo, calcularPeriodo, serieDePeriodos, navegacaoPeriodos, dataDaConta, derivarDividas
 } from "./periodos.js";
+import { esqueletoPagina } from "./esqueleto.js";
 
 // ---------- Interface ----------
 // contexto: { obterBackend, obterCasaId, aviso, abrirDividas(ym), aoResumo(resumoDoMesAtual | null) }
@@ -113,7 +114,7 @@ export function configurarContas(contexto) {
     const caixa = $("ct-conteudo");
     if (!caixa) return;
     if (!tudoPronto()) {
-      caixa.replaceChildren(h("div", { class: "cartao ct-carregando" }, h("div", { class: "spinner", "aria-label": "Carregando" })));
+      caixa.replaceChildren(esqueletoPagina());
       contexto.aoResumo(null);
       if (contexto.aoSerie) contexto.aoSerie([]);
       return;

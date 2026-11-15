@@ -16,6 +16,8 @@ export function configurarLogo() {
     } catch (e) { /* sem animação, o logo aparece parado */ }
   };
   new MutationObserver(() => { if (!tela.hidden) iniciar(); }).observe(tela, { attributes: true, attributeFilter: ["hidden"] });
+  // A tela de entrada pode estar por baixo da abertura: o logo recomeça quando ela se dissolve, para ninguém perder a animação.
+  window.addEventListener("conexoes:abertura-fim", () => { if (!tela.hidden) iniciar(); });
   if (!tela.hidden) iniciar();
 }
 

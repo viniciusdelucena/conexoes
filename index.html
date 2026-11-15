@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="abertura-ativa">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -9,7 +9,7 @@
     // Aplica o tema escolhido antes de desenhar a tela (evita piscar).
     try { var t = localStorage.getItem("conexoes-tema"); if (t !== "auto") { document.documentElement.setAttribute("data-theme", t === "escuro" ? "dark" : "light"); document.documentElement.setAttribute("data-tema-app", "1"); } } catch (e) { document.documentElement.setAttribute("data-theme", "light"); document.documentElement.setAttribute("data-tema-app", "1"); }
   </script>
-  <meta name="theme-color" id="meta-cor" content="#f6f3f2">
+  <meta name="theme-color" id="meta-cor" content="#cc313f">
   <meta name="description" content="Dívidas, contas do mês, imprevistos e investimentos da casa.">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/svg+xml" href="icons/icone.svg">
@@ -41,13 +41,27 @@
   <link rel="stylesheet" href="assistente.css">
   <link rel="stylesheet" href="investimentos.css">
   <link rel="stylesheet" href="vidro.css">
+  <link rel="stylesheet" href="carregando.css">
 </head>
 <body>
 
 
-  <!-- Carregando -->
-  <section id="tela-carregando" class="tela centro">
-    <div class="spinner" aria-label="Carregando"></div>
+  <!-- Abertura e carregamento: já está na página no primeiro desenho, sem esperar o JavaScript -->
+  <section id="tela-carregando" class="splash" role="status" aria-busy="true">
+    <div class="splash-centro">
+      <div class="splash-palco" aria-hidden="true">
+        <span class="splash-onda"></span>
+        <svg class="splash-elos" viewBox="80 164 352 184" xmlns="http://www.w3.org/2000/svg">
+          <g fill="none" stroke-width="34" stroke-linecap="round" stroke-linejoin="round">
+            <path class="anel e" pathLength="100" stroke="#fff" d="M256 256C228 214 180 190 146 204C108 220 100 292 146 308C180 322 228 298 256 256Z"/>
+            <path class="anel d" pathLength="100" stroke="#ffc4bd" d="M256 256C284 214 332 190 366 204C404 220 412 292 366 308C332 322 284 298 256 256Z"/>
+          </g>
+        </svg>
+      </div>
+      <p class="splash-nome" aria-hidden="true">Conexões</p>
+      <span class="splash-sr">Carregando</span>
+    </div>
+    <p class="splash-dica">Está demorando um pouco mais que o normal. Confira sua conexão com a internet.</p>
   </section>
 
   <!-- Entrada -->

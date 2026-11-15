@@ -13,6 +13,7 @@ import { diaDaSemana, DIAS_SEMANA } from "./calendario.js";
 import { hojeIso, dataCurta } from "./periodos.js";
 import { situacao, serieMensal, ritmoMensal, progressoMeta, ordenarMetas, ordenarMovimentos, metaMaisProxima } from "./invest-calc.js";
 import { montarGraficoInvest, comSinal } from "./invest-grafico.js";
+import { esqueletoPagina } from "./esqueleto.js";
 
 const LIMITE = 9999999999; // R$ 99.999.999,99
 const VISIVEIS = 6;       // registros do histórico antes de "Ver todos"
@@ -44,7 +45,7 @@ export function configurarInvestimentos(contexto) {
     const caixa = $("inv-conteudo");
     if (!caixa) return;
     if (!pronto.movs || !pronto.metas) {
-      caixa.replaceChildren(h("div", { class: "cartao ct-carregando" }, h("div", { class: "spinner", "aria-label": "Carregando" })));
+      caixa.replaceChildren(esqueletoPagina());
       contexto.aoResumo(null);
       return;
     }

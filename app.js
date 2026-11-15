@@ -34,13 +34,52 @@ document.querySelectorAll(".folha-painel").forEach((p) => {
 configurarLogo();
 $("btn-simular-conexao").addEventListener("click", () => backend.simularParceiro && backend.simularParceiro());
 assistenteUI.configurar({});
-const TELAS = ["tela-carregando", "tela-login", "tela-casa"];
+const TELAS = ["tela-login", "tela-casa"];
+
+// A tela de abertura fica por cima de tudo (position: fixed) e só se dissolve quando a tela seguinte já está pronta por baixo.
+// Na primeira abertura ela toca a animação inteira, mesmo que os dados cheguem antes.
+const abertura = $("tela-carregando");
+const INTRO_MIN_MS = 1300;
+const reduzirMovimento = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let jaAbriu = false;
+let aberturaAtiva = true;
+let aberturaTimer;
+
+function mostrarAbertura() {
+  clearTimeout(aberturaTimer);
+  const jaVisivel = !abertura.hidden && !abertura.classList.contains("saindo");
+  abertura.classList.remove("saindo");
+  abertura.hidden = false;
+  aberturaAtiva = true;
+  document.documentElement.classList.add("abertura-ativa");
+  if (!jaVisivel && jaAbriu) {
+    abertura.classList.add("reentra");
+    aberturaTimer = setTimeout(() => abertura.classList.remove("reentra"), 300);
+  }
+}
+
+function esconderAbertura() {
+  if (abertura.hidden) return;
+  clearTimeout(aberturaTimer);
+  const reduzir = reduzirMovimento();
+  const falta = jaAbriu || reduzir ? 0 : INTRO_MIN_MS - performance.now();
+  aberturaTimer = setTimeout(() => {
+    jaAbriu = true;
+    aberturaAtiva = false;
+    document.documentElement.classList.remove("abertura-ativa");
+    atualizarCorBarra();
+    window.dispatchEvent(new Event("conexoes:abertura-fim"));
+    abertura.classList.add("saindo");
+    aberturaTimer = setTimeout(() => { abertura.hidden = true; abertura.classList.remove("saindo"); }, reduzir ? 160 : 460);
+  }, Math.max(0, falta));
+}
 
 let telaAtual = "tela-carregando";
 function mostrarTela(nome) {
   telaAtual = nome;
   for (const t of TELAS) $(t).hidden = t !== nome;
   $("app").hidden = nome !== "app";
+  if (nome === "tela-carregando") mostrarAbertura(); else esconderAbertura();
   atualizarCorBarra();
 }
 
@@ -50,7 +89,7 @@ function atualizarCorBarra() {
   if (!meta) return;
   const attr = document.documentElement.getAttribute("data-theme");
   const escuro = attr ? attr === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
-  const heroVermelho = telaAtual === "tela-login" || telaAtual === "tela-casa";
+  const heroVermelho = aberturaAtiva || telaAtual === "tela-login" || telaAtual === "tela-casa";
   meta.setAttribute("content", heroVermelho ? "#cd323f" : escuro ? "#141010" : "#f6f3f2");
 }
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", atualizarCorBarra);
@@ -218,6 +257,30 @@ function saudacao() {
   return h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
 }
 
+// Enquanto as primeiras informações não chegam, o Início mostra um esqueleto brilhante em vez de "R$ —".
+let pendentes = new Set();
+let esperaTimer;
+function aguardarDados(chaves) {
+  const area = $("ini-dados");
+  pendentes = new Set(chaves);
+  area.classList.add("esperando");
+  area.setAttribute("aria-busy", "true");
+  atualizarVazio();
+  clearTimeout(esperaTimer);
+  esperaTimer = setTimeout(dadosProntos, 8000); // se algo não responder, o esqueleto não fica para sempre
+}
+function chegou(chave) {
+  if (pendentes.delete(chave) && pendentes.size === 0) dadosProntos();
+}
+function dadosProntos() {
+  clearTimeout(esperaTimer);
+  pendentes.clear();
+  const area = $("ini-dados");
+  area.classList.remove("esperando");
+  area.removeAttribute("aria-busy");
+  atualizarVazio();
+}
+
 let membrosAnterior = null;
 function entrarNoApp(id, recemEntrou = false) {
   casaId = id;
@@ -236,6 +299,7 @@ function entrarNoApp(id, recemEntrou = false) {
   $("cfg-teste").hidden = !DEMO;
 
   pararObservadores();
+  aguardarDados(["contas", "meses", "gastos", "invest"]);
   cancelarCasa = backend.observarCasa(
     id,
     ({ nome, membros, diasUteis }) => {
@@ -264,11 +328,11 @@ function entrarNoApp(id, recemEntrou = false) {
     }
   );
   const falhou = (e) => { console.error(e); aviso(traduzirErro(e)); };
-  cancelarContas = backend.observarContas(id, (l) => { contasUI.receberContas(l); dividasUI.receberContas(l); assistenteUI.receberContas(l); }, falhou);
+  cancelarContas = backend.observarContas(id, (l) => { contasUI.receberContas(l); dividasUI.receberContas(l); assistenteUI.receberContas(l); chegou("contas"); }, falhou);
   cancelarFeriados = backend.observarFeriados(id, (m) => contasUI.receberFeriados(m), falhou);
-  cancelarGastos = backend.observarGastos(id, (l) => { contasUI.receberGastos(l); gastosUI.receberGastos(l); assistenteUI.receberGastos(l); }, falhou);
-  cancelarMeses = backend.observarMeses(id, (m) => { contasUI.receberMeses(m); gastosUI.receberMeses(m); dividasUI.receberMeses(m); assistenteUI.receberMeses(m); }, falhou);
-  cancelarInvest = backend.observarInvestimentos(id, (l) => investUI.receberInvestimentos(l), falhou);
+  cancelarGastos = backend.observarGastos(id, (l) => { contasUI.receberGastos(l); gastosUI.receberGastos(l); assistenteUI.receberGastos(l); chegou("gastos"); }, falhou);
+  cancelarMeses = backend.observarMeses(id, (m) => { contasUI.receberMeses(m); gastosUI.receberMeses(m); dividasUI.receberMeses(m); assistenteUI.receberMeses(m); chegou("meses"); }, falhou);
+  cancelarInvest = backend.observarInvestimentos(id, (l) => { investUI.receberInvestimentos(l); chegou("invest"); }, falhou);
   cancelarMetas = backend.observarMetas(id, (l) => investUI.receberMetas(l), falhou);
   abrirPagina(paginaAtual);
 }
@@ -277,8 +341,10 @@ function entrarNoApp(id, recemEntrou = false) {
 let resumoVazio = { dividas: null, contas: null };
 function atualizarVazio() {
   const vazio = resumoVazio.dividas === 0 && resumoVazio.contas === 0;
-  $("ini-vazio").hidden = !vazio;
-  $("ini-dados").hidden = vazio || resumoVazio.dividas === null || resumoVazio.contas === null;
+  // Enquanto as informações não chegam, o esqueleto ocupa o lugar dos cartões (em vez de uma tela em branco).
+  const esperando = $("ini-dados").classList.contains("esperando");
+  $("ini-vazio").hidden = esperando || !vazio;
+  $("ini-dados").hidden = esperando ? false : vazio || resumoVazio.dividas === null || resumoVazio.contas === null;
 }
 function barra(id, pct) { $(id).style.width = `${Math.max(0, Math.min(100, pct))}%`; }
 

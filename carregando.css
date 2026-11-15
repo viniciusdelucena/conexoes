@@ -1,0 +1,106 @@
+/* ===== Abertura do app, carregamento e entrada ===== */
+
+/* --- Tela de abertura: o infinito se desenha, o nome sobe e, enquanto os dados chegam, as duas argolas "respiram" em revezamento.
+       O vermelho e a posição da marca seguem a imagem de abertura do iPhone, para a troca ser invisível. --- */
+#tela-carregando.splash {
+  position: fixed; inset: 0; z-index: 90;
+  display: flex; align-items: center; justify-content: center;
+  min-height: 0; padding: 0;
+  overflow: hidden; isolation: isolate;
+  color: #fff;
+  background:
+    radial-gradient(70% 42% at 92% 0%, rgba(255, 255, 255, .16), transparent 72%),
+    linear-gradient(170deg, #cc313f 0%, #b32732 46%, #911722 80%, #7a0f1f 100%);
+}
+#tela-carregando.splash.reentra { animation: splash-fade .25s ease both; }
+#tela-carregando.splash.saindo { animation: splash-sai .45s cubic-bezier(.4, 0, .2, 1) both; pointer-events: none; }
+#tela-carregando.splash.saindo .splash-centro { animation: splash-centro-sai .45s cubic-bezier(.4, 0, .2, 1) both; }
+
+.splash-centro {
+  display: flex; flex-direction: column; align-items: center; gap: 22px;
+  margin-top: -8vh;
+}
+.splash-palco { position: relative; width: min(42vw, 200px); aspect-ratio: 352 / 184; }
+.splash-elos { position: relative; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 10px 26px rgba(60, 0, 10, .4)); }
+.splash-elos .anel { stroke-dasharray: 100; stroke-dashoffset: 100; }
+.splash-elos .anel.e { animation: splash-traco .85s cubic-bezier(.45, .05, .25, 1) .1s forwards, splash-respira 1.8s ease-in-out 1.3s infinite; }
+.splash-elos .anel.d { animation: splash-traco .85s cubic-bezier(.45, .05, .25, 1) .4s forwards, splash-respira 1.8s ease-in-out 2.2s infinite; }
+/* Pulso de luz atrás da marca, de tempos em tempos: sinal de que o app está conectando. */
+.splash-onda {
+  position: absolute; inset: -34% -22%; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, .34), rgba(255, 255, 255, 0));
+  opacity: 0; transform: scale(.6);
+  animation: splash-onda 1.8s ease-out 1.3s infinite;
+}
+.splash-nome {
+  margin: 0; font-size: 2rem; font-weight: 800; letter-spacing: -.02em; line-height: 1.1;
+  text-shadow: 0 2px 14px rgba(60, 0, 10, .3);
+  animation: splash-sobe .6s cubic-bezier(.22, 1, .36, 1) .75s both;
+}
+.splash-dica {
+  position: absolute; left: 24px; right: 24px; bottom: calc(40px + env(safe-area-inset-bottom));
+  margin: 0; text-align: center; font-size: .9rem; line-height: 1.4; color: rgba(255, 255, 255, .92);
+  animation: splash-fade .5s ease 9s both;
+}
+.splash-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@keyframes splash-traco { to { stroke-dashoffset: 0; } }
+@keyframes splash-respira { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+@keyframes splash-onda { 0% { opacity: 0; transform: scale(.6); } 30% { opacity: 1; } 100% { opacity: 0; transform: scale(1.25); } }
+@keyframes splash-sobe { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes splash-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes splash-sai { to { opacity: 0; } }
+@keyframes splash-centro-sai { to { transform: scale(1.1); } }
+
+/* Enquanto a abertura cobre a tela, o que está por baixo espera parado: as animações de entrada só começam quando ela se dissolve. */
+html.abertura-ativa :is(#tela-login, #tela-casa, #app),
+html.abertura-ativa :is(#tela-login, #tela-casa, #app) :is(*, *::before, *::after) { animation-play-state: paused !important; }
+
+/* --- Esqueleto: blocos com um brilho que corre, no lugar de spinner, enquanto os dados chegam --- */
+:root { --esq-base: rgba(110, 90, 90, .12); --esq-brilho: rgba(110, 90, 90, .24); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --esq-base: rgba(255, 255, 255, .07); --esq-brilho: rgba(255, 255, 255, .15); }
+}
+:root[data-theme="dark"] { --esq-base: rgba(255, 255, 255, .07); --esq-brilho: rgba(255, 255, 255, .15); }
+
+@keyframes esq-brilho { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+.esq, #ini-dados.esperando :is(.ini-valor, .ini-num, .ini-leg, .ini-sub) {
+  background: linear-gradient(100deg, var(--esq-base) 30%, var(--esq-brilho) 50%, var(--esq-base) 70%) 0 0 / 200% 100%;
+  animation: esq-brilho 1.4s linear infinite;
+}
+.esq { display: block; max-width: 100%; border-radius: 8px; }
+.esq-forte { border-radius: 10px; }
+.esq-trilho { border-radius: 999px; }
+
+.esq-pagina { display: flex; flex-direction: column; gap: 14px; }
+.esq-cartao { display: flex; flex-direction: column; gap: 12px; padding: 18px; }
+.esq-item { display: flex; align-items: center; gap: 12px; padding: 4px 0; }
+.esq-bolha { width: 40px; height: 40px; flex: none; border-radius: 12px; }
+.esq-texto { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+
+/* Início: os números e legendas viram barras brilhantes até as informações chegarem. */
+#ini-dados.esperando :is(.ini-valor, .ini-num, .ini-leg, .ini-sub) {
+  color: transparent !important; -webkit-text-fill-color: transparent;
+  border-radius: 8px; user-select: none; align-self: flex-start;
+}
+#ini-dados.esperando .ini-valor, #ini-dados.esperando .ini-num { width: 58%; }
+#ini-dados.esperando :is(.ini-leg, .ini-sub) { width: 74%; }
+#ini-dados.esperando :is(.ini-spark, .ini-dia, .ini-ver) { visibility: hidden; }
+#ini-dados.esperando .ini-hero { --esq-base: rgba(255, 255, 255, .18); --esq-brilho: rgba(255, 255, 255, .38); }
+#ini-dados.esperando :is(.ini-trilho, .ini-prog) > span { width: 0 !important; }
+
+/* --- Entrada do app: topo e barra inferior entram depois que a abertura se dissolve --- */
+@keyframes topo-entra { from { opacity: 0; transform: translateY(-12px); } }
+@keyframes dock-entra { from { opacity: 0; transform: translateY(28px); } }
+#app:not([hidden]) > .topo { animation: topo-entra .5s cubic-bezier(.22, 1, .36, 1) backwards; }
+#app:not([hidden]) > .dock { animation: dock-entra .6s cubic-bezier(.22, 1, .36, 1) .12s backwards; }
+#pagina-inicio .ini-saudacao { animation: ini-sobe .5s cubic-bezier(.22, 1, .36, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .splash-elos .anel { animation: none !important; stroke-dashoffset: 0; }
+  .splash-onda { display: none; }
+  .splash-nome, .splash-dica { animation: none; }
+  #tela-carregando.splash.saindo, #tela-carregando.splash.saindo .splash-centro { animation-duration: .15s; }
+  .esq, #ini-dados.esperando :is(.ini-valor, .ini-num, .ini-leg, .ini-sub) { animation: none; }
+  #app:not([hidden]) > .topo, #app:not([hidden]) > .dock, #pagina-inicio .ini-saudacao { animation: none; }
+}

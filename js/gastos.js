@@ -13,6 +13,7 @@ import {
   periodoSeguinte, selecao, resolverSelecionado, resumoTetoPeriodo, gastosDoPeriodo,
   totalGastosDoPeriodo, navegacaoPeriodos
 } from "./periodos.js";
+import { esqueletoPagina } from "./esqueleto.js";
 
 export const resumoTeto = resumoTetoPeriodo;
 
@@ -40,7 +41,7 @@ export function configurarGastos(contexto) {
     const caixa = $("gt-conteudo");
     if (!caixa) return;
     if (!pronto.meses || !pronto.gastos) {
-      caixa.replaceChildren(h("div", { class: "cartao ct-carregando" }, h("div", { class: "spinner", "aria-label": "Carregando" })));
+      caixa.replaceChildren(esqueletoPagina());
       contexto.aoResumo(null);
       return;
     }
