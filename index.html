@@ -15,17 +15,17 @@
   <link rel="icon" type="image/svg+xml" href="icons/icone.svg">
   <link rel="icon" type="image/png" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/icon-180.png">
-  <link rel="apple-touch-startup-image" href="splash/splash-1320x2868.jpg" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="splash/splash-1206x2622.jpg" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="splash/splash-1290x2796.jpg" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="splash/splash-1179x2556.jpg" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="splash/splash-1170x2532.jpg" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="splash/splash-1125x2436.jpg" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="splash/splash-1242x2688.jpg" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="splash/splash-828x1792.jpg" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="splash/splash-1242x2208.jpg" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="splash/splash-750x1334.jpg" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="splash/splash-640x1136.jpg" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/abertura-1320x2868.jpg" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/abertura-1206x2622.jpg" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/abertura-1290x2796.jpg" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/abertura-1179x2556.jpg" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/abertura-1170x2532.jpg" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/abertura-1125x2436.jpg" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/abertura-1242x2688.jpg" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/abertura-828x1792.jpg" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/abertura-1242x2208.jpg" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/abertura-750x1334.jpg" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/abertura-640x1136.jpg" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Conexões">
     <link rel="preload" href="fonts/inter-Regular.woff" as="font" type="font/woff" crossorigin>
@@ -48,17 +48,35 @@
 
   <!-- Abertura e carregamento: já está na página no primeiro desenho, sem esperar o JavaScript -->
   <section id="tela-carregando" class="splash" role="status" aria-busy="true">
+    <div class="splash-aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span></div>
     <div class="splash-centro">
       <div class="splash-palco" aria-hidden="true">
-        <span class="splash-onda"></span>
+        <span class="splash-luz"></span>
         <svg class="splash-elos" viewBox="80 164 352 184" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="splash-desfoque" x="-20%" y="-40%" width="140%" height="180%"><feGaussianBlur stdDeviation="9"/></filter>
+            <linearGradient id="splash-brilho-grad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".95"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+            </linearGradient>
+            <mask id="splash-forma" maskUnits="userSpaceOnUse" x="60" y="150" width="392" height="212">
+              <g fill="none" stroke="#fff" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"><path d="M256 256C228 214 180 190 146 204C108 220 100 292 146 308C180 322 228 298 256 256Z"/><path d="M256 256C284 214 332 190 366 204C404 220 412 292 366 308C332 322 284 298 256 256Z"/></g>
+            </mask>
+          </defs>
+          <!-- halo: cópia desfocada que se desenha junto com o traço -->
+          <g class="halo" fill="none" stroke-width="40" stroke-linecap="round" stroke-linejoin="round" filter="url(#splash-desfoque)">
+            <path class="anel e" pathLength="100" stroke="#fff" d="M256 256C228 214 180 190 146 204C108 220 100 292 146 308C180 322 228 298 256 256Z"/>
+            <path class="anel d" pathLength="100" stroke="#ffd9d3" d="M256 256C284 214 332 190 366 204C404 220 412 292 366 308C332 322 284 298 256 256Z"/>
+          </g>
           <g fill="none" stroke-width="34" stroke-linecap="round" stroke-linejoin="round">
             <path class="anel e" pathLength="100" stroke="#fff" d="M256 256C228 214 180 190 146 204C108 220 100 292 146 308C180 322 228 298 256 256Z"/>
             <path class="anel d" pathLength="100" stroke="#ffc4bd" d="M256 256C284 214 332 190 366 204C404 220 412 292 366 308C332 322 284 298 256 256Z"/>
           </g>
+          <!-- brilho que atravessa a marca -->
+          <g mask="url(#splash-forma)"><polygon class="brilho" points="-100,150 -10,150 40,362 -50,362" fill="url(#splash-brilho-grad)"/></g>
+          <circle class="conexao" cx="256" cy="256" r="10"/>
         </svg>
       </div>
-      <p class="splash-nome" aria-hidden="true">Conexões</p>
+      <p class="splash-nome" aria-hidden="true"><span style="--i:0">C</span><span style="--i:1">o</span><span style="--i:2">n</span><span style="--i:3">e</span><span style="--i:4">x</span><span style="--i:5">õ</span><span style="--i:6">e</span><span style="--i:7">s</span></p>
       <span class="splash-sr">Carregando</span>
     </div>
     <p class="splash-dica">Está demorando um pouco mais que o normal. Confira sua conexão com a internet.</p>

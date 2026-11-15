@@ -39,7 +39,7 @@ const TELAS = ["tela-login", "tela-casa"];
 // A tela de abertura fica por cima de tudo (position: fixed) e só se dissolve quando a tela seguinte já está pronta por baixo.
 // Na primeira abertura ela toca a animação inteira, mesmo que os dados cheguem antes.
 const abertura = $("tela-carregando");
-const INTRO_MIN_MS = 1300;
+const INTRO_MIN_MS = 2400;
 const reduzirMovimento = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 let jaAbriu = false;
 let aberturaAtiva = true;
@@ -49,6 +49,7 @@ function mostrarAbertura() {
   clearTimeout(aberturaTimer);
   const jaVisivel = !abertura.hidden && !abertura.classList.contains("saindo");
   abertura.classList.remove("saindo");
+  abertura.classList.toggle("retorno", jaAbriu); // depois da primeira vez, a marca já aparece pronta
   abertura.hidden = false;
   aberturaAtiva = true;
   document.documentElement.classList.add("abertura-ativa");
@@ -70,7 +71,7 @@ function esconderAbertura() {
     atualizarCorBarra();
     window.dispatchEvent(new Event("conexoes:abertura-fim"));
     abertura.classList.add("saindo");
-    aberturaTimer = setTimeout(() => { abertura.hidden = true; abertura.classList.remove("saindo"); }, reduzir ? 160 : 460);
+    aberturaTimer = setTimeout(() => { abertura.hidden = true; abertura.classList.remove("saindo"); }, reduzir ? 160 : 720);
   }, Math.max(0, falta));
 }
 
