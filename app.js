@@ -38,15 +38,23 @@ const TELAS = ["tela-login", "tela-casa"];
 
 // A tela de abertura fica por cima de tudo (position: fixed) e só se dissolve quando a tela seguinte já está pronta por baixo.
 // Na primeira abertura ela toca a animação inteira, mesmo que os dados cheguem antes.
+// - O tempo conta a partir do primeiro quadro da abertura (marcado no HTML), não do início da navegação: em rede lenta a
+//   animação não é cortada no meio.
+// - A tela de baixo é montada (layout e dados) logo, mas só é pintada ANTES_FIM_MS antes do fim, ainda coberta: o trabalho de
+//   desenhar o app não cai em cima da dissolução.
 const abertura = $("tela-carregando");
 const INTRO_MIN_MS = 2400;
+const ANTES_FIM_MS = 450;
+const T0 = typeof window.__t0 === "number" ? window.__t0 : 0;
 const reduzirMovimento = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 let jaAbriu = false;
 let aberturaAtiva = true;
 let aberturaTimer;
+let revelarTimer;
 
 function mostrarAbertura() {
   clearTimeout(aberturaTimer);
+  clearTimeout(revelarTimer);
   const jaVisivel = !abertura.hidden && !abertura.classList.contains("saindo");
   abertura.classList.remove("saindo");
   abertura.classList.toggle("retorno", jaAbriu); // depois da primeira vez, a marca já aparece pronta
@@ -59,20 +67,36 @@ function mostrarAbertura() {
   }
 }
 
+// Os estilos do app baixam sem travar o primeiro desenho; a abertura só se dissolve com todos aplicados (no máximo ~4 s).
+const estilosProntos = () => [...document.querySelectorAll("link[data-css]")].every((l) => l.dataset.ok);
+function quandoEstilosProntos(fn, tentativas = 40) {
+  if (estilosProntos() || tentativas <= 0) return fn();
+  setTimeout(() => quandoEstilosProntos(fn, tentativas - 1), 100);
+}
+const descobrirApp = () => document.documentElement.classList.remove("app-coberto");
+
+function finalizarAbertura() {
+  jaAbriu = true;
+  aberturaAtiva = false;
+  document.documentElement.classList.remove("abertura-ativa");
+  atualizarCorBarra();
+  window.dispatchEvent(new Event("conexoes:abertura-fim"));
+  abertura.classList.add("saindo");
+  aberturaTimer = setTimeout(() => { abertura.hidden = true; abertura.classList.remove("saindo"); }, reduzirMovimento() ? 160 : 720);
+}
+
 function esconderAbertura() {
-  if (abertura.hidden) return;
+  if (abertura.hidden) { descobrirApp(); return; }
   clearTimeout(aberturaTimer);
-  const reduzir = reduzirMovimento();
-  const falta = jaAbriu || reduzir ? 0 : INTRO_MIN_MS - performance.now();
-  aberturaTimer = setTimeout(() => {
-    jaAbriu = true;
-    aberturaAtiva = false;
-    document.documentElement.classList.remove("abertura-ativa");
-    atualizarCorBarra();
-    window.dispatchEvent(new Event("conexoes:abertura-fim"));
-    abertura.classList.add("saindo");
-    aberturaTimer = setTimeout(() => { abertura.hidden = true; abertura.classList.remove("saindo"); }, reduzir ? 160 : 720);
-  }, Math.max(0, falta));
+  clearTimeout(revelarTimer);
+  const imediato = jaAbriu || reduzirMovimento();
+  const falta = imediato ? 0 : Math.max(0, INTRO_MIN_MS - (performance.now() - T0));
+  const revelarEm = Math.max(0, falta - ANTES_FIM_MS);
+  revelarTimer = setTimeout(() => quandoEstilosProntos(() => {
+    descobrirApp();
+    // um respiro para o primeiro desenho da tela de baixo acontecer antes de a abertura começar a se dissolver
+    aberturaTimer = setTimeout(finalizarAbertura, imediato ? 0 : Math.max(falta - revelarEm, 120));
+  }), revelarEm);
 }
 
 let telaAtual = "tela-carregando";

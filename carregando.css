@@ -1,97 +1,5 @@
-/* ===== Abertura do app, carregamento e entrada ===== */
-
-/* --- Tela de abertura. O fundo é igual à imagem de abertura do iPhone (splash/abertura-*.jpg, só o degradê), então a troca
-       entre as duas não aparece. Linha do tempo: o infinito se desenha com brilho (0,2 a 1,5 s), a conexão acontece (1,35 s),
-       o nome surge letra a letra (1,25 a 2,3 s) e um brilho atravessa a marca, repetindo enquanto os dados carregam. --- */
-#tela-carregando.splash {
-  position: fixed; inset: 0; z-index: 90;
-  display: flex; align-items: center; justify-content: center;
-  min-height: 0; padding: 0;
-  overflow: hidden; isolation: isolate;
-  color: #fff;
-  background:
-    radial-gradient(70% 42% at 92% 0%, rgba(255, 255, 255, .16), transparent 72%),
-    linear-gradient(170deg, #cc313f 0%, #b32732 46%, #911722 80%, #7a0f1f 100%);
-}
-#tela-carregando.splash.reentra { animation: splash-fade .3s ease both; }
-#tela-carregando.splash.saindo { animation: splash-sai .7s cubic-bezier(.4, 0, .2, 1) both; pointer-events: none; }
-#tela-carregando.splash.saindo .splash-centro { animation: splash-centro-sai .7s cubic-bezier(.4, 0, .2, 1) both; }
-
-/* Luzes de fundo que flutuam devagar */
-.splash-aurora { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
-.splash-aurora span { position: absolute; width: 78vmax; height: 78vmax; border-radius: 50%; opacity: 0; }
-.splash-aurora .a1 {
-  top: -34vmax; left: -30vmax;
-  background: radial-gradient(closest-side, rgba(255, 150, 138, .42), rgba(255, 150, 138, 0));
-  animation: splash-aurora-a 9s ease-in-out infinite alternate, splash-fade 1.6s ease .2s forwards;
-}
-.splash-aurora .a2 {
-  bottom: -40vmax; right: -34vmax;
-  background: radial-gradient(closest-side, rgba(96, 0, 22, .6), rgba(96, 0, 22, 0));
-  animation: splash-aurora-b 11s ease-in-out infinite alternate, splash-fade 1.6s ease .2s forwards;
-}
-
-.splash-centro {
-  position: relative; z-index: 1;
-  display: flex; flex-direction: column; align-items: center; gap: 24px;
-  margin-top: -8vh;
-}
-.splash-palco {
-  position: relative; width: min(46vw, 210px); aspect-ratio: 352 / 184;
-  animation: splash-palco 1.4s cubic-bezier(.22, 1, .36, 1) both, splash-pop .9s cubic-bezier(.34, 1.56, .64, 1) 1.35s;
-}
-.splash-luz {
-  position: absolute; inset: -46% -30%; border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(255, 255, 255, .36), rgba(255, 255, 255, 0));
-  animation: splash-luz 2s cubic-bezier(.22, 1, .36, 1) .1s both, splash-respira 2.8s ease-in-out 2.1s infinite alternate;
-}
-.splash-elos { position: relative; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 12px 28px rgba(60, 0, 10, .38)); }
-.splash-elos .anel { stroke-dasharray: 100; stroke-dashoffset: 100; }
-.splash-elos .anel.e { animation: splash-traco 1.1s cubic-bezier(.65, 0, .35, 1) .2s forwards; }
-.splash-elos .anel.d { animation: splash-traco 1.1s cubic-bezier(.65, 0, .35, 1) .45s forwards; }
-.splash-elos .halo { opacity: .6; }
-.splash-elos .brilho { animation: splash-brilho 3s cubic-bezier(.45, 0, .2, 1) 1.8s infinite; }
-.splash-elos .conexao {
-  fill: none; stroke: #fff; stroke-width: 3; opacity: 0;
-  transform-box: fill-box; transform-origin: center;
-  animation: splash-conexao 1.1s cubic-bezier(.22, 1, .36, 1) 1.35s both;
-}
-.splash-nome {
-  margin: 0; display: flex; font-size: 2.05rem; font-weight: 800; letter-spacing: -.02em; line-height: 1.1;
-  text-shadow: 0 2px 16px rgba(60, 0, 10, .3);
-}
-.splash-nome span {
-  display: inline-block;
-  animation: splash-letra .75s cubic-bezier(.22, 1, .36, 1) both;
-  animation-delay: calc(1.25s + var(--i) * .05s);
-}
-.splash-dica {
-  position: absolute; left: 24px; right: 24px; bottom: calc(40px + env(safe-area-inset-bottom));
-  margin: 0; text-align: center; font-size: .9rem; line-height: 1.4; color: rgba(255, 255, 255, .92);
-  animation: splash-fade .5s ease 9s both;
-}
-.splash-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-
-@keyframes splash-traco { to { stroke-dashoffset: 0; } }
-@keyframes splash-palco { from { opacity: 0; transform: scale(.88); } 35% { opacity: 1; } to { opacity: 1; transform: none; } }
-@keyframes splash-pop { 0%, 100% { transform: scale(1); } 40% { transform: scale(1.055); } }
-@keyframes splash-luz { from { opacity: 0; transform: scale(.55); } 55% { opacity: 1; } to { opacity: .6; transform: scale(1); } }
-@keyframes splash-respira { from { opacity: .45; transform: scale(.96); } to { opacity: .85; transform: scale(1.08); } }
-@keyframes splash-conexao { from { opacity: .9; transform: scale(.6); } to { opacity: 0; transform: scale(9); } }
-@keyframes splash-brilho { 0% { transform: translateX(0); } 40% { transform: translateX(560px); } 100% { transform: translateX(560px); } }
-@keyframes splash-letra { from { opacity: 0; transform: translateY(16px); filter: blur(10px); } to { opacity: 1; transform: none; filter: blur(0); } }
-@keyframes splash-aurora-a { to { transform: translate(10vmax, 12vmax) scale(1.16); } }
-@keyframes splash-aurora-b { to { transform: translate(-12vmax, -9vmax) scale(1.12); } }
-@keyframes splash-fade { from { opacity: 0; } to { opacity: 1; } }
-@keyframes splash-sai { to { opacity: 0; } }
-@keyframes splash-centro-sai { to { transform: scale(1.08); filter: blur(5px); } }
-
-/* Nas voltas seguintes (por exemplo, logo depois do login) a marca já aparece pronta, só com o brilho passando. */
-.splash.retorno .anel, .splash.retorno .splash-palco, .splash.retorno .splash-luz { animation: none; stroke-dashoffset: 0; }
-.splash.retorno .splash-luz { opacity: .7; }
-.splash.retorno .splash-nome span { animation: none; }
-.splash.retorno .conexao { display: none; }
-.splash.retorno .brilho { animation-delay: .2s; }
+/* ===== Carregamento e entrada do app =====
+   A tela de abertura (splash) tem o CSS embutido no index.html (<style id="css-abertura">), para aparecer no primeiro quadro. */
 
 /* Enquanto a abertura cobre a tela, o que está por baixo espera parado: as animações de entrada só começam quando ela se dissolve. */
 html.abertura-ativa :is(#tela-login, #tela-casa, #app),
@@ -130,19 +38,10 @@ html.abertura-ativa :is(#tela-login, #tela-casa, #app) :is(*, *::before, *::afte
 #ini-dados.esperando .ini-hero { --esq-base: rgba(255, 255, 255, .18); --esq-brilho: rgba(255, 255, 255, .38); }
 #ini-dados.esperando :is(.ini-trilho, .ini-prog) > span { width: 0 !important; }
 
-/* --- Entrada do app: topo e barra inferior entram depois que a abertura se dissolve --- */
-@keyframes topo-entra { from { opacity: 0; transform: translateY(-12px); } }
-@keyframes dock-entra { from { opacity: 0; transform: translateY(28px); } }
-#app:not([hidden]) > .topo { animation: topo-entra .5s cubic-bezier(.22, 1, .36, 1) backwards; }
-#app:not([hidden]) > .dock { animation: dock-entra .6s cubic-bezier(.22, 1, .36, 1) .12s backwards; }
+/* --- Entrada do app: o conteúdo do Início sobe quando a abertura se dissolve. Topo e barra inferior só aparecem junto com a dissolução (sem mover elementos com vidro fosco). --- */
 #pagina-inicio .ini-saudacao { animation: ini-sobe .5s cubic-bezier(.22, 1, .36, 1) both; }
 
 @media (prefers-reduced-motion: reduce) {
-  .splash-elos .anel, .splash-palco, .splash-luz, .splash-nome span, .splash-dica { animation: none !important; }
-  .splash-elos .anel { stroke-dashoffset: 0; }
-  .splash-luz { opacity: .6; }
-  .splash-elos .brilho, .splash-elos .conexao, .splash-aurora { display: none; }
-  #tela-carregando.splash.saindo, #tela-carregando.splash.saindo .splash-centro { animation-duration: .15s; }
   .esq, #ini-dados.esperando :is(.ini-valor, .ini-num, .ini-leg, .ini-sub) { animation: none; }
-  #app:not([hidden]) > .topo, #app:not([hidden]) > .dock, #pagina-inicio .ini-saudacao { animation: none; }
+  #pagina-inicio .ini-saudacao { animation: none; }
 }
