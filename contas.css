@@ -11,6 +11,8 @@
 .ct-lista { list-style: none; margin: 0; padding: 0; }
 .ct-lista li + li { border-top: 1px solid var(--borda); }
 .ct-vazio { margin: .4rem 0 .9rem; color: var(--suave); font-size: .9rem; }
+.ct-legenda { display: flex; flex-wrap: wrap; gap: .1rem .9rem; margin: 0 0 .5rem; color: var(--suave); font-size: var(--t-rotulo); font-variant-numeric: tabular-nums; }
+.ct-legenda span { white-space: nowrap; }
 
 .ct-linha {
   display: flex; align-items: center; gap: 12px; width: 100%;

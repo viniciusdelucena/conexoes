@@ -149,6 +149,18 @@ export function contasDoPeriodo(p, contas) {
   return itens.sort((a, b) => (a.data < b.data ? -1 : a.data > b.data ? 1 : a.conta.nome.localeCompare(b.conta.nome, "pt-BR")));
 }
 
+// Conta com dia de vencimento válido (1 a 31); sem ele a conta não tem data própria no período.
+export const temVencimento = (c) => Number(c.dia) >= 1 && Number(c.dia) <= 31;
+
+// Ordem do checklist de Contas: pela data em que cada conta vence dentro do período (de 20/10 a 19/11, o dia 25 vem antes do dia 5).
+// Contas sem dia de vencimento vão para o fim; empate de data, pelo nome. Não mexe na lista original.
+export function ordenarPorVencimento(itens) {
+  return [...itens].sort((a, b) =>
+    (temVencimento(a.conta) ? 0 : 1) - (temVencimento(b.conta) ? 0 : 1)
+    || (a.data < b.data ? -1 : a.data > b.data ? 1 : 0)
+    || a.conta.nome.localeCompare(b.conta.nome, "pt-BR"));
+}
+
 export function calcularPeriodo(p, { contas, periodos, gastos = [], feriados = [] }) {
   const itens = contasDoPeriodo(p, contas);
   const somar = (tipo) => itens.filter((i) => i.conta.tipo === tipo).reduce((s, i) => s + i.valor, 0);

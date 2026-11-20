@@ -13,7 +13,7 @@ import {
 import {
   hojeIso, somarDias, somarMesesData, diasEntre, mesesEntre, dataCurta, rotuloPeriodo,
   listaPeriodos, periodoDeHoje, periodoSeguinte, periodoContem, selecao, resolverSelecionado,
-  tetoDoPeriodo, calcularPeriodo, serieDePeriodos, navegacaoPeriodos, dataDaConta, derivarDividas
+  tetoDoPeriodo, calcularPeriodo, serieDePeriodos, navegacaoPeriodos, dataDaConta, derivarDividas, ordenarPorVencimento, temVencimento
 } from "./periodos.js";
 import { esqueletoPagina } from "./esqueleto.js";
 
@@ -141,9 +141,7 @@ export function configurarContas(contexto) {
       ...(dividasAntigas.length ? [cartaoMigracao()] : []),
       resumo(r, p),
       ...(usarDias ? [calendario(p)] : []),
-      secao("Contas fixas", r.fixas, linhasContas(r, "fixa"), "Nenhuma conta fixa neste período."),
-      secao("Contas variáveis", r.variaveis, linhasContas(r, "variavel"), "Nenhuma conta variável neste período."),
-      secao("Cartões e empréstimos", r.parceladas, linhasContas(r, "parcelada"), "Nenhuma parcela vence neste período. Crie uma conta do tipo Parcelada."),
+      secao("Contas do período", r.fixas + r.variaveis + r.parceladas, linhasContas(r), "Nenhuma conta neste período. Use o botão abaixo para adicionar.", legendaTipos(r)),
       secao("Imprevistos", r.teto, [linhaTeto(r)]),
       h("button", { class: "btn-sutil", type: "button", onclick: () => abrirConta(null) }, "+ Adicionar conta")
     ];
@@ -262,9 +260,16 @@ export function configurarContas(contexto) {
       h("p", { class: "ct-vazio cal-nota" }, "Feriados nacionais vêm da BrasilAPI (ou são calculados pelo app, sem internet). Toque num dia para adicionar uma folga ou deixar de descontar um feriado."));
   }
 
-  function secao(titulo, subtotal, linhas, vazio) {
+  // Quanto vai para cada tipo de conta, numa linha só (aparece quando há mais de um tipo).
+  function legendaTipos(r) {
+    const partes = [["Fixas", r.fixas], ["Variáveis", r.variaveis], ["Parcelas", r.parceladas]].filter(([, v]) => v > 0);
+    return partes.length > 1 ? h("p", { class: "ct-legenda" }, partes.map(([n, v]) => h("span", {}, `${n} ${reais(v)}`))) : null;
+  }
+
+  function secao(titulo, subtotal, linhas, vazio, legenda = null) {
     return h("article", { class: "cartao ct-secao" },
       h("header", { class: "ct-topo" }, h("h3", {}, titulo), h("span", { class: "ct-subtotal" }, reais(subtotal))),
+      legenda,
       linhas.length
         ? h("ul", { class: "ct-lista" }, linhas.map((l) => h("li", {}, l)))
         : h("p", { class: "ct-vazio" }, vazio));
@@ -279,9 +284,10 @@ export function configurarContas(contexto) {
   }
 
   // Linha com o círculo de "paga" à esquerda e o resto abrindo o detalhe da conta.
-  function linhasContas(r, tipo) {
-    return r.itens.filter((i) => i.conta.tipo === tipo).map((i) => {
-      const venc = i.conta.dia ? `vence ${dataCurta(i.data)}` : null;
+  function linhasContas(r) {
+    return ordenarPorVencimento(r.itens).map((i) => {
+      const tipo = i.conta.tipo;
+      const venc = temVencimento(i.conta) ? `vence ${dataCurta(i.data)}` : "sem dia de vencimento";
       let resto;
       if (tipo === "parcelada") resto = i.parcelas.map((x) => `${x.it.nome} ${x.k}/${x.it.total}`).join(" · ");
       else if (i.estimada) resto = [h("span", { class: "chip atencao" }, "Estimada"), " toque para informar"];
